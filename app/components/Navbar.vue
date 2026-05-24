@@ -1,6 +1,6 @@
 // app/components/Navbar.vue
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 const { user, logout, role, fetchRole } = useAuth();
 
 const isMenuOpen = ref(false);
@@ -10,6 +10,14 @@ const longPressTriggered = ref(false);
 const brandClickCount = ref(0);
 let adminRevealTimer: ReturnType<typeof setTimeout> | null = null;
 let brandClickResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+const hasMobileMenuItems = computed(() => {
+    if (!user.value) {
+        return registrationsOpen.value || showAdminLogin.value;
+    }
+
+    return true;
+});
 
 const loadRegistrationSettings = async () => {
     const client = useSupabaseClient();
@@ -81,6 +89,10 @@ watch(user, (newUser) => {
     else role.value = null;
 });
 
+watch(hasMobileMenuItems, (hasItems) => {
+    if (!hasItems) closeMenu();
+});
+
 onBeforeUnmount(() => {
     cancelAdminReveal();
     if (brandClickResetTimer) clearTimeout(brandClickResetTimer);
@@ -108,6 +120,7 @@ onMounted(loadRegistrationSettings);
                     >Dodgeball Urbania</NuxtLink
                 >
                 <button
+                    v-if="hasMobileMenuItems"
                     type="button"
                     class="sm:hidden inline-flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-black transition-all active:scale-95"
                     :aria-expanded="isMenuOpen"
@@ -122,6 +135,7 @@ onMounted(loadRegistrationSettings);
                 </button>
             </div>
             <nav
+                v-if="hasMobileMenuItems"
                 class="grid gap-2 text-sm font-black uppercase tracking-wide transition-all duration-300 sm:flex sm:items-center sm:overflow-x-auto"
                 :class="
                     isMenuOpen
