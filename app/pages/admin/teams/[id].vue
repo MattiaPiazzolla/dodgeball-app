@@ -92,7 +92,7 @@ const onLogoSelected = async (e: Event) => {
         fileToUpload.value = compressed;
         previewUrl.value = URL.createObjectURL(compressed);
     } catch (err) {
-        alert("Compression failed");
+        alert("Compressione fallita");
     }
 };
 
@@ -111,7 +111,7 @@ const updateTeam = async () => {
 
         if (uploadError) {
             console.error(uploadError);
-            alert("Upload failed: " + uploadError.message);
+            alert("Caricamento fallito: " + uploadError.message);
             return;
         }
         logo_url = client.storage.from("logos").getPublicUrl(path)
@@ -124,14 +124,14 @@ const updateTeam = async () => {
         .from("teams")
         .update({ name: team.value.name, logo_url })
         .eq("id", team.value.id);
-    alert("Team updated!");
+    alert("Squadra aggiornata!");
     fetchData();
 };
 
 const updatePlayer = async (p: any) => {
     const jerseyNumber = typeof p.jersey_number === 'string' ? parseInt(p.jersey_number) : p.jersey_number;
     if (players.value.some((other: any) => other.id !== p.id && other.jersey_number === jerseyNumber)) {
-        alert("A player with this jersey number already exists.");
+        alert("Esiste già un giocatore con questo numero di maglia.");
         return;
     }
 
@@ -147,7 +147,7 @@ const updatePlayer = async (p: any) => {
 
         if (uploadError) {
             console.error(uploadError);
-            alert("Upload failed: " + uploadError.message);
+            alert("Caricamento fallito: " + uploadError.message);
             return;
         }
         photo_url = client.storage.from("player-photos").getPublicUrl(path)
@@ -161,7 +161,7 @@ const updatePlayer = async (p: any) => {
         .from("players")
         .update({ name: p.name, jersey_number: p.jersey_number, photo_url })
         .eq("id", p.id);
-    alert("Player updated!");
+    alert("Giocatore aggiornato!");
 };
 
 const onPlayerPhotoSelected = async (e: Event, p: any) => {
@@ -172,7 +172,7 @@ const onPlayerPhotoSelected = async (e: Event, p: any) => {
         p._fileToUpload = compressed;
         p._previewUrl = URL.createObjectURL(compressed);
     } catch (err) {
-        alert("Compression failed");
+        alert("Compressione fallita");
     }
 };
 
@@ -181,7 +181,7 @@ onMounted(fetchData);
 
 <template>
     <div v-if="team" class="max-w-2xl mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-4">Edit Team</h1>
+        <h1 class="text-2xl font-bold mb-4">Modifica Squadra</h1>
         <input v-model="team.name" class="border p-2 w-full mb-2" />
         <img
             v-if="previewUrl"
@@ -193,10 +193,10 @@ onMounted(fetchData);
             @click="updateTeam"
             class="bg-blue-600 text-white px-4 py-2 rounded"
         >
-            Save Team
+            Salva Squadra
         </button>
 
-        <h2 class="text-xl font-bold mt-8">Roster</h2>
+        <h2 class="text-xl font-bold mt-8">Rosa</h2>
         <div
             v-for="p in players"
             :key="p.id"
@@ -213,13 +213,13 @@ onMounted(fetchData);
                 </div>
                 <input type="file" @change="(e) => onPlayerPhotoSelected(e, p)" class="block text-sm" />
             </div>
-            <input v-model="p.name" class="border p-1" placeholder="Name" />
-            <input v-model="p.jersey_number" type="number" class="border p-1" placeholder="Jersey Number" />
+            <input v-model="p.name" class="border p-1" placeholder="Nome" />
+            <input v-model="p.jersey_number" type="number" class="border p-1" placeholder="Numero di Maglia" />
             <button
                 @click="updatePlayer(p)"
                 class="bg-green-600 text-white p-1 rounded font-semibold mt-1"
             >
-                Save Player
+                Salva Giocatore
             </button>
         </div>
     </div>

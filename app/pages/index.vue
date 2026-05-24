@@ -10,13 +10,13 @@
                 <h1
                     class="text-4xl sm:text-5xl font-black uppercase tracking-tighter text-black leading-none"
                 >
-                    Dodgeball<br /><span class="text-red-600">Showdown</span>
+                    Dodgeball<br /><span class="text-red-600">Urbania</span>
                 </h1>
             </div>
             <p
                 class="text-gray-400 font-bold text-sm uppercase tracking-widest max-w-xs"
             >
-                The ultimate tournament management hub.
+                Il portale definitivo di gestione del torneo.
             </p>
         </div>
 
@@ -41,7 +41,7 @@
                             name="mdi:format-list-numbered"
                             class="text-red-500 text-xl"
                         />
-                        Standings
+                        Classifiche
                     </h2>
 
                     <div class="space-y-6">
@@ -64,17 +64,17 @@
                                     >
                                         <tr>
                                             <th class="py-2.5 px-3 font-bold">
-                                                Team
+                                                Squadra
                                             </th>
                                             <th
                                                 class="py-2.5 px-2 text-center font-bold"
                                             >
-                                                W-L
+                                                V-P
                                             </th>
                                             <th
                                                 class="py-2.5 px-3 text-right font-black text-black"
                                             >
-                                                Pts
+                                                Pt
                                             </th>
                                         </tr>
                                     </thead>
@@ -88,7 +88,7 @@
                                                 class="py-2.5 px-3 font-black uppercase truncate max-w-[100px] text-gray-800"
                                                 :title="gt.teams?.name"
                                             >
-                                                {{ gt.teams?.name || "TBD" }}
+                                                {{ gt.teams?.name || "DA DEFINIRE" }}
                                             </td>
                                             <td
                                                 class="py-2.5 px-2 text-center font-bold text-gray-500"
@@ -109,7 +109,7 @@
                             v-if="!groups.length"
                             class="text-xs text-gray-400 font-bold uppercase text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200"
                         >
-                            No groups formed.
+                            Nessun gruppo formato.
                         </div>
                     </div>
                 </div>
@@ -136,8 +136,8 @@
                             >
                                 {{
                                     liveMatch.is_timer_running
-                                        ? "Live Match"
-                                        : "Match Paused"
+                                        ? "Partita in Diretta"
+                                        : "Partita in Pausa"
                                 }}
                             </div>
 
@@ -155,7 +155,7 @@
                                 <div
                                     class="text-gray-400 font-bold uppercase tracking-widest mt-2 text-xs"
                                 >
-                                    {{ liveMatch.match_type }} Stage
+                                    {{ translateStage(liveMatch.match_type) }}
                                 </div>
                             </div>
 
@@ -173,7 +173,7 @@
                                     >
                                         {{
                                             getTeamName(liveMatch.team1_id) ||
-                                            "TBD"
+                                            "DA DEFINIRE"
                                         }}
                                     </div>
                                     <div
@@ -201,7 +201,7 @@
                                     >
                                         {{
                                             getTeamName(liveMatch.team2_id) ||
-                                            "TBD"
+                                            "DA DEFINIRE"
                                         }}
                                     </div>
                                     <div
@@ -226,12 +226,12 @@
                                 <h2
                                     class="text-3xl font-black uppercase tracking-tight text-black"
                                 >
-                                    Next Up
+                                    Prossimo Incontro
                                 </h2>
                                 <p
                                     class="text-red-500 font-bold uppercase tracking-widest text-sm mt-1"
                                 >
-                                    {{ upcomingMatches[0].start_time || "TBD" }}
+                                    {{ upcomingMatches[0].start_time || "DA DEFINIRE" }}
                                 </p>
                             </div>
 
@@ -258,7 +258,7 @@
                                         {{
                                             getTeamName(
                                                 upcomingMatches[0].team1_id,
-                                            ) || "TBD"
+                                            ) || "DA DEFINIRE"
                                         }}
                                     </div>
                                 </div>
@@ -286,7 +286,7 @@
                                         {{
                                             getTeamName(
                                                 upcomingMatches[0].team2_id,
-                                            ) || "TBD"
+                                            ) || "DA DEFINIRE"
                                         }}
                                     </div>
                                 </div>
@@ -306,13 +306,13 @@
                                 <h2
                                     class="text-3xl font-black uppercase tracking-tight text-black mb-2"
                                 >
-                                    Tournament Finished
+                                    Torneo Terminato
                                 </h2>
                                 <p
                                     class="text-gray-400 font-bold uppercase tracking-widest text-sm max-w-sm mx-auto"
                                 >
-                                    All matches are completed. Thanks for
-                                    playing!
+                                    Tutti gli incontri sono terminati. Grazie per
+                                    aver partecipato!
                                 </p>
                             </div>
                         </template>
@@ -337,13 +337,13 @@
                                 <h2
                                     class="text-3xl font-black uppercase tracking-tight text-black mb-3"
                                 >
-                                    Group Stage Over
+                                    Fase a Gironi Terminata
                                 </h2>
                                 <p
                                     class="text-gray-400 font-bold uppercase tracking-widest text-xs max-w-[250px] mx-auto leading-relaxed"
                                 >
-                                    The groups are settled. Standby for the
-                                    knockout bracket draw...
+                                    I gironi sono conclusi. In attesa del
+                                    sorteggio del tabellone a eliminazione diretta...
                                 </p>
                             </div>
                         </template>
@@ -357,7 +357,7 @@
                                 <p
                                     class="font-black text-xl uppercase tracking-widest"
                                 >
-                                    No Matches Live
+                                    Nessuna Partita in Diretta
                                 </p>
                             </div>
                         </template>
@@ -375,8 +375,8 @@
                             <div
                                 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between"
                             >
-                                <span>{{ match.match_type }}</span>
-                                <span class="text-red-500">FINAL</span>
+                                <span>{{ translateStage(match.match_type) }}</span>
+                                <span class="text-red-500">FINALE</span>
                             </div>
                             <div class="space-y-2">
                                 <div class="flex justify-between items-center">
@@ -388,7 +388,7 @@
                                                 : 'text-gray-400'
                                         "
                                         >{{
-                                            getTeamName(match.team1_id) || "TBD"
+                                            getTeamName(match.team1_id) || "DA DEFINIRE"
                                         }}</span
                                     >
                                     <span
@@ -410,7 +410,7 @@
                                                 : 'text-gray-400'
                                         "
                                         >{{
-                                            getTeamName(match.team2_id) || "TBD"
+                                            getTeamName(match.team2_id) || "DA DEFINIRE"
                                         }}</span
                                     >
                                     <span
@@ -435,7 +435,7 @@
                         class="text-lg font-black uppercase tracking-tight text-gray-800 mb-4 flex items-center gap-2"
                     >
                         <Icon name="mdi:star" class="text-yellow-400 text-xl" />
-                        MVP Voting
+                        Votazione MVP
                     </h2>
 
                     <div class="relative mb-4">
@@ -446,7 +446,7 @@
                         <input
                             v-model="searchQuery"
                             type="text"
-                            placeholder="Search players..."
+                            placeholder="Cerca giocatori..."
                             class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold uppercase tracking-wide focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-gray-300"
                         />
                     </div>
@@ -525,7 +525,7 @@
                             v-if="filteredPlayers.length === 0"
                             class="text-center py-8 text-gray-400 font-bold uppercase text-xs"
                         >
-                            No players found.
+                            Nessun giocatore trovato.
                         </div>
                     </div>
                 </div>
@@ -536,6 +536,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
+
+const translateStage = (stage: string) => {
+    if (!stage) return "";
+    const lower = stage.toLowerCase();
+    if (lower === "group") return "Fase a Gironi";
+    if (lower === "knockout") return "Fase a Eliminazione Diretta";
+    return stage;
+};
 
 const supabase = useSupabaseClient();
 const { subscribeToAllMatches, unsubscribe } = useMatchRealtime();

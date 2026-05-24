@@ -10,7 +10,7 @@ const router = useRouter();
 const { fetchRole } = useAuth();
 
 const handleLogin = async () => {
-    message.value = "Logging in...";
+    message.value = "Accesso in corso...";
     isError.value = false;
 
     const { data: authData, error: authError } =
@@ -35,7 +35,7 @@ const handleLogin = async () => {
         if (userError || userData?.role !== "admin") {
             await client.auth.signOut();
             isError.value = true;
-            message.value = "Access denied: Admins only.";
+            message.value = "Accesso negato: solo per amministratori.";
             return;
         }
 
@@ -51,7 +51,7 @@ const handleLogin = async () => {
         class="max-w-md mx-auto mt-20 bg-white p-8 border rounded-lg shadow-sm"
     >
         <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">
-            Admin Login
+            Accesso Amministratore
         </h1>
         <form @submit.prevent="handleLogin" class="space-y-4">
             <div>
@@ -87,7 +87,7 @@ const handleLogin = async () => {
                 type="submit"
                 class="w-full bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 font-bold transition"
             >
-                Login
+                Accedi
             </button>
         </form>
     </div>

@@ -4,13 +4,13 @@
     <!-- Top Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <h1 class="text-2xl font-black uppercase tracking-tight text-black">
-        Group Stages
+        Fasi a Gironi
       </h1>
 
       <form @submit.prevent="createGroup" class="flex items-center gap-2">
         <input
           v-model="newGroupName"
-          placeholder="Group Name (e.g. Group A)"
+          placeholder="Nome Gruppo (es. Gruppo A)"
           required
           class="w-52 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:outline-none rounded-lg px-3 py-2 text-sm font-medium text-gray-800 placeholder-gray-400 transition-all"
         />
@@ -18,7 +18,7 @@
           type="submit"
           class="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 active:scale-95 transition-all whitespace-nowrap"
         >
-          Create Group
+          Crea Gruppo
         </button>
       </form>
     </div>
@@ -31,8 +31,8 @@
       <div class="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mb-5">
         <Icon name="mdi:trophy-outline" class="text-4xl text-gray-300" />
       </div>
-      <p class="text-gray-500 font-semibold text-base mb-1">No groups yet</p>
-      <p class="text-gray-400 text-sm">Create your first group to get started.</p>
+      <p class="text-gray-500 font-semibold text-base mb-1">Nessun gruppo ancora</p>
+      <p class="text-gray-400 text-sm">Crea il tuo primo gruppo per iniziare.</p>
     </div>
 
     <!-- Groups Grid -->
@@ -49,12 +49,12 @@
           </h2>
           <div class="flex items-center gap-2 shrink-0">
             <span class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-              {{ group.group_teams.length }} {{ group.group_teams.length === 1 ? 'Team' : 'Teams' }}
+              {{ group.group_teams.length }} {{ group.group_teams.length === 1 ? 'Squadra' : 'Squadre' }}
             </span>
             <button
               class="bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-gray-800 active:scale-95 transition-all whitespace-nowrap"
             >
-              Generate Matches
+              Genera Partite
             </button>
           </div>
         </div>
@@ -65,10 +65,10 @@
             <thead>
               <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase text-xs tracking-wide">
                 <th class="px-4 py-2.5 text-left">#</th>
-                <th class="px-4 py-2.5 text-left">Team</th>
-                <th class="px-4 py-2.5 text-center">W</th>
-                <th class="px-4 py-2.5 text-center">L</th>
-                <th class="px-4 py-2.5 text-center text-red-500">Pts</th>
+                <th class="px-4 py-2.5 text-left">Squadra</th>
+                <th class="px-4 py-2.5 text-center">V</th>
+                <th class="px-4 py-2.5 text-center">P</th>
+                <th class="px-4 py-2.5 text-center text-red-500">Pt</th>
                 <th class="px-4 py-2.5"></th>
               </tr>
             </thead>
@@ -110,7 +110,7 @@
               </template>
               <tr v-else>
                 <td colspan="6" class="px-4 py-8 text-center text-gray-400 text-xs font-medium">
-                  No teams assigned yet.
+                  Nessuna squadra ancora assegnata.
                 </td>
               </tr>
             </tbody>
@@ -129,7 +129,7 @@
               required
               class="flex-1 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:outline-none rounded-lg px-3 py-2 text-xs font-bold uppercase text-gray-700 transition-all"
             >
-              <option value="" disabled>Add a team…</option>
+              <option value="" disabled>Aggiungi una squadra...</option>
               <option
                 v-for="team in availableTeams"
                 :key="team.id"
@@ -142,11 +142,11 @@
               type="submit"
               class="bg-black text-white px-4 py-2 rounded-lg text-xs font-black hover:bg-gray-800 active:scale-95 transition-all"
             >
-              Add
+              Aggiungi
             </button>
           </form>
           <p v-else class="text-xs text-gray-400 font-medium">
-            All teams assigned.
+            Tutte le squadre assegnate.
           </p>
         </div>
       </div>
@@ -203,7 +203,7 @@ const createGroup = async () => {
   const { error } = await supabase
     .from('groups')
     .insert([{ name: newGroupName.value }])
-  if (error) alert('Error: ' + error.message)
+  if (error) alert('Errore: ' + error.message)
   else {
     newGroupName.value = ''
     await loadData()
@@ -217,7 +217,7 @@ const addTeamToGroup = async (groupId: string) => {
   const { error } = await supabase
     .from('group_teams')
     .insert([{ group_id: groupId, team_id: teamId }])
-  if (error) alert('Error: ' + error.message)
+  if (error) alert('Errore: ' + error.message)
   else {
     selectedTeams.value[groupId] = ''
     await loadData()
@@ -229,7 +229,7 @@ const removeTeam = async (groupTeamId: string) => {
     .from('group_teams')
     .delete()
     .eq('id', groupTeamId)
-  if (error) alert('Error: ' + error.message)
+  if (error) alert('Errore: ' + error.message)
   else await loadData()
 }
 

@@ -8,14 +8,14 @@
             >
                 <Icon name="mdi:arrow-left" class="text-xl" />
             </NuxtLink>
-            <h1 class="text-2xl font-black uppercase">Referee Console</h1>
+            <h1 class="text-2xl font-black uppercase">Console Arbitro</h1>
         </div>
 
         <div
             v-if="pending"
             class="text-center py-12 font-bold animate-pulse text-gray-500"
         >
-            LOADING MATCH...
+            CARICAMENTO INCONTRO...
         </div>
 
         <div v-else-if="match" class="space-y-6">
@@ -25,13 +25,13 @@
                 class="bg-white p-8 rounded-3xl shadow-sm border-2 border-dashed border-gray-200 text-center"
             >
                 <h2 class="text-xl font-black uppercase mb-4 text-gray-400">
-                    Match is ready
+                    L'incontro è pronto
                 </h2>
                 <button
                     @click="startMatch"
                     class="w-full py-6 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-2xl font-black uppercase tracking-widest shadow-xl transition-transform hover:-translate-y-1"
                 >
-                    Start Match
+                    Inizia Incontro
                 </button>
             </div>
 
@@ -49,7 +49,7 @@
                             : 'bg-yellow-500 text-black'
                     "
                 >
-                    {{ match.is_timer_running ? "Live Now" : "Paused" }}
+                    {{ match.is_timer_running ? "Ora in Diretta" : "In Pausa" }}
                 </div>
 
                 <div
@@ -73,27 +73,27 @@
                             @click="pauseMatch"
                             class="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black rounded-xl text-xs font-black uppercase tracking-wide transition-colors"
                         >
-                            Pause Time
+                            Pausa Tempo
                         </button>
                         <button
                             v-else
                             @click="resumeMatch"
                             class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition-colors"
                         >
-                            Resume Time
+                            Riprendi Tempo
                         </button>
                         <button
                             @click="endMatch('completed')"
                             class="px-6 py-3 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-black uppercase tracking-wide transition-colors"
                         >
-                            End Match
+                            Termina Incontro
                         </button>
                     </template>
                     <div
                         v-else
                         class="px-6 py-3 bg-white/10 rounded-xl text-xs font-black uppercase tracking-wide text-gray-300"
                     >
-                        {{ match.status.replace("_", " ") }}
+                        {{ translateStatus(match.status) }}
                     </div>
                 </div>
             </div>
@@ -113,7 +113,7 @@
                         class="text-xl font-black uppercase mb-4 line-clamp-1"
                         :title="getTeamName(match.team1_id)"
                     >
-                        {{ getTeamName(match.team1_id) || "TBD" }}
+                        {{ getTeamName(match.team1_id) || "DA DEFINIRE" }}
                     </h2>
                     <div class="text-7xl font-black mb-6">
                         {{ match.team1_score || 0 }}
@@ -143,8 +143,8 @@
                     >
                         {{
                             match.winner_id === match.team1_id
-                                ? "Winner"
-                                : "Set Winner"
+                                ? "Vincitore"
+                                : "Imposta Vincitore"
                         }}
                     </button>
                 </div>
@@ -162,7 +162,7 @@
                         class="text-xl font-black uppercase mb-4 line-clamp-1"
                         :title="getTeamName(match.team2_id)"
                     >
-                        {{ getTeamName(match.team2_id) || "TBD" }}
+                        {{ getTeamName(match.team2_id) || "DA DEFINIRE" }}
                     </h2>
                     <div class="text-7xl font-black mb-6">
                         {{ match.team2_score || 0 }}
@@ -192,8 +192,8 @@
                     >
                         {{
                             match.winner_id === match.team2_id
-                                ? "Winner"
-                                : "Set Winner"
+                                ? "Vincitore"
+                                : "Imposta Vincitore"
                         }}
                     </button>
                 </div>
@@ -206,13 +206,13 @@
                     @click="setWinner(null)"
                     class="w-full py-4 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase text-xs hover:bg-gray-200 transition-colors"
                 >
-                    Clear Winner
+                    Rimuovi Vincitore
                 </button>
                 <button
                     @click="resetMatch"
                     class="w-full py-4 text-red-500 font-bold uppercase text-xs hover:text-red-700 transition-colors"
                 >
-                    Reset Match to Pending (Clear Scores & Time)
+                    Ripristina Incontro a In attesa (Azzera Punteggi e Tempo)
                 </button>
             </div>
         </div>
@@ -222,7 +222,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 
-definePageMeta({ middleware: "admin", layout: "admin" });
+definePageMeta({ middleware: ["admin"], layout: "admin" });
+
+const translateStatus = (s: string) => {
+    if (s === "pending") return "In attesa";
+    if (s === "in_progress") return "In corso";
+    if (s === "completed" || s === "finished") return "Completato";
+    if (s === "retired") return "Ritirato";
+    return s;
+};
 
 const route = useRoute();
 const supabase = useSupabaseClient();
@@ -348,7 +356,7 @@ const endMatch = async (status: string) => {
 const resetMatch = async () => {
     if (
         !confirm(
-            "Are you sure you want to reset this match? All scores and time will be lost.",
+            "Sei sicuro di voler ripristinare questo incontro? Tutti i punteggi e il tempo saranno persi.",
         )
     )
         return;

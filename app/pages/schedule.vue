@@ -3,10 +3,10 @@
     <div class="max-w-7xl mx-auto p-6 space-y-8 relative">
         <div class="text-center space-y-4 mb-12">
             <h1 class="text-4xl font-black uppercase tracking-tight text-black">
-                Tournament Schedule
+                Calendario del Torneo
             </h1>
             <p class="text-gray-500 font-medium">
-                Live brackets, group standings, and match times.
+                Tabellone in tempo reale, classifiche dei gironi e orari delle partite.
             </p>
         </div>
 
@@ -14,7 +14,7 @@
             v-if="pending"
             class="text-center text-gray-500 py-12 font-bold animate-pulse uppercase tracking-widest"
         >
-            Loading Schedule...
+            Caricamento Calendario...
         </div>
 
         <div
@@ -34,7 +34,7 @@
                     "
                     class="flex-1 py-3 font-black uppercase tracking-wide text-sm rounded-xl transition-all"
                 >
-                    Group Stage
+                    Fase a Gironi
                 </button>
                 <button
                     @click="activeTab = 'knockout'"
@@ -45,7 +45,7 @@
                     "
                     class="flex-1 py-3 font-black uppercase tracking-wide text-sm rounded-xl transition-all"
                 >
-                    Knockout Stage
+                    Fase a Eliminazione Diretta
                 </button>
             </div>
 
@@ -55,7 +55,7 @@
                     v-if="groups.length === 0"
                     class="text-center text-gray-400 py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200 font-bold uppercase tracking-wide"
                 >
-                    Group stages haven't been drawn yet.
+                    La fase a gironi non è stata ancora sorteggiata.
                 </div>
 
                 <div
@@ -68,7 +68,7 @@
                         <h3
                             class="text-xl font-black text-black uppercase tracking-tight mb-4"
                         >
-                            {{ group.name }} Standings
+                            Classifica {{ group.name }}
                         </h3>
                         <div
                             class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
@@ -80,11 +80,11 @@
                                     <tr
                                         class="text-gray-400 font-bold uppercase tracking-wide text-xs"
                                     >
-                                        <th class="p-4">Team</th>
-                                        <th class="p-4 text-center">W</th>
-                                        <th class="p-4 text-center">L</th>
+                                        <th class="p-4">Squadra</th>
+                                        <th class="p-4 text-center">V</th>
+                                        <th class="p-4 text-center">P</th>
                                         <th class="p-4 text-center text-black">
-                                            Pts
+                                            Pt
                                         </th>
                                     </tr>
                                 </thead>
@@ -125,7 +125,7 @@
                         <h3
                             class="text-xl font-black text-black uppercase tracking-tight mb-4"
                         >
-                            Matches
+                            Partite
                         </h3>
                         <div class="space-y-4">
                             <div
@@ -141,7 +141,7 @@
                                     v-if="match.status === 'in_progress'"
                                     class="absolute top-0 left-0 right-0 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest text-center py-0.5 animate-pulse"
                                 >
-                                    LIVE NOW
+                                    ORA IN DIRETTA
                                 </div>
 
                                 <div
@@ -156,7 +156,7 @@
                                         "
                                     >
                                         <span>{{
-                                            getTeamName(match.team1_id) || "TBD"
+                                            getTeamName(match.team1_id) || "DA DEFINIRE"
                                         }}</span>
                                         <span
                                             v-if="
@@ -188,7 +188,7 @@
                                                     : 'text-gray-400'
                                             "
                                             >{{
-                                                match.start_time || "TBD"
+                                                match.start_time || "DA DEFINIRE"
                                             }}</span
                                         >
                                         <span
@@ -206,7 +206,7 @@
                                         "
                                     >
                                         <span>{{
-                                            getTeamName(match.team2_id) || "TBD"
+                                            getTeamName(match.team2_id) || "DA DEFINIRE"
                                         }}</span>
                                         <span
                                             v-if="
@@ -234,7 +234,7 @@
                                             match.status !== 'in_progress'
                                         "
                                         class="text-[10px] font-bold uppercase tracking-widest text-gray-400 bg-gray-50 px-2 py-1 rounded"
-                                        >{{ match.status }}</span
+                                        >{{ translateStatus(match.status) }}</span
                                     >
                                 </div>
                             </div>
@@ -242,7 +242,7 @@
                                 v-if="!groupedGroupMatches[group.id]?.length"
                                 class="text-center text-gray-400 text-sm font-bold uppercase py-4"
                             >
-                                No matches scheduled
+                                Nessun incontro programmato
                             </div>
                         </div>
                     </div>
@@ -265,7 +265,7 @@
                         <h3
                             class="text-sm font-black text-black text-center uppercase tracking-widest bg-gray-50 py-3 rounded-xl border border-gray-100"
                         >
-                            Round {{ roundNum }}
+                            Turno {{ roundNum }}
                         </h3>
 
                         <div
@@ -282,7 +282,7 @@
                                 v-if="match.status === 'in_progress'"
                                 class="absolute top-0 left-0 right-0 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest text-center py-0.5 animate-pulse z-10"
                             >
-                                LIVE NOW
+                                ORA IN DIRETTA
                             </div>
 
                             <div
@@ -403,7 +403,7 @@
                                             : 'text-gray-400'
                                     "
                                 >
-                                    {{ match.start_time || "TIME TBD" }}
+                                    {{ match.start_time || "ORARIO DA DEFINIRE" }}
                                 </span>
                                 <span
                                     v-if="
@@ -412,7 +412,7 @@
                                     "
                                     class="text-[10px] font-bold uppercase tracking-widest text-gray-400 bg-gray-50 px-2 py-1 rounded"
                                 >
-                                    {{ match.status }}
+                                    {{ translateStatus(match.status) }}
                                 </span>
                             </div>
                         </div>
@@ -422,7 +422,7 @@
                     v-else
                     class="text-center text-gray-400 py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200 font-bold uppercase tracking-wide"
                 >
-                    Knockout bracket hasn't been generated yet.
+                    Il tabellone a eliminazione diretta non è stato ancora generato.
                 </div>
             </div>
         </div>
@@ -431,6 +431,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
+
+const translateStatus = (s: string) => {
+    if (s === "pending") return "In attesa";
+    if (s === "in_progress") return "In corso";
+    if (s === "completed" || s === "finished") return "Completato";
+    if (s === "retired") return "Ritirato";
+    return s;
+};
 
 const supabase = useSupabaseClient();
 const { subscribeToAllMatches, unsubscribe } = useMatchRealtime();
@@ -530,9 +538,9 @@ const getPlaceholder = (
     isTeam2: boolean,
 ) => {
     const r = parseInt(roundStr as string);
-    if (r === 1) return "TBD";
+    if (r === 1) return "DA DEFINIRE";
     const prevMatchNum = mIndex * 2 + (isTeam2 ? 2 : 1);
-    return `Winner of R${r - 1} M${prevMatchNum}`;
+    return `Vincitrice di T${r - 1} P${prevMatchNum}`;
 };
 
 onMounted(loadData);

@@ -83,7 +83,7 @@ const saveTeamInfo = async () => {
 
     if (!user?.id) {
         isError.value = true;
-        message.value = "Auth error: User ID is missing.";
+        message.value = "Errore di autenticazione: ID utente mancante.";
         return;
     }
 
@@ -188,12 +188,12 @@ const onFileSelected = async (event: Event) => {
     const file = target.files[0];
     if (file.size > 10 * 1024 * 1024) {
         isError.value = true;
-        message.value = "File size must be under 10MB.";
+        message.value = "Il file deve essere inferiore a 10 MB.";
         return;
     }
 
     try {
-        message.value = "Compressing image...";
+        message.value = "Compressione dell'immagine...";
         isError.value = false;
 
         const compressedBlob = await compressImage(file);
@@ -204,7 +204,7 @@ const onFileSelected = async (event: Event) => {
         message.value = "";
     } catch (error: any) {
         isError.value = true;
-        message.value = "Failed to compress image.";
+        message.value = "Compressione dell'immagine fallita.";
     }
 };
 
@@ -212,7 +212,7 @@ const confirmUpload = async () => {
     if (!fileToUpload.value) return;
 
     isUploading.value = true;
-    message.value = "Uploading...";
+    message.value = "Caricamento in corso...";
     isError.value = false;
 
     try {
@@ -256,7 +256,7 @@ const onPlayerPhotoSelected = async (event: Event) => {
     const file = target.files[0];
     if (file.size > 10 * 1024 * 1024) {
         isError.value = true;
-        message.value = "File size must be under 10MB.";
+        message.value = "Il file deve essere inferiore a 10 MB.";
         return;
     }
 
@@ -269,7 +269,7 @@ const onPlayerPhotoSelected = async (event: Event) => {
         playerPreviewUrl.value = URL.createObjectURL(compressedBlob);
     } catch (error: any) {
         isError.value = true;
-        message.value = "Failed to compress player photo.";
+        message.value = "Compressione della foto del giocatore fallita.";
     }
 };
 
@@ -280,13 +280,13 @@ const addPlayer = async () => {
     const jerseyNumber = parseInt(newPlayerJersey.value);
     if (players.value.some(p => p.jersey_number === jerseyNumber)) {
         isError.value = true;
-        message.value = "A player with this jersey number already exists.";
+        message.value = "Esiste già un giocatore con questo numero di maglia.";
         return;
     }
 
     isAddingPlayer.value = true;
     isError.value = false;
-    message.value = "Adding player...";
+    message.value = "Aggiunta del giocatore in corso...";
 
     try {
         // 1. Insert player
@@ -368,7 +368,7 @@ const saveInlineTeamName = async () => {
         teamName.value = inlineEditTeamName.value;
         isEditingTeamName.value = false;
     } catch (err: any) {
-        alert("Failed to update team name: " + err.message);
+        alert("Impossibile aggiornare il nome della squadra: " + err.message);
     }
 };
 
@@ -382,7 +382,7 @@ const onInlineLogoSelected = async (event: Event) => {
 
     const file = target.files[0];
     if (file.size > 10 * 1024 * 1024) {
-        alert("File size must be under 10MB.");
+        alert("Il file deve essere inferiore a 10 MB.");
         return;
     }
 
@@ -415,7 +415,7 @@ const onInlineLogoSelected = async (event: Event) => {
 
         teamLogoUrl.value = newLogoUrl;
     } catch (error: any) {
-        alert("Failed to update logo: " + error.message);
+        alert("Impossibile aggiornare il logo: " + error.message);
     } finally {
         isUpdatingTeamLogo.value = false;
     }
@@ -463,7 +463,7 @@ const onEditPlayerPhotoSelected = async (event: Event) => {
     const file = target.files[0];
     if (file.size > 10 * 1024 * 1024) {
         isError.value = true;
-        message.value = "File size must be under 10MB.";
+        message.value = "Il file deve essere inferiore a 10 MB.";
         return;
     }
 
@@ -476,7 +476,7 @@ const onEditPlayerPhotoSelected = async (event: Event) => {
         editPlayerPreviewUrl.value = URL.createObjectURL(compressedBlob);
     } catch (error: any) {
         isError.value = true;
-        message.value = "Failed to compress player photo.";
+        message.value = "Compressione della foto del giocatore fallita.";
     }
 };
 
@@ -487,12 +487,12 @@ const saveEditPlayer = async (player: any) => {
     const jerseyNumber = parseInt(editPlayerJersey.value);
     if (players.value.some(p => p.id !== player.id && p.jersey_number === jerseyNumber)) {
         isError.value = true;
-        message.value = "A player with this jersey number already exists.";
+        message.value = "Esiste già un giocatore con questo numero di maglia.";
         return;
     }
 
     isError.value = false;
-    message.value = "Saving player...";
+    message.value = "Salvataggio del giocatore...";
 
     try {
         let photoUrl = player.photo_url;
@@ -535,7 +535,7 @@ const saveEditPlayer = async (player: any) => {
 <template>
     <div class="max-w-6xl mx-auto py-12 px-4 sm:px-6">
         <div class="flex items-center justify-between mb-8">
-            <h1 class="text-4xl font-black text-black tracking-tight uppercase italic">Captain HQ</h1>
+            <h1 class="text-4xl font-black text-black tracking-tight uppercase italic">Quartier Generale Capitano</h1>
         </div>
 
         <div v-if="isLoading" class="flex items-center justify-center py-20 text-red-600 animate-pulse">
@@ -546,8 +546,8 @@ const saveEditPlayer = async (player: any) => {
             <!-- Step 1: Team Info -->
             <div v-if="currentStep === 1" class="max-w-2xl mx-auto bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4">
                 <div class="mb-8 text-center">
-                    <h2 class="text-3xl font-black text-black tracking-tight uppercase">Create your team</h2>
-                    <p class="text-gray-500 mt-3 font-medium text-lg">What is the name of your dodgeball squad?</p>
+                    <h2 class="text-3xl font-black text-black tracking-tight uppercase">Crea la tua squadra</h2>
+                    <p class="text-gray-500 mt-3 font-medium text-lg">Qual è il nome della tua squadra di dodgeball?</p>
                 </div>
                 
                 <form @submit.prevent="saveTeamInfo" class="space-y-6">
@@ -555,7 +555,7 @@ const saveEditPlayer = async (player: any) => {
                         <input
                             v-model="teamName"
                             type="text"
-                            placeholder="e.g. The Average Joes"
+                            placeholder="es. The Average Joes"
                             required
                             class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-50 transition-all outline-none text-black placeholder-gray-300 text-xl font-bold text-center uppercase"
                         />
@@ -573,7 +573,7 @@ const saveEditPlayer = async (player: any) => {
                         type="submit"
                         class="w-full bg-red-600 text-white px-8 py-5 rounded-2xl hover:bg-red-700 font-black text-lg uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-red-200"
                     >
-                        Save & Continue
+                        Salva e Continua
                     </button>
                 </form>
             </div>
@@ -581,8 +581,8 @@ const saveEditPlayer = async (player: any) => {
             <!-- Step 2: Upload Logo -->
             <div v-else-if="currentStep === 2" class="max-w-2xl mx-auto bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4">
                 <div class="mb-8 text-center">
-                    <h2 class="text-3xl font-black text-black tracking-tight uppercase">Team Identity</h2>
-                    <p class="text-gray-500 mt-3 font-medium text-lg">Upload a logo for <strong class="text-red-600">{{ teamName }}</strong> to stand out.</p>
+                    <h2 class="text-3xl font-black text-black tracking-tight uppercase">Identità della Squadra</h2>
+                    <p class="text-gray-500 mt-3 font-medium text-lg">Carica un logo per <strong class="text-red-600">{{ teamName }}</strong> per farti notare.</p>
                 </div>
 
                 <div class="flex flex-col items-center">
@@ -594,7 +594,7 @@ const saveEditPlayer = async (player: any) => {
                         />
                         <div v-if="!previewUrl" class="text-gray-400 group-hover:text-red-500 flex flex-col items-center gap-2 transition-colors">
                             <Icon name="mdi:image-plus" class="text-5xl" />
-                            <span class="text-sm font-bold uppercase tracking-wide">Select logo</span>
+                            <span class="text-sm font-bold uppercase tracking-wide">Seleziona logo</span>
                         </div>
                         <input
                             type="file"
@@ -604,7 +604,7 @@ const saveEditPlayer = async (player: any) => {
                         />
                     </label>
 
-                    <p class="text-sm text-gray-400 mt-6 font-medium">Max size 10MB. Transparent PNGs recommended.</p>
+                    <p class="text-sm text-gray-400 mt-6 font-medium">Dimensione massima 10MB. PNG trasparenti consigliati.</p>
 
                     <div v-if="previewUrl" class="mt-8 flex gap-4 w-full">
                         <button
@@ -612,14 +612,14 @@ const saveEditPlayer = async (player: any) => {
                             :disabled="isUploading"
                             class="flex-1 px-6 py-4 text-base font-bold text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 active:scale-95 transition-all uppercase"
                         >
-                            Cancel
+                            Annulla
                         </button>
                         <button
                             @click="confirmUpload"
                             :disabled="isUploading"
                             class="flex-1 px-6 py-4 text-base font-bold text-white bg-red-600 rounded-2xl hover:bg-red-700 shadow-lg shadow-red-200 active:scale-95 transition-all uppercase"
                         >
-                            {{ isUploading ? 'Uploading...' : 'Confirm' }}
+                            {{ isUploading ? 'Caricamento in corso...' : 'Conferma' }}
                         </button>
                     </div>
 
@@ -636,7 +636,7 @@ const saveEditPlayer = async (player: any) => {
                         @click="currentStep = 3; fetchPlayers();"
                         class="mt-8 text-gray-400 hover:text-red-600 text-sm font-bold uppercase tracking-wide transition-colors"
                     >
-                        Skip for now
+                        Salta per ora
                     </button>
                 </div>
             </div>
@@ -677,8 +677,8 @@ const saveEditPlayer = async (player: any) => {
                                     class="w-full bg-gray-50 px-4 py-2 rounded-xl text-black border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none uppercase font-black text-xl"
                                 />
                                 <div class="flex gap-2">
-                                    <button @click="saveInlineTeamName" class="px-4 py-2 bg-red-600 text-white rounded-xl font-bold uppercase text-sm hover:bg-red-700 transition-colors">Save</button>
-                                    <button @click="cancelInlineTeamName" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase text-sm hover:bg-gray-200 transition-colors">Cancel</button>
+                                    <button @click="saveInlineTeamName" class="px-4 py-2 bg-red-600 text-white rounded-xl font-bold uppercase text-sm hover:bg-red-700 transition-colors">Salva</button>
+                                    <button @click="cancelInlineTeamName" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase text-sm hover:bg-gray-200 transition-colors">Annulla</button>
                                 </div>
                             </div>
                             
@@ -688,7 +688,7 @@ const saveEditPlayer = async (player: any) => {
                                     <Icon name="mdi:pencil" class="text-xl block" />
                                 </button>
                             </div>
-                            <p class="text-gray-500 mt-1 font-medium">Manage your players and build your ultimate team.</p>
+                            <p class="text-gray-500 mt-1 font-medium">Gestisci i tuoi giocatori e crea la tua squadra definitiva.</p>
                         </div>
                     </div>
                 </div>
@@ -720,7 +720,7 @@ const saveEditPlayer = async (player: any) => {
                         <input
                             v-model="newPlayerName"
                             type="text"
-                            placeholder="PLAYER NAME"
+                            placeholder="NOME GIOCATORE"
                             required
                             class="w-full bg-transparent px-4 py-3 text-black placeholder-gray-300 outline-none font-bold text-lg uppercase tracking-wide"
                         />
@@ -730,7 +730,7 @@ const saveEditPlayer = async (player: any) => {
                         <input
                             v-model="newPlayerJersey"
                             type="number"
-                            placeholder="NO."
+                            placeholder="N."
                             required
                             class="w-full bg-transparent px-4 py-3 text-red-600 placeholder-gray-300 outline-none font-black text-2xl"
                         />
@@ -742,7 +742,7 @@ const saveEditPlayer = async (player: any) => {
                             :disabled="isAddingPlayer"
                             class="w-full sm:w-auto bg-red-600 text-white px-8 py-4 rounded-full text-sm font-black uppercase tracking-widest hover:bg-red-700 shadow-md shadow-red-200 active:scale-95 transition-all disabled:opacity-50"
                         >
-                            {{ isAddingPlayer ? 'ADDING...' : 'ADD' }}
+                            {{ isAddingPlayer ? 'AGGIUNTA...' : 'AGGIUNGI' }}
                         </button>
                     </div>
                 </form>
@@ -791,19 +791,19 @@ const saveEditPlayer = async (player: any) => {
                                     </template>
                                     <template v-else>
                                         <div class="flex flex-col gap-2 items-end bg-white/90 backdrop-blur-sm p-2 rounded-2xl shadow-xl border border-red-100 animate-in fade-in zoom-in-95 duration-200">
-                                            <span class="text-xs font-black text-red-600 uppercase tracking-widest px-2 pt-1">Delete player?</span>
+                                            <span class="text-xs font-black text-red-600 uppercase tracking-widest px-2 pt-1">Eliminare il giocatore?</span>
                                             <div class="flex gap-2 w-full">
                                                 <button
                                                     @click="deletingPlayerId = null"
                                                     class="flex-1 bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-colors"
                                                 >
-                                                    Cancel
+                                                    Annulla
                                                 </button>
                                                 <button
                                                     @click="removePlayer(player.id)"
                                                     class="flex-1 bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-xl text-xs font-bold uppercase shadow-md shadow-red-200 transition-colors"
                                                 >
-                                                    Confirm
+                                                    Conferma
                                                 </button>
                                             </div>
                                         </div>
@@ -829,7 +829,7 @@ const saveEditPlayer = async (player: any) => {
                                 <Icon v-else name="mdi:camera" class="text-gray-300 text-6xl" />
                                 <div class="absolute inset-0 bg-red-600/70 opacity-0 group-hover/edit:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-sm">
                                     <span class="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2">
-                                        <Icon name="mdi:camera" /> CHANGE
+                                        <Icon name="mdi:camera" /> CAMBIA
                                     </span>
                                 </div>
                                 <input
@@ -843,7 +843,7 @@ const saveEditPlayer = async (player: any) => {
                             <!-- Edit Info -->
                             <div class="p-5 flex flex-col gap-4">
                                 <div>
-                                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Name</label>
+                                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Nome</label>
                                     <input
                                         v-model="editPlayerName"
                                         type="text"
@@ -851,7 +851,7 @@ const saveEditPlayer = async (player: any) => {
                                     />
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Number</label>
+                                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Numero</label>
                                     <input
                                         v-model="editPlayerJersey"
                                         type="number"
@@ -864,13 +864,13 @@ const saveEditPlayer = async (player: any) => {
                                         @click="cancelEditPlayer"
                                         class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 uppercase transition-colors"
                                     >
-                                        Cancel
+                                        Annulla
                                     </button>
                                     <button
                                         @click="saveEditPlayer(player)"
                                         class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 uppercase shadow-md shadow-red-200 active:scale-95 transition-all"
                                     >
-                                        Save
+                                        Salva
                                     </button>
                                 </div>
                             </div>
@@ -880,8 +880,8 @@ const saveEditPlayer = async (player: any) => {
                 
                 <div v-else class="text-center py-24 px-4 rounded-[2rem] bg-white border-2 border-dashed border-gray-200">
                     <Icon name="mdi:account-group-outline" class="text-6xl text-gray-200 mx-auto mb-4" />
-                    <h3 class="text-2xl font-black text-gray-400 uppercase tracking-wide">Empty Roster</h3>
-                    <p class="text-gray-400 mt-2 font-medium text-lg">Add your first player using the form above.</p>
+                    <h3 class="text-2xl font-black text-gray-400 uppercase tracking-wide">Rosa Vuota</h3>
+                    <p class="text-gray-400 mt-2 font-medium text-lg">Aggiungi il tuo primo giocatore usando il modulo sopra.</p>
                 </div>
 
                 <div v-if="message && currentStep === 3" class="flex justify-center mt-8">

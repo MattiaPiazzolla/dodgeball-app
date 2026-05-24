@@ -65,10 +65,10 @@ const allGroupMatchesCompleted = computed(() => {
 
 const roundLabel = (r: number) => {
     const total = Object.keys(knockoutMatches.value).length;
-    if (r === total) return "Final";
-    if (r === total - 1) return "Semi-Finals";
-    if (r === total - 2) return "Quarter-Finals";
-    return `Round ${r}`;
+    if (r === total) return "Finale";
+    if (r === total - 1) return "Semifinali";
+    if (r === total - 2) return "Quarti di Finale";
+    return `Turno ${r}`;
 };
 
 // ── Helpers ───────────────────────────────────────────────
@@ -93,6 +93,22 @@ const statusColor = (s: string) => {
     if (s === "completed") return "bg-green-100 text-green-700";
     if (s === "in_progress") return "bg-red-100 text-red-600 animate-pulse";
     return "bg-gray-100 text-gray-500";
+};
+
+const translateStage = (stage: string) => {
+    if (!stage) return "";
+    const lower = stage.toLowerCase();
+    if (lower === "group") return "Fase a Gironi";
+    if (lower === "knockout") return "Fase a Eliminazione Diretta";
+    return stage;
+};
+
+const translateStatus = (s: string) => {
+    if (s === "pending") return "In attesa";
+    if (s === "in_progress") return "In corso";
+    if (s === "completed" || s === "finished") return "Completato";
+    if (s === "retired") return "Ritirato";
+    return s;
 };
 
 // ── Data ──────────────────────────────────────────────────
@@ -141,7 +157,7 @@ const saveEdit = async () => {
         );
         if (otherLive) {
             alert(
-                "Another match is already IN PROGRESS! You must end it before starting this one.",
+                "Un'altra partita è già IN CORSO! Devi terminarla prima di iniziare questa.",
             );
             return;
         }
@@ -202,7 +218,7 @@ const saveAdd = async () => {
     if (f.start_time) payload.start_time = f.start_time;
     const { error } = await supabase.from("matches").insert([payload]);
     if (error) {
-        alert("Error: " + error.message);
+        alert("Errore: " + error.message);
         return;
     }
     showAddModal.value = false;
@@ -211,14 +227,14 @@ const saveAdd = async () => {
 
 // ── Generators ────────────────────────────────────────────
 const clearKnockout = async () => {
-    if (!confirm("Clear the entire knockout bracket? This cannot be undone."))
+    if (!confirm("Cancellare l'intero tabellone a eliminazione diretta? L'azione non può essere annullata."))
         return;
     await supabase.from("matches").delete().eq("match_type", "knockout");
     await loadData();
 };
 
 const clearGroupMatches = async () => {
-    if (!confirm("Clear all group matches? This cannot be undone.")) return;
+    if (!confirm("Cancellare tutti gli incontri dei gironi? L'azione non può essere annullata.")) return;
     await supabase.from("matches").delete().eq("match_type", "group");
     await loadData();
 };
@@ -226,13 +242,13 @@ const clearGroupMatches = async () => {
 const autoGenerateKnockout = async () => {
     if (!allGroupMatchesCompleted.value) {
         alert(
-            "You must complete all group matches before generating the bracket!",
+            "Devi completare tutti gli incontri dei gironi prima di generare il tabellone!",
         );
         return;
     }
 
     if (matches.value.some((m) => m.match_type === "knockout")) {
-        if (!confirm("This will replace the existing bracket. Continue?"))
+        if (!confirm("Questo sostituirà il tabellone esistente. Continuare?"))
             return;
         await supabase.from("matches").delete().eq("match_type", "knockout");
     }
@@ -259,13 +275,13 @@ const autoGenerateKnockout = async () => {
         }
     } else {
         if (teams.value.length < 2)
-            return alert("Need at least 2 approved teams.");
+            return alert("Sono necessarie almeno 2 squadre approvate.");
         knockoutTeams = [...teams.value]
             .map((t) => t.id)
             .sort(() => 0.5 - Math.random());
     }
 
-    if (knockoutTeams.length < 2) return alert("Not enough teams.");
+    if (knockoutTeams.length < 2) return alert("Squadre insufficienti.");
 
     const totalRounds = Math.ceil(Math.log2(knockoutTeams.length));
     let matchesInRound = Math.pow(2, totalRounds) / 2;
@@ -295,13 +311,13 @@ const autoGenerateKnockout = async () => {
     }
 
     const { error } = await supabase.from("matches").insert(newMatches);
-    if (error) alert("Error: " + error.message);
+    if (error) alert("Errore: " + error.message);
     else await loadData();
 };
 
 const autoGenerateGroupMatches = async () => {
     if (matches.value.some((m) => m.match_type === "group")) {
-        if (!confirm("This will replace existing group matches. Continue?"))
+        if (!confirm("Questo sostituirà gli incontri dei gironi esistenti. Continuare?"))
             return;
         await supabase.from("matches").delete().eq("match_type", "group");
     }
@@ -319,9 +335,9 @@ const autoGenerateGroupMatches = async () => {
                     status: "pending",
                 });
     });
-    if (newMatches.length === 0) return alert("No teams in groups.");
+    if (newMatches.length === 0) return alert("Nessuna squadra nei gironi.");
     const { error } = await supabase.from("matches").insert(newMatches);
-    if (error) alert("Error: " + error.message);
+    if (error) alert("Errore: " + error.message);
     else await loadData();
 };
 
@@ -353,7 +369,7 @@ onMounted(loadData);
                                 : 'text-gray-400 hover:text-black'
                         "
                     >
-                        Group Stage
+                        Fase a Gironi
                     </button>
                     <button
                         v-if="allGroupMatchesCompleted"
@@ -365,7 +381,7 @@ onMounted(loadData);
                                 : 'text-gray-400 hover:text-black'
                         "
                     >
-                        Knockout Stage
+                        Fase a Eliminazione Diretta
                     </button>
                 </div>
 
@@ -378,19 +394,19 @@ onMounted(loadData);
                                 @click="clearKnockout"
                                 class="px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors"
                             >
-                                Clear
+                                Cancella
                             </button>
                             <button
                                 @click="openAddModal"
                                 class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition-colors"
                             >
-                                + Add Match
+                                + Aggiungi Incontro
                             </button>
                             <button
                                 @click="autoGenerateKnockout"
                                 class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-black text-white hover:bg-gray-800 rounded-xl transition-colors shadow-md"
                             >
-                                Regenerate Bracket
+                                Rigenera Tabellone
                             </button>
                         </template>
                     </template>
@@ -399,19 +415,19 @@ onMounted(loadData);
                             @click="clearGroupMatches"
                             class="px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors"
                         >
-                            Clear
+                            Cancella
                         </button>
                         <button
                             @click="openAddModal"
                             class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition-colors"
                         >
-                            + Add Match
+                            + Aggiungi Incontro
                         </button>
                         <button
                             @click="autoGenerateGroupMatches"
                             class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-black text-white hover:bg-gray-800 rounded-xl transition-colors shadow-md"
                         >
-                            Generate All
+                            Genera Tutti
                         </button>
                     </template>
                 </div>
@@ -439,17 +455,17 @@ onMounted(loadData);
                                     name="mdi:check-decagram"
                                     class="text-lg"
                                 />
-                                Group Stage Complete
+                                Fase a Gironi Completata
                             </div>
                             <h2
                                 class="text-4xl sm:text-5xl font-black uppercase tracking-tight leading-none"
                             >
-                                Ready for the Draw
+                                Pronto per il Sorteggio
                             </h2>
                             <p class="text-white/80 font-medium">
-                                All group stage matches have been resolved. You
-                                can now generate the official tournament
-                                knockout brackets.
+                                Tutti gli incontri della fase a gironi sono stati
+                                risolti. Ora puoi generare il tabellone ufficiale
+                                a eliminazione diretta.
                             </p>
                         </div>
                         <div class="relative z-10 mt-4">
@@ -458,7 +474,7 @@ onMounted(loadData);
                                 class="flex items-center justify-center gap-3 px-10 py-5 bg-white text-red-600 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-all hover:-translate-y-1 hover:shadow-xl"
                             >
                                 <Icon name="mdi:whistle" class="text-2xl" />
-                                Generate Bracket
+                                Genera Tabellone
                             </button>
                         </div>
                     </div>
@@ -490,7 +506,7 @@ onMounted(loadData);
                                         v-model="editingMatch.team1_id"
                                         class="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black focus:ring-2 focus:ring-black/10 outline-none uppercase"
                                     >
-                                        <option value="">TBD</option>
+                                        <option value="">DA DEFINIRE</option>
                                         <option
                                             v-for="t in teams"
                                             :key="t.id"
@@ -503,7 +519,7 @@ onMounted(loadData);
                                         v-model="editingMatch.team2_id"
                                         class="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black focus:ring-2 focus:ring-black/10 outline-none uppercase"
                                     >
-                                        <option value="">TBD</option>
+                                        <option value="">DA DEFINIRE</option>
                                         <option
                                             v-for="t in teams"
                                             :key="t.id"
@@ -517,7 +533,7 @@ onMounted(loadData);
                                             v-model="editingMatch.round"
                                             type="number"
                                             min="1"
-                                            placeholder="Round"
+                                            placeholder="Turno"
                                             class="w-1/3 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none"
                                         />
                                         <input
@@ -530,27 +546,27 @@ onMounted(loadData);
                                         v-model="editingMatch.status"
                                         class="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none uppercase"
                                     >
-                                        <option value="pending">Pending</option>
+                                        <option value="pending">In attesa</option>
                                         <option value="in_progress">
-                                            In Progress
+                                            In corso
                                         </option>
                                         <option value="completed">
-                                            Completed
+                                            Completato
                                         </option>
-                                        <option value="retired">Retired</option>
+                                        <option value="retired">Ritirato</option>
                                     </select>
                                     <div class="flex gap-2 pt-1">
                                         <button
                                             @click="saveEdit"
                                             class="flex-1 bg-black text-white py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-800 transition-colors"
                                         >
-                                            Save
+                                            Salva
                                         </button>
                                         <button
                                             @click="cancelEdit"
                                             class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-200 transition-colors"
                                         >
-                                            Cancel
+                                            Annulla
                                         </button>
                                     </div>
                                 </div>
@@ -637,7 +653,7 @@ onMounted(loadData);
                                             <span
                                                 v-else
                                                 class="text-xs font-bold text-red-400"
-                                                >No time</span
+                                                >Nessun orario</span
                                             >
                                             <span
                                                 :class="
@@ -646,10 +662,7 @@ onMounted(loadData);
                                                 class="text-xs font-bold px-2 py-0.5 rounded-full capitalize"
                                             >
                                                 {{
-                                                    match.status.replace(
-                                                        "_",
-                                                        " ",
-                                                    )
+                                                    translateStatus(match.status)
                                                 }}
                                             </span>
                                         </div>
@@ -665,7 +678,7 @@ onMounted(loadData);
                                                     "
                                                     class="text-xs font-black text-red-600 hover:text-red-800 uppercase px-2"
                                                 >
-                                                    Yes
+                                                    Sì
                                                 </button>
                                                 <button
                                                     @click="
@@ -730,10 +743,10 @@ onMounted(loadData);
                         class="text-6xl mb-4 opacity-30"
                     />
                     <p class="font-bold uppercase tracking-wide">
-                        No group matches yet
+                        Nessun incontro dei gironi ancora
                     </p>
                     <p class="text-sm mt-1">
-                        Generate all group matches or add them manually
+                        Genera tutti gli incontri dei gironi o aggiungili manualmente
                     </p>
                 </div>
                 <div v-else class="space-y-6">
@@ -753,7 +766,7 @@ onMounted(loadData);
                             <span
                                 class="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100"
                             >
-                                {{ groupMatchList.length }} matches
+                                {{ groupMatchList.length }} incontri
                             </span>
                         </div>
                         <div class="divide-y divide-gray-50">
@@ -770,7 +783,7 @@ onMounted(loadData);
                                             v-model="editingMatch.team1_id"
                                             class="flex-1 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none uppercase"
                                         >
-                                            <option value="">TBD</option>
+                                            <option value="">DA DEFINIRE</option>
                                             <option
                                                 v-for="t in teams"
                                                 :key="t.id"
@@ -787,7 +800,7 @@ onMounted(loadData);
                                             v-model="editingMatch.team2_id"
                                             class="flex-1 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none uppercase"
                                         >
-                                            <option value="">TBD</option>
+                                            <option value="">DA DEFINIRE</option>
                                             <option
                                                 v-for="t in teams"
                                                 :key="t.id"
@@ -807,13 +820,13 @@ onMounted(loadData);
                                             @click="saveEdit"
                                             class="flex-1 bg-black text-white py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-800"
                                         >
-                                            Save
+                                            Salva
                                         </button>
                                         <button
                                             @click="cancelEdit"
                                             class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-200"
                                         >
-                                            Cancel
+                                            Annulla
                                         </button>
                                     </div>
                                 </div>
@@ -890,13 +903,13 @@ onMounted(loadData);
                                         <span
                                             v-else
                                             class="text-xs font-bold text-red-400"
-                                            >No time</span
+                                            >Nessun orario</span
                                         >
                                         <span
                                             :class="statusColor(match.status)"
                                             class="text-xs font-bold px-2 py-0.5 rounded-full capitalize hidden sm:inline"
                                             >{{
-                                                match.status.replace("_", " ")
+                                                translateStatus(match.status)
                                             }}</span
                                         >
                                         <template
@@ -906,7 +919,7 @@ onMounted(loadData);
                                                 @click="deleteMatch(match.id)"
                                                 class="text-xs font-black text-red-600 uppercase"
                                             >
-                                                Yes
+                                                Sì
                                             </button>
                                             <button
                                                 @click="confirmDeleteId = null"
@@ -966,7 +979,7 @@ onMounted(loadData);
             >
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-black uppercase tracking-tight">
-                        Add Match
+                        Aggiungi Incontro
                     </h3>
                     <button
                         @click="showAddModal = false"
@@ -980,7 +993,7 @@ onMounted(loadData);
                     <div>
                         <label
                             class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
-                            >Type</label
+                            >Tipo</label
                         >
                         <div class="flex bg-gray-100 p-1 rounded-xl">
                             <button
@@ -996,7 +1009,7 @@ onMounted(loadData);
                                         : '',
                                 ]"
                             >
-                                Knockout
+                                Eliminazione Diretta
                             </button>
                             <button
                                 @click="addForm.match_type = 'group'"
@@ -1007,7 +1020,7 @@ onMounted(loadData);
                                         : 'text-gray-500'
                                 "
                             >
-                                Group
+                                Girone
                             </button>
                         </div>
                     </div>
@@ -1015,13 +1028,13 @@ onMounted(loadData);
                     <div v-if="addForm.match_type === 'group'">
                         <label
                             class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
-                            >Group</label
+                            >Girone</label
                         >
                         <select
                             v-model="addForm.group_id"
                             class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm uppercase focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
                         >
-                            <option value="">-- Select Group --</option>
+                            <option value="">-- Seleziona Girone --</option>
                             <option
                                 v-for="g in groups"
                                 :key="g.id"
@@ -1035,7 +1048,7 @@ onMounted(loadData);
                     <div v-if="addForm.match_type === 'knockout'">
                         <label
                             class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
-                            >Round</label
+                            >Turno</label
                         >
                         <input
                             v-model="addForm.round"
@@ -1048,7 +1061,7 @@ onMounted(loadData);
                     <div>
                         <label
                             class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
-                            >Team 1</label
+                            >Squadra 1</label
                         >
                         <div class="flex bg-gray-100 p-1 rounded-xl mb-2">
                             <button
@@ -1060,7 +1073,7 @@ onMounted(loadData);
                                         : 'text-gray-400'
                                 "
                             >
-                                Team
+                                Squadra
                             </button>
                             <button
                                 @click="addForm.team1_type = 'placeholder'"
@@ -1071,7 +1084,7 @@ onMounted(loadData);
                                         : 'text-gray-400'
                                 "
                             >
-                                Placeholder
+                                Segnaposto
                             </button>
                         </div>
                         <select
@@ -1079,7 +1092,7 @@ onMounted(loadData);
                             v-model="addForm.team1_id"
                             class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm uppercase focus:border-black outline-none"
                         >
-                            <option value="">-- Select Team --</option>
+                            <option value="">-- Seleziona Squadra --</option>
                             <option
                                 v-for="t in teams"
                                 :key="t.id"
@@ -1091,7 +1104,7 @@ onMounted(loadData);
                         <input
                             v-else
                             v-model="addForm.team1_placeholder"
-                            placeholder="e.g. Winner Match 3"
+                            placeholder="es. Vincitore Partita 3"
                             class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm focus:border-black outline-none"
                         />
                     </div>
@@ -1099,7 +1112,7 @@ onMounted(loadData);
                     <div>
                         <label
                             class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
-                            >Team 2</label
+                            >Squadra 2</label
                         >
                         <div class="flex bg-gray-100 p-1 rounded-xl mb-2">
                             <button
@@ -1111,7 +1124,7 @@ onMounted(loadData);
                                         : 'text-gray-400'
                                 "
                             >
-                                Team
+                                Squadra
                             </button>
                             <button
                                 @click="addForm.team2_type = 'placeholder'"
@@ -1122,7 +1135,7 @@ onMounted(loadData);
                                         : 'text-gray-400'
                                 "
                             >
-                                Placeholder
+                                Segnaposto
                             </button>
                         </div>
                         <select
@@ -1130,7 +1143,7 @@ onMounted(loadData);
                             v-model="addForm.team2_id"
                             class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm uppercase focus:border-black outline-none"
                         >
-                            <option value="">-- Select Team --</option>
+                            <option value="">-- Seleziona Squadra --</option>
                             <option
                                 v-for="t in teams"
                                 :key="t.id"
@@ -1142,7 +1155,7 @@ onMounted(loadData);
                         <input
                             v-else
                             v-model="addForm.team2_placeholder"
-                            placeholder="e.g. Winner Match 4"
+                            placeholder="es. Vincitore Partita 4"
                             class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm focus:border-black outline-none"
                         />
                     </div>
@@ -1150,7 +1163,7 @@ onMounted(loadData);
                     <div>
                         <label
                             class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
-                            >Start Time (optional)</label
+                            >Orario di inizio (opzionale)</label
                         >
                         <input
                             v-model="addForm.start_time"
@@ -1165,13 +1178,13 @@ onMounted(loadData);
                         @click="showAddModal = false"
                         class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-black uppercase text-sm hover:bg-gray-200 transition-colors"
                     >
-                        Cancel
+                        Annulla
                     </button>
                     <button
                         @click="saveAdd"
                         class="flex-1 bg-black text-white py-3 rounded-xl font-black uppercase text-sm hover:bg-gray-800 transition-colors shadow-md"
                     >
-                        Save
+                        Salva
                     </button>
                 </div>
             </div>

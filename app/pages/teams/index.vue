@@ -3,10 +3,10 @@
     <div class="max-w-7xl mx-auto p-6 space-y-8">
         <div class="text-center space-y-4 mb-12">
             <h1 class="text-4xl font-black uppercase tracking-tight text-black">
-                Participating Teams
+                Squadre Partecipanti
             </h1>
             <p class="text-gray-500 font-medium">
-                The official roster for the dodgeball tournament.
+                La rosa ufficiale per il torneo di dodgeball.
             </p>
         </div>
 
@@ -14,7 +14,7 @@
             v-if="pending"
             class="text-center text-gray-500 py-12 font-bold animate-pulse"
         >
-            LOADING TEAMS...
+            CARICAMENTO SQUADRE...
         </div>
 
         <div
@@ -44,7 +44,7 @@
                     {{ team.name }}
                 </h2>
                 <span class="text-xs font-bold text-gray-400 uppercase mt-2"
-                    >Click to view roster</span
+                    >Clicca per vedere la rosa</span
                 >
             </div>
         </div>
@@ -53,7 +53,7 @@
             v-else
             class="text-center text-gray-400 py-16 bg-gray-50 rounded-3xl border border-dashed border-gray-200 font-bold uppercase tracking-wide"
         >
-            No teams have been approved yet.
+            Nessuna squadra è stata ancora approvata.
         </div>
 
         <!-- Team Details Modal -->
@@ -70,7 +70,7 @@
                     <h2
                         class="text-2xl font-black uppercase text-black tracking-tight"
                     >
-                        {{ selectedTeam?.name }} ROSTER
+                        ROSA - {{ selectedTeam?.name }}
                     </h2>
                     <button
                         @click="closeModal"
@@ -85,7 +85,7 @@
                         v-if="loadingRoster"
                         class="text-center text-gray-500 py-8 font-bold animate-pulse uppercase tracking-widest"
                     >
-                        Loading players...
+                        Caricamento giocatori...
                     </div>
 
                     <div
@@ -159,7 +159,7 @@
                                 <span
                                     class="text-[10px] font-black uppercase text-gray-400 tracking-wider"
                                 >
-                                    {{ player.mvp_votes || 0 }} Votes
+                                    {{ player.mvp_votes || 0 }} Voti
                                 </span>
                             </div>
                         </div>
@@ -169,7 +169,7 @@
                         v-else
                         class="text-center text-gray-400 py-12 font-bold uppercase tracking-wide border-2 border-dashed border-gray-100 rounded-2xl"
                     >
-                        No players found for this team.
+                        Nessun giocatore trovato per questa squadra.
                     </div>
                 </div>
             </div>

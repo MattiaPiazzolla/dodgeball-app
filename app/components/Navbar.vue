@@ -23,34 +23,34 @@ watch(user, (newUser) => {
                         to="/login"
                         class="bg-white text-red-600 px-4 py-2 rounded font-bold hover:bg-gray-100 transition mr-2"
                     >
-                        Captain Portal
+                        Portale Capitano
                     </NuxtLink>
                     <NuxtLink
                         to="/admin/login"
                         class="bg-gray-800 text-white px-4 py-2 rounded font-bold hover:bg-gray-700 transition"
                     >
-                        Admin Login
+                        Accesso Amministratore
                     </NuxtLink>
                 </template>
                 <template v-else>
                     <template v-if="role === 'admin'">
                         <NuxtLink to="/admin" class="bg-gray-800 text-white px-4 py-2 rounded font-bold hover:bg-gray-700 transition mr-4"
-                            >Admin Portal</NuxtLink
+                            >Portale Amministratore</NuxtLink
                         >
                         <NuxtLink to="/admin/matches" class="hover:text-red-200"
-                            >Matches</NuxtLink
+                            >Incontri</NuxtLink
                         >
                         <NuxtLink to="/admin/groups" class="hover:text-red-200 mr-4"
-                            >Groups</NuxtLink
+                            >Gironi</NuxtLink
                         >
                     </template>
                     <template v-else>
                         <NuxtLink to="/captain" class="hover:text-red-200 mr-4"
-                            >Captain Portal</NuxtLink
+                            >Portale Capitano</NuxtLink
                         >
                     </template>
                     <button @click="logout" class="bg-white text-red-600 px-4 py-2 rounded font-bold hover:bg-gray-100 transition">
-                        Logout
+                        Disconnetti
                     </button>
                 </template>
                 </ClientOnly>

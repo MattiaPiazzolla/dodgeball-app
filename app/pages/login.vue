@@ -15,7 +15,7 @@ const handleAuth = async () => {
                 password: password.value,
             });
             if (error) throw error;
-            alert("Check your email to confirm signup!");
+            alert("Controlla la tua email per confermare la registrazione!");
         } else {
             const { error } = await client.auth.signInWithPassword({
                 email: email.value,
@@ -35,7 +35,7 @@ const handleAuth = async () => {
         class="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md border-t-4 border-red-600"
     >
         <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">
-            {{ isSignUp ? "Captain Signup" : "Captain Login" }}
+            {{ isSignUp ? "Registrazione Capitano" : "Accesso Capitano" }}
         </h1>
         <form @submit.prevent="handleAuth" class="space-y-4">
             <div>
@@ -67,7 +67,7 @@ const handleAuth = async () => {
                 type="submit"
                 class="w-full bg-red-600 text-white p-2 rounded hover:bg-red-700 font-bold transition"
             >
-                {{ isSignUp ? "Register as Captain" : "Login" }}
+                {{ isSignUp ? "Registrati come Capitano" : "Accedi" }}
             </button>
         </form>
         <button
@@ -76,8 +76,8 @@ const handleAuth = async () => {
         >
             {{
                 isSignUp
-                    ? "Already have an account? Login"
-                    : "Need an account? Sign up"
+                    ? "Hai già un account? Accedi"
+                    : "Non hai un account? Registrati"
             }}
         </button>
     </div>

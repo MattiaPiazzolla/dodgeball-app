@@ -92,6 +92,14 @@ const setStatus = async (
 const confirmingDeleteId = ref<string | null>(null);
 
 onMounted(fetchAll);
+
+const translateStage = (stage: string) => {
+    if (!stage) return "";
+    const lower = stage.toLowerCase();
+    if (lower === "group") return "Girone";
+    if (lower === "knockout") return "Eliminazione Diretta";
+    return stage;
+};
 </script>
 
 <template>
@@ -123,16 +131,16 @@ onMounted(fetchAll);
                             class="flex items-center justify-center md:justify-start gap-2 text-yellow-300 font-bold uppercase tracking-widest text-xs"
                         >
                             <Icon name="mdi:check-decagram" class="text-lg" />
-                            Group Stage Complete
+                            Fase a Gironi Completata
                         </div>
                         <h2
                             class="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-none"
                         >
-                            Ready for the Draw
+                            Pronto per il Sorteggio
                         </h2>
                         <p class="text-white/80 font-medium max-w-md">
-                            All group stage matches have been resolved. You can
-                            now generate the knockout brackets.
+                            Tutti gli incontri della fase a gironi sono stati risolti. Ora puoi
+                            generare il tabellone a eliminazione diretta.
                         </p>
                     </div>
 
@@ -142,7 +150,7 @@ onMounted(fetchAll);
                             class="flex items-center justify-center gap-3 w-full md:w-auto px-8 py-5 bg-white text-red-600 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-all hover:-translate-y-1 hover:shadow-xl"
                         >
                             <Icon name="mdi:whistle" class="text-xl" />
-                            Generate Bracket
+                            Genera Tabellone
                         </NuxtLink>
                     </div>
                 </div>
@@ -152,7 +160,7 @@ onMounted(fetchAll);
                 <h2
                     class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4"
                 >
-                    Dashboard
+                    Pannello di Controllo
                 </h2>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div
@@ -160,7 +168,7 @@ onMounted(fetchAll);
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
-                            >Approved Teams</span
+                            >Squadre Approvate</span
                         >
                         <span class="text-4xl font-black text-black">{{
                             approvedTeams.length
@@ -171,7 +179,7 @@ onMounted(fetchAll);
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
-                            >Pending Requests</span
+                            >Richieste in Sospeso</span
                         >
                         <span
                             class="text-4xl font-black"
@@ -196,13 +204,13 @@ onMounted(fetchAll);
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
-                            >Total Matches</span
+                            >Incontri Totali</span
                         >
                         <span class="text-4xl font-black text-black">{{
                             totalMatches
                         }}</span>
                         <span class="text-xs text-gray-400 font-medium"
-                            >{{ completedMatches }} completed</span
+                            >{{ completedMatches }} completati</span
                         >
                     </div>
                     <div
@@ -210,13 +218,13 @@ onMounted(fetchAll);
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
-                            >Scheduled Matches</span
+                            >Incontri Programmati</span
                         >
                         <span class="text-4xl font-black text-black">{{
                             pendingMatches
                         }}</span>
                         <span class="text-xs text-gray-400 font-medium"
-                            >awaiting play</span
+                            >in attesa di gioco</span
                         >
                     </div>
                 </div>
@@ -226,7 +234,7 @@ onMounted(fetchAll);
                 <h2
                     class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4"
                 >
-                    Next Match
+                    Prossimo Incontro
                 </h2>
                 <div
                     class="bg-black text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6"
@@ -265,7 +273,7 @@ onMounted(fetchAll);
                                     : 'bg-white/10 text-white/70'
                             "
                         >
-                            {{ nextMatch.match_type }}
+                            {{ translateStage(nextMatch.match_type) }}
                         </span>
                     </div>
                     <div class="flex items-center gap-4 flex-1 justify-end">
@@ -298,7 +306,7 @@ onMounted(fetchAll);
                 <h2
                     class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4"
                 >
-                    Live MVP Standings (Top Candidates)
+                    Classifica MVP in Diretta (Migliori Candidati)
                 </h2>
                 <div
                     class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
@@ -307,7 +315,7 @@ onMounted(fetchAll);
                         v-if="topMvpPlayers.length === 0"
                         class="py-12 text-center text-gray-400 font-medium"
                     >
-                        No MVP votes submitted yet. 🗳️
+                        Nessun voto MVP ancora inviato. 🗳️
                     </div>
                     <div v-else>
                         <div
@@ -377,7 +385,7 @@ onMounted(fetchAll);
                                     name="mdi:thumb-up"
                                     class="text-red-500 text-xs"
                                 />
-                                <span>{{ player.mvp_votes }} Votes</span>
+                                <span>{{ player.mvp_votes }} Voti</span>
                             </div>
                         </div>
                     </div>
@@ -388,7 +396,7 @@ onMounted(fetchAll);
                 <h2
                     class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4"
                 >
-                    Registration Requests
+                    Richieste di Registrazione
                     <span
                         class="ml-2"
                         :class="
@@ -406,7 +414,7 @@ onMounted(fetchAll);
                         v-if="pendingTeams.length === 0"
                         class="py-12 text-center text-gray-400 font-medium"
                     >
-                        No pending requests. 🎉
+                        Nessuna richiesta in sospeso. 🎉
                     </div>
                     <div
                         v-for="(team, i) in pendingTeams"
@@ -439,7 +447,7 @@ onMounted(fetchAll);
                                     >{{ team.name }}</span
                                 >
                                 <span class="text-xs text-gray-400 font-medium"
-                                    >Requested
+                                    >Richiesta il
                                     {{
                                         new Date(
                                             team.created_at,
@@ -453,13 +461,13 @@ onMounted(fetchAll);
                                 @click="setStatus(team.id, 'approved')"
                                 class="px-4 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                             >
-                                Approve
+                                Approva
                             </button>
                             <button
                                 @click="setStatus(team.id, 'rejected')"
                                 class="px-4 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                             >
-                                Reject
+                                Rifiuta
                             </button>
                         </div>
                     </div>
@@ -470,7 +478,7 @@ onMounted(fetchAll);
                 <h2
                     class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4"
                 >
-                    Approved Teams
+                    Squadre Approvate
                     <span class="ml-2 text-gray-300"
                         >({{ approvedTeams.length }})</span
                     >
@@ -482,7 +490,7 @@ onMounted(fetchAll);
                         v-if="approvedTeams.length === 0"
                         class="py-12 text-center text-gray-400 font-medium"
                     >
-                        No approved teams yet.
+                        Nessuna squadra ancora approvata.
                     </div>
                     <div
                         v-for="(team, i) in approvedTeams"
@@ -522,7 +530,7 @@ onMounted(fetchAll);
                             <template v-if="confirmingDeleteId === team.id">
                                 <span
                                     class="text-xs font-bold text-red-600 uppercase tracking-wide"
-                                    >Reject team?</span
+                                    >Rifiutare la squadra?</span
                                 >
                                 <button
                                     @click="
@@ -531,13 +539,13 @@ onMounted(fetchAll);
                                     "
                                     class="px-4 py-1.5 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
-                                    Yes
+                                    Sì
                                 </button>
                                 <button
                                     @click="confirmingDeleteId = null"
                                     class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
-                                    Cancel
+                                    Annulla
                                 </button>
                             </template>
                             <template v-else>
@@ -545,13 +553,13 @@ onMounted(fetchAll);
                                     @click="confirmingDeleteId = team.id"
                                     class="px-4 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
-                                    Remove
+                                    Rimuovi
                                 </button>
                                 <NuxtLink
                                     :to="`/admin/teams/${team.id}`"
                                     class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
-                                    Manage
+                                    Gestisci
                                 </NuxtLink>
                             </template>
                         </div>
@@ -563,7 +571,7 @@ onMounted(fetchAll);
                 <h2
                     class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4"
                 >
-                    Rejected
+                    Rifiutate
                     <span class="ml-2 text-gray-300"
                         >({{ rejectedTeams.length }})</span
                     >
@@ -605,7 +613,7 @@ onMounted(fetchAll);
                             @click="setStatus(team.id, 'pending')"
                             class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                         >
-                            Restore
+                            Ripristina
                         </button>
                     </div>
                 </div>
