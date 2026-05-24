@@ -7,6 +7,7 @@ const message = ref("");
 
 const client = useSupabaseClient();
 const router = useRouter();
+const { fetchRole } = useAuth();
 
 const handleLogin = async () => {
     message.value = "Logging in...";
@@ -38,6 +39,8 @@ const handleLogin = async () => {
             return;
         }
 
+        // Populate the shared role state so the Navbar updates immediately
+        await fetchRole();
         router.push("/admin");
     }
 };

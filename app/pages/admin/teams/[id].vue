@@ -96,6 +96,8 @@ const onLogoSelected = async (e: Event) => {
     }
 };
 
+
+
 const updateTeam = async () => {
     let logo_url = team.value.logo_url;
     if (fileToUpload.value) {
@@ -127,6 +129,12 @@ const updateTeam = async () => {
 };
 
 const updatePlayer = async (p: any) => {
+    const jerseyNumber = typeof p.jersey_number === 'string' ? parseInt(p.jersey_number) : p.jersey_number;
+    if (players.value.some((other: any) => other.id !== p.id && other.jersey_number === jerseyNumber)) {
+        alert("A player with this jersey number already exists.");
+        return;
+    }
+
     let photo_url = p.photo_url;
     if (p._fileToUpload) {
         const path = `${p.id}-photo.jpg`;

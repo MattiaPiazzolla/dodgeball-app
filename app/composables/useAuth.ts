@@ -5,17 +5,28 @@ export const useAuth = () => {
   const role = useState<string | null>("user-role", () => null);
 
   const fetchRole = async () => {
-    if (!user.value || !user.value.id) {
+    // Use getSession() directly — the reactive `user` ref may not be
+    // populated yet when this is called from a plugin or early in the lifecycle.
+    const { data: { session } } = await client.auth.getSession();
+
+    if (!session?.user?.id) {
       role.value = null;
       return;
     }
-    const { data } = await client
+
+    const { data, error } = await client
       .from("users")
       .select("role")
-      .eq("id", user.value.id)
+      .eq("id", session.user.id)
       .single();
 
-    role.value = data?.role || "captain";
+    if (error) {
+      console.error("[useAuth] fetchRole error:", error.message);
+      role.value = null;
+      return;
+    }
+
+    role.value = data?.role ?? null;
   };
 
   const logout = async () => {
