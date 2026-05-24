@@ -549,22 +549,38 @@ const loadData = async () => {
         .order("id");
     if (mData) matches.value = mData;
 
-    // Set up Realtime listener
     realtimeChannel = subscribeToAllMatches((payload) => {
-        const updatedMatch = payload.new;
-        const index = matches.value.findIndex((m) => m.id === updatedMatch.id);
+        const changedMatch = payload.new || payload.old;
+        if (!changedMatch?.id) return;
 
-        if (index !== -1) {
-            // Update the match reactively
-            matches.value[index] = { ...matches.value[index], ...updatedMatch };
+        if (payload.eventType === "DELETE") {
+            matches.value = matches.value.filter(
+                (match) => match.id !== changedMatch.id,
+            );
+        } else {
+            const index = matches.value.findIndex(
+                (match) => match.id === changedMatch.id,
+            );
 
-            // Reload standings as soon as a group match is resolved.
-            if (
-                updatedMatch.match_type === "group" &&
-                ["completed", "retired"].includes(updatedMatch.status)
-            ) {
-                loadGroupsAndStandings();
+            if (index !== -1) {
+                matches.value[index] = {
+                    ...matches.value[index],
+                    ...changedMatch,
+                };
+            } else {
+                matches.value.push(changedMatch);
             }
+        }
+
+        matches.value.sort(
+            (a, b) =>
+                (a.round || 0) - (b.round || 0) ||
+                (a.start_time || "").localeCompare(b.start_time || "") ||
+                a.id.localeCompare(b.id),
+        );
+
+        if (changedMatch.match_type === "group") {
+            loadGroupsAndStandings();
         }
     });
 

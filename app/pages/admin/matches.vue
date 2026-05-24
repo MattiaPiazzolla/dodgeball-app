@@ -1,16 +1,18 @@
 // pages/admin/matches.vue
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 
 definePageMeta({ middleware: "admin" });
 
 const supabase = useSupabaseClient();
+const { subscribeToAllMatches, unsubscribe } = useMatchRealtime();
 const activeTab = ref<"knockout" | "group">("group"); // Default to group
 const teams = ref<any[]>([]);
 const groups = ref<any[]>([]);
 const matches = ref<any[]>([]);
 const isLoading = ref(true);
+let realtimeChannel: any = null;
 
 // Edit state
 const editingMatch = ref<any | null>(null);
@@ -87,6 +89,14 @@ const getTeamLogo = (id: string | null) =>
     teams.value.find((t) => t.id === id)?.logo_url || null;
 const getGroupName = (id: string) =>
     groups.value.find((g) => g.id === id)?.name || "Group";
+
+const getScoreWinnerId = (match: any) => {
+    const team1Score = match.team1_score || 0;
+    const team2Score = match.team2_score || 0;
+
+    if (team1Score === team2Score) return null;
+    return team1Score > team2Score ? match.team1_id : match.team2_id;
+};
 
 const displayName = (match: any, slot: 1 | 2) => {
     const idKey = `team${slot}_id`;
@@ -172,6 +182,45 @@ const loadData = async () => {
     isLoading.value = false;
 };
 
+const applyMatchRealtimeChange = (payload: any) => {
+    const changedMatch = payload.new || payload.old;
+    if (!changedMatch?.id) return;
+
+    if (payload.eventType === "DELETE") {
+        matches.value = matches.value.filter(
+            (match) => match.id !== changedMatch.id,
+        );
+        if (editingMatch.value?.id === changedMatch.id) {
+            editingMatch.value = null;
+        }
+        if (confirmDeleteId.value === changedMatch.id) {
+            confirmDeleteId.value = null;
+        }
+    } else {
+        const index = matches.value.findIndex(
+            (match) => match.id === changedMatch.id,
+        );
+
+        if (index !== -1) {
+            matches.value[index] = {
+                ...matches.value[index],
+                ...changedMatch,
+            };
+        } else {
+            matches.value.push(changedMatch);
+        }
+    }
+
+    matches.value.sort(
+        (a, b) =>
+            (a.round || 0) - (b.round || 0) ||
+            (a.bracket_position ?? Number.MAX_SAFE_INTEGER) -
+                (b.bracket_position ?? Number.MAX_SAFE_INTEGER) ||
+            (a.created_at || "").localeCompare(b.created_at || "") ||
+            a.id.localeCompare(b.id),
+    );
+};
+
 // ── Match CRUD ────────────────────────────────────────────
 const startEdit = (match: any) => {
     editingMatch.value = { ...match };
@@ -197,6 +246,16 @@ const saveEdit = async () => {
         }
     }
 
+    const winnerId =
+        editingMatch.value.status === "completed"
+            ? getScoreWinnerId(editingMatch.value)
+            : editingMatch.value.winner_id || null;
+
+    if (editingMatch.value.status === "completed" && !winnerId) {
+        alert("Non puoi completare l'incontro in parità. Modifica il punteggio dalla console arbitro prima di chiuderlo.");
+        return;
+    }
+
     const { id, team1_id, team2_id, round, start_time, status } =
         editingMatch.value;
     await supabase
@@ -207,6 +266,7 @@ const saveEdit = async () => {
             round,
             start_time: start_time || null,
             status,
+            winner_id: winnerId,
         })
         .eq("id", id);
     editingMatch.value = null;
@@ -393,7 +453,14 @@ const autoGenerateGroupMatches = async () => {
     else await loadData();
 };
 
-onMounted(loadData);
+onMounted(async () => {
+    await loadData();
+    realtimeChannel = subscribeToAllMatches(applyMatchRealtimeChange);
+});
+
+onUnmounted(() => {
+    unsubscribe(realtimeChannel);
+});
 </script>
 
 <template>

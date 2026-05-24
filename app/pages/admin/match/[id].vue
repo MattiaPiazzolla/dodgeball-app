@@ -287,6 +287,16 @@ const loadMatch = async () => {
 
 const getTeamName = (id: string) => teams.value.find((t) => t.id === id)?.name;
 
+const getScoreWinnerId = (targetMatch: any) => {
+    const team1Score = targetMatch.team1_score || 0;
+    const team2Score = targetMatch.team2_score || 0;
+
+    if (team1Score === team2Score) return null;
+    return team1Score > team2Score
+        ? targetMatch.team1_id
+        : targetMatch.team2_id;
+};
+
 const startMatch = async () => {
     const startTime = new Date().toISOString();
     match.value.status = "in_progress";
@@ -336,8 +346,16 @@ const resumeMatch = async () => {
 };
 
 const endMatch = async (status: string) => {
+    const winnerId = status === "completed" ? getScoreWinnerId(match.value) : null;
+
+    if (status === "completed" && !winnerId) {
+        alert("Non puoi terminare l'incontro in parità. Modifica il punteggio prima di chiudere.");
+        return;
+    }
+
     const elapsed = totalElapsed.value;
     match.value.status = status;
+    match.value.winner_id = winnerId;
     match.value.is_timer_running = false;
     match.value.elapsed_seconds = elapsed;
     match.value.timer_started_at = null;
@@ -346,6 +364,7 @@ const endMatch = async (status: string) => {
         .from("matches")
         .update({
             status,
+            winner_id: winnerId,
             is_timer_running: false,
             elapsed_seconds: elapsed,
             timer_started_at: null,

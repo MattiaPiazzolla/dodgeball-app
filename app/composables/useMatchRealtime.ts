@@ -24,13 +24,13 @@ export const useMatchRealtime = () => {
     return channel;
   };
 
-  // Subscribe to updates for all matches (for the public schedule view)
+  // Subscribe to every match table mutation so lists stay current.
   const subscribeToAllMatches = (callback: (payload: any) => void) => {
     const channel = supabase
-      .channel("all_matches")
+      .channel(`all_matches_${Date.now()}_${Math.random()}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "matches" },
+        { event: "*", schema: "public", table: "matches" },
         callback,
       )
       .subscribe();

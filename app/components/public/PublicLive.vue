@@ -340,11 +340,328 @@
                     </div>
 
                     <div
-                        v-if="recentMatches.length"
+                        v-if="liveMatch"
+                        class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-100 mobile-fade-in space-y-5"
+                    >
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                        >
+                            <div>
+                                <h2
+                                    class="text-lg font-black uppercase tracking-tight text-black"
+                                >
+                                    MVP della partita
+                                </h2>
+                                <p
+                                    class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1"
+                                >
+                                    Vota il migliore tra i giocatori in campo
+                                </p>
+                            </div>
+                            <div
+                                v-if="rankedLivePlayers.length"
+                                class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 sm:pb-0"
+                            >
+                                <div
+                                    v-for="(player, index) in rankedLivePlayers.slice(0, 3)"
+                                    :key="player.id"
+                                    class="shrink-0 flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl px-3 py-2"
+                                >
+                                    <span
+                                        class="text-xs font-black"
+                                        :class="
+                                            index === 0
+                                                ? 'text-yellow-500'
+                                                : index === 1
+                                                  ? 'text-gray-400'
+                                                  : 'text-amber-600'
+                                        "
+                                        >#{{ index + 1 }}</span
+                                    >
+                                    <span
+                                        class="max-w-24 truncate text-xs font-black uppercase text-black"
+                                        >{{ player.name }}</span
+                                    >
+                                    <span
+                                        class="text-xs font-black text-red-600"
+                                        >{{ player.mvp_votes || 0 }}</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div
+                                v-for="teamRoster in liveTeamRosters"
+                                :key="teamRoster.teamId || teamRoster.name"
+                                class="bg-gray-50/80 border border-gray-100 rounded-3xl p-3 sm:p-4"
+                            >
+                                <div class="flex items-center gap-3 mb-3">
+                                    <PublicTeamLogo
+                                        :src="getTeamLogo(teamRoster.teamId)"
+                                        :alt="teamRoster.name"
+                                        size-class="w-10 h-10"
+                                        icon-class="text-xl"
+                                    />
+                                    <div class="min-w-0">
+                                        <h3
+                                            class="font-black uppercase text-black truncate"
+                                        >
+                                            {{ teamRoster.name }}
+                                        </h3>
+                                        <p
+                                            class="text-[10px] font-bold uppercase tracking-widest text-gray-400"
+                                        >
+                                            {{ teamRoster.players.length }} giocatori
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-if="teamRoster.players.length"
+                                    class="space-y-2"
+                                >
+                                    <div
+                                        v-for="player in teamRoster.players"
+                                        :key="player.id"
+                                        class="interactive-card flex items-center justify-between gap-3 bg-white rounded-2xl border border-gray-100 p-3 hover:border-gray-200"
+                                    >
+                                        <div
+                                            class="flex items-center gap-3 min-w-0"
+                                        >
+                                            <div
+                                                class="w-11 h-11 rounded-full bg-gray-100 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 text-gray-300"
+                                            >
+                                                <img
+                                                    v-if="player.photo_url"
+                                                    :src="player.photo_url"
+                                                    :alt="player.name"
+                                                    class="w-full h-full object-cover"
+                                                />
+                                                <Icon
+                                                    v-else
+                                                    name="mdi:account"
+                                                    class="text-2xl"
+                                                />
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p
+                                                    class="font-black uppercase text-sm text-black truncate"
+                                                >
+                                                    {{ player.name }}
+                                                </p>
+                                                <p
+                                                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400"
+                                                >
+                                                    #{{ player.jersey_number || "00" }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="flex items-center gap-2 shrink-0"
+                                        >
+                                            <span
+                                                class="w-9 text-center text-sm font-black text-red-600"
+                                                >{{ player.mvp_votes || 0 }}</span
+                                            >
+                                            <button
+                                                @click="voteForLivePlayer(player.id)"
+                                                :disabled="
+                                                    hasVotedInLiveMatch ||
+                                                    hasVoted(player.id)
+                                                "
+                                                class="w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-sm border active:scale-90"
+                                                :class="
+                                                    hasVotedInLiveMatch ||
+                                                    hasVoted(player.id)
+                                                        ? 'bg-green-50 border-green-200 text-green-500 cursor-not-allowed'
+                                                        : 'bg-white border-gray-200 text-gray-300 hover:text-red-500 hover:border-red-200 hover:shadow-md'
+                                                "
+                                                :title="
+                                                    hasVotedInLiveMatch
+                                                        ? 'Hai già votato il migliore'
+                                                        : hasVoted(player.id)
+                                                          ? 'Voto registrato'
+                                                        : 'Vota MVP'
+                                                "
+                                            >
+                                                <Icon
+                                                    :name="
+                                                        hasVotedInLiveMatch ||
+                                                        hasVoted(player.id)
+                                                            ? 'mdi:thumb-up'
+                                                            : 'mdi:thumb-up-outline'
+                                                    "
+                                                    class="text-lg"
+                                                />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-else
+                                    class="text-center py-8 text-xs font-bold uppercase tracking-widest text-gray-400 border border-dashed border-gray-200 rounded-2xl bg-white"
+                                >
+                                    Nessun giocatore registrato.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <section
+                        v-if="lastMatch"
+                        class="relative overflow-hidden bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 sm:p-7 mobile-fade-in"
+                    >
+                        <div
+                            class="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-red-50 result-pulse"
+                        ></div>
+                        <div
+                            class="relative flex flex-col gap-5"
+                        >
+                            <div
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                            >
+                                <div>
+                                    <p
+                                        class="text-[10px] font-black uppercase tracking-[0.24em] text-red-500"
+                                    >
+                                        Ultimo incontro
+                                    </p>
+                                    <h2
+                                        class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black mt-1"
+                                    >
+                                        {{
+                                            getTeamName(lastMatch.winner_id) ||
+                                            "Risultato finale"
+                                        }}
+                                        <span class="text-red-600">vince</span>
+                                    </h2>
+                                </div>
+                                <div
+                                    class="self-start sm:self-auto px-4 py-2 rounded-full bg-black text-white text-[10px] font-black uppercase tracking-widest shadow-md"
+                                >
+                                    {{ translateStage(lastMatch.match_type) }}
+                                </div>
+                            </div>
+
+                            <div
+                                class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-2 min-[420px]:gap-4"
+                            >
+                                <div
+                                    class="result-team-card"
+                                    :class="
+                                        lastMatch.winner_id === lastMatch.team1_id
+                                            ? 'result-winner'
+                                            : 'result-loser'
+                                    "
+                                >
+                                    <div class="flex justify-center mb-3">
+                                        <PublicTeamLogo
+                                            :src="getTeamLogo(lastMatch.team1_id)"
+                                            :alt="getTeamName(lastMatch.team1_id)"
+                                            size-class="w-16 h-16 sm:w-20 sm:h-20"
+                                            icon-class="text-4xl"
+                                        />
+                                    </div>
+                                    <p
+                                        class="font-black uppercase text-center text-sm sm:text-base truncate"
+                                    >
+                                        {{
+                                            getTeamName(lastMatch.team1_id) ||
+                                            "DA DEFINIRE"
+                                        }}
+                                    </p>
+                                    <div
+                                        class="text-center text-5xl sm:text-6xl font-black leading-none mt-2"
+                                    >
+                                        {{ lastMatch.team1_score || 0 }}
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="flex flex-col items-center justify-center gap-2 px-1"
+                                >
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shadow-inner result-vs"
+                                    >
+                                        <span
+                                            class="text-gray-400 font-black text-xs uppercase"
+                                            >VS</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="h-16 w-1 rounded-full bg-gradient-to-b from-red-500 via-gray-200 to-black"
+                                    ></div>
+                                </div>
+
+                                <div
+                                    class="result-team-card"
+                                    :class="
+                                        lastMatch.winner_id === lastMatch.team2_id
+                                            ? 'result-winner'
+                                            : 'result-loser'
+                                    "
+                                >
+                                    <div class="flex justify-center mb-3">
+                                        <PublicTeamLogo
+                                            :src="getTeamLogo(lastMatch.team2_id)"
+                                            :alt="getTeamName(lastMatch.team2_id)"
+                                            size-class="w-16 h-16 sm:w-20 sm:h-20"
+                                            icon-class="text-4xl"
+                                        />
+                                    </div>
+                                    <p
+                                        class="font-black uppercase text-center text-sm sm:text-base truncate"
+                                    >
+                                        {{
+                                            getTeamName(lastMatch.team2_id) ||
+                                            "DA DEFINIRE"
+                                        }}
+                                    </p>
+                                    <div
+                                        class="text-center text-5xl sm:text-6xl font-black leading-none mt-2"
+                                    >
+                                        {{ lastMatch.team2_score || 0 }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3"
+                            >
+                                <div class="h-3 rounded-full bg-gray-100 overflow-hidden">
+                                    <div
+                                        class="h-full rounded-full bg-black result-bar"
+                                        :style="{
+                                            width: `${getScoreShare(lastMatch.team1_score, lastMatch.team2_score, 1)}%`,
+                                        }"
+                                    ></div>
+                                </div>
+                                <div
+                                    class="text-[10px] font-black uppercase tracking-widest text-gray-400"
+                                >
+                                    Finale
+                                </div>
+                                <div class="h-3 rounded-full bg-gray-100 overflow-hidden">
+                                    <div
+                                        class="h-full rounded-full bg-red-600 result-bar"
+                                        :style="{
+                                            width: `${getScoreShare(lastMatch.team1_score, lastMatch.team2_score, 2)}%`,
+                                        }"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div
+                        v-if="recentMatches.length > 1"
                         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                     >
                         <div
-                            v-for="match in recentMatches.slice(0, 3)"
+                            v-for="match in recentMatches.slice(1, 4)"
                             :key="match.id"
                             class="interactive-card bg-white rounded-3xl p-5 shadow-sm border border-gray-100 hover:-translate-y-0.5 hover:shadow-md"
                         >
@@ -548,8 +865,10 @@ const pending = ref(true);
 
 const searchQuery = ref("");
 const trackingVotes = ref<Record<string, boolean>>({});
+const liveMatchVotes = ref<Record<string, string>>({});
 
 let realtimeChannel: any = null;
+let playerRealtimeChannel: any = null;
 const now = ref(Date.now());
 let timerInterval: any = null;
 
@@ -572,6 +891,8 @@ const recentMatches = computed(() =>
             (b.start_time || b.id).localeCompare(a.start_time || a.id),
         ),
 );
+
+const lastMatch = computed(() => recentMatches.value[0] || null);
 
 // Advanced Computed States
 const showTournamentComplete = computed(() => {
@@ -609,10 +930,68 @@ const filteredPlayers = computed(() => {
     return sorted;
 });
 
+const getTeamPlayers = (teamId: string | null) =>
+    players.value
+        .filter((player) => player.team_id === teamId)
+        .sort(
+            (a, b) =>
+                (b.mvp_votes || 0) - (a.mvp_votes || 0) ||
+                (a.jersey_number || 999) - (b.jersey_number || 999) ||
+                a.name.localeCompare(b.name),
+        );
+
+const liveTeamRosters = computed(() => {
+    if (!liveMatch.value) return [];
+    return [
+        {
+            teamId: liveMatch.value.team1_id,
+            name: getTeamName(liveMatch.value.team1_id) || "DA DEFINIRE",
+            players: getTeamPlayers(liveMatch.value.team1_id),
+        },
+        {
+            teamId: liveMatch.value.team2_id,
+            name: getTeamName(liveMatch.value.team2_id) || "DA DEFINIRE",
+            players: getTeamPlayers(liveMatch.value.team2_id),
+        },
+    ];
+});
+
+const rankedLivePlayers = computed(() =>
+    liveTeamRosters.value
+        .flatMap((teamRoster) => teamRoster.players)
+        .sort(
+            (a, b) =>
+                (b.mvp_votes || 0) - (a.mvp_votes || 0) ||
+                a.name.localeCompare(b.name),
+        ),
+);
+
+const liveMatchVotePlayerId = computed(() => {
+    if (!liveMatch.value) return null;
+    return (
+        liveMatchVotes.value[liveMatch.value.id] ||
+        localStorage.getItem(`voted_mvp_match_${liveMatch.value.id}`)
+    );
+});
+
+const hasVotedInLiveMatch = computed(() => !!liveMatchVotePlayerId.value);
+
 const getTeamName = (id: string | null) =>
     teams.value.find((t) => t.id === id)?.name;
 const getTeamLogo = (id: string | null) =>
     teams.value.find((t) => t.id === id)?.logo_url;
+
+const getScoreShare = (
+    team1Score: number | null,
+    team2Score: number | null,
+    side: 1 | 2,
+) => {
+    const score1 = team1Score || 0;
+    const score2 = team2Score || 0;
+    const total = Math.max(score1 + score2, 1);
+    const share = side === 1 ? score1 / total : score2 / total;
+    return Math.max(10, Math.round(share * 100));
+};
 
 const totalElapsed = computed(() => {
     if (!liveMatch.value) return 0;
@@ -667,6 +1046,14 @@ const loadData = async () => {
 
     if (tData) teams.value = tData;
     if (mData) matches.value = mData;
+    if (mData) {
+        mData.forEach((match: any) => {
+            const votedPlayerId = localStorage.getItem(
+                `voted_mvp_match_${match.id}`,
+            );
+            if (votedPlayerId) liveMatchVotes.value[match.id] = votedPlayerId;
+        });
+    }
     if (pData) {
         players.value = pData;
         pData.forEach((p: any) => {
@@ -679,22 +1066,57 @@ const loadData = async () => {
     await loadGroupsAndStandings();
 
     realtimeChannel = subscribeToAllMatches((payload) => {
-        const updatedMatch = payload.new;
-        const index = matches.value.findIndex((m) => m.id === updatedMatch.id);
+        const changedMatch = payload.new || payload.old;
+        if (!changedMatch?.id) return;
+
+        const index = matches.value.findIndex((m) => m.id === changedMatch.id);
         const wasActiveNowFinished =
+            payload.eventType !== "DELETE" &&
             index !== -1 &&
             matches.value[index].status === "in_progress" &&
-            ["completed", "retired"].includes(updatedMatch.status);
+            ["completed", "retired"].includes(changedMatch.status);
 
-        if (index !== -1) {
-            matches.value[index] = { ...matches.value[index], ...updatedMatch };
+        if (payload.eventType === "DELETE") {
+            matches.value = matches.value.filter(
+                (match) => match.id !== changedMatch.id,
+            );
+        } else if (index !== -1) {
+            matches.value[index] = { ...matches.value[index], ...changedMatch };
         } else {
-            matches.value.push(updatedMatch);
+            matches.value.push(changedMatch);
         }
-        if (wasActiveNowFinished && updatedMatch.match_type === "group") {
+
+        matches.value.sort((a, b) =>
+            (a.start_time || a.id).localeCompare(b.start_time || b.id),
+        );
+
+        if (
+            (wasActiveNowFinished || payload.eventType !== "UPDATE") &&
+            changedMatch.match_type === "group"
+        ) {
             loadGroupsAndStandings();
         }
     });
+
+    playerRealtimeChannel = supabase
+        .channel("public_live_players")
+        .on(
+            "postgres_changes",
+            { event: "UPDATE", schema: "public", table: "players" },
+            (payload) => {
+                const updatedPlayer = payload.new;
+                const index = players.value.findIndex(
+                    (player) => player.id === updatedPlayer.id,
+                );
+                if (index !== -1) {
+                    players.value[index] = {
+                        ...players.value[index],
+                        ...updatedPlayer,
+                    };
+                }
+            },
+        )
+        .subscribe();
 
     timerInterval = setInterval(() => {
         now.value = Date.now();
@@ -714,9 +1136,25 @@ const voteForPlayer = async (playerId: string) => {
     await supabase.rpc("increment_player_votes", { player_uuid: playerId });
 };
 
+const voteForLivePlayer = async (playerId: string) => {
+    if (!liveMatch.value || hasVotedInLiveMatch.value || hasVoted(playerId)) {
+        return;
+    }
+
+    const player = players.value.find((p) => p.id === playerId);
+    if (player) player.mvp_votes = (player.mvp_votes || 0) + 1;
+
+    trackingVotes.value[playerId] = true;
+    liveMatchVotes.value[liveMatch.value.id] = playerId;
+    localStorage.setItem(`voted_mvp_player_${playerId}`, "true");
+    localStorage.setItem(`voted_mvp_match_${liveMatch.value.id}`, playerId);
+    await supabase.rpc("increment_player_votes", { player_uuid: playerId });
+};
+
 onMounted(loadData);
 onUnmounted(() => {
     unsubscribe(realtimeChannel);
+    if (playerRealtimeChannel) supabase.removeChannel(playerRealtimeChannel);
     if (timerInterval) clearInterval(timerInterval);
 });
 </script>
@@ -749,5 +1187,103 @@ onUnmounted(() => {
 }
 .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
+}
+
+.result-team-card {
+    position: relative;
+    min-width: 0;
+    border-radius: 1.5rem;
+    border: 1px solid #f3f4f6;
+    padding: 1rem;
+    background: #f9fafb;
+    transition:
+        transform 320ms var(--ease-organic),
+        box-shadow 320ms var(--ease-organic),
+        border-color 320ms var(--ease-organic);
+}
+
+.result-winner {
+    color: #111827;
+    background:
+        linear-gradient(180deg, rgba(254, 242, 242, 0.9), rgba(255, 255, 255, 1)),
+        #fff;
+    border-color: #fecaca;
+    box-shadow: 0 18px 45px rgba(220, 38, 38, 0.12);
+    animation: winner-rise 640ms var(--ease-spring) both;
+}
+
+.result-winner::after {
+    content: "WIN";
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    padding: 0.25rem 0.5rem;
+}
+
+.result-loser {
+    color: #9ca3af;
+    filter: grayscale(0.35);
+}
+
+.result-bar {
+    transform-origin: left center;
+    animation: score-fill 800ms var(--ease-spring) both;
+}
+
+.result-vs {
+    animation: soft-pop 560ms var(--ease-spring) both;
+}
+
+.result-pulse {
+    animation: result-pulse 3.2s var(--ease-organic) infinite;
+}
+
+@keyframes winner-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes score-fill {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes soft-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.8) rotate(-8deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes result-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.12);
+        opacity: 0.35;
+    }
 }
 </style>
