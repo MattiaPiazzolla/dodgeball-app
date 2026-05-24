@@ -1,23 +1,32 @@
 // pages/index.vue
 <template>
     <div
-        class="min-h-screen bg-[#f8f9fa] p-4 sm:p-8 font-sans pb-24 selection:bg-red-500 selection:text-white"
+        class="min-h-screen bg-[#f7f7f6] px-4 py-5 sm:p-8 font-sans pb-24 selection:bg-red-500 selection:text-white"
     >
         <div
-            class="max-w-[1400px] mx-auto mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4"
+            class="max-w-[1400px] mx-auto mb-6 sm:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 mobile-fade-in"
         >
             <div>
                 <h1
-                    class="text-4xl sm:text-5xl font-black uppercase tracking-tighter text-black leading-none"
+                    class="text-4xl sm:text-5xl font-black uppercase tracking-tight text-black leading-none"
                 >
                     Dodgeball<br /><span class="text-red-600">Urbania</span>
                 </h1>
             </div>
-            <p
-                class="text-gray-400 font-bold text-sm uppercase tracking-widest max-w-xs"
+            <div
+                class="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-widest"
             >
-                Il portale definitivo di gestione del torneo.
-            </p>
+                <NuxtLink
+                    to="/schedule"
+                    class="px-4 py-3 sm:py-2 bg-black text-white rounded-2xl sm:rounded-xl hover:bg-gray-800 transition-all active:scale-95 shadow-sm"
+                    >Calendario</NuxtLink
+                >
+                <NuxtLink
+                    to="/teams"
+                    class="px-4 py-3 sm:py-2 bg-white text-gray-700 border border-gray-100 rounded-2xl sm:rounded-xl hover:border-gray-200 hover:-translate-y-0.5 transition-all active:scale-95 shadow-sm"
+                    >Squadre</NuxtLink
+                >
+            </div>
         </div>
 
         <div
@@ -29,10 +38,10 @@
 
         <template v-else>
             <div
-                class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+                class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start"
             >
                 <div
-                    class="lg:col-span-3 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex flex-col gap-6"
+                    class="order-2 lg:order-1 lg:col-span-3 bg-white rounded-3xl lg:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col gap-5 sm:gap-6 mobile-fade-in"
                 >
                     <h2
                         class="text-lg font-black uppercase tracking-tight text-gray-800 flex items-center gap-2"
@@ -114,9 +123,9 @@
                     </div>
                 </div>
 
-                <div class="lg:col-span-6 flex flex-col gap-6">
+                <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col gap-4 sm:gap-6">
                     <div
-                        class="bg-white rounded-[2.5rem] p-8 sm:p-12 shadow-sm border-4 relative overflow-hidden transition-all duration-500 flex flex-col justify-center min-h-[420px]"
+                        class="bg-white rounded-[1.75rem] sm:rounded-[2.5rem] px-4 py-8 sm:p-12 shadow-sm border-2 sm:border-4 relative overflow-hidden transition-all duration-500 flex flex-col justify-center min-h-[360px] sm:min-h-[420px] mobile-fade-in"
                         :class="
                             liveMatch
                                 ? liveMatch.is_timer_running
@@ -143,7 +152,7 @@
 
                             <div class="text-center mt-4 mb-10">
                                 <span
-                                    class="font-mono text-6xl sm:text-7xl font-black tracking-tighter drop-shadow-sm transition-colors"
+                                    class="font-mono text-5xl min-[380px]:text-6xl sm:text-7xl font-black tracking-tight drop-shadow-sm transition-colors"
                                     :class="
                                         liveMatch.is_timer_running
                                             ? 'text-red-600'
@@ -160,16 +169,16 @@
                             </div>
 
                             <div
-                                class="flex justify-between items-center gap-4 sm:gap-8"
+                                class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 min-[380px]:gap-4 sm:gap-8"
                             >
                                 <div class="flex-1 text-center">
                                     <img
                                         v-if="getTeamLogo(liveMatch.team1_id)"
                                         :src="getTeamLogo(liveMatch.team1_id)"
-                                        class="w-16 h-16 sm:w-24 sm:h-24 mx-auto rounded-full object-cover shadow-sm mb-4 bg-gray-50"
+                                        class="w-14 h-14 min-[380px]:w-16 min-[380px]:h-16 sm:w-24 sm:h-24 mx-auto rounded-full object-cover shadow-sm mb-3 sm:mb-4 bg-gray-50"
                                     />
                                     <div
-                                        class="text-xl sm:text-2xl font-black uppercase truncate text-black mb-1"
+                                        class="text-sm min-[380px]:text-base sm:text-2xl font-black uppercase truncate text-black mb-1"
                                     >
                                         {{
                                             getTeamName(liveMatch.team1_id) ||
@@ -177,13 +186,13 @@
                                         }}
                                     </div>
                                     <div
-                                        class="text-6xl sm:text-8xl font-black text-gray-900 leading-none"
+                                        class="text-5xl min-[380px]:text-6xl sm:text-8xl font-black text-gray-900 leading-none"
                                     >
                                         {{ liveMatch.team1_score || 0 }}
                                     </div>
                                 </div>
                                 <div
-                                    class="px-4 py-3 bg-gray-100 rounded-2xl shadow-inner"
+                                    class="px-3 py-2 sm:px-4 sm:py-3 bg-gray-100 rounded-2xl shadow-inner"
                                 >
                                     <span
                                         class="text-gray-400 text-sm sm:text-xl font-black uppercase tracking-widest"
@@ -194,10 +203,10 @@
                                     <img
                                         v-if="getTeamLogo(liveMatch.team2_id)"
                                         :src="getTeamLogo(liveMatch.team2_id)"
-                                        class="w-16 h-16 sm:w-24 sm:h-24 mx-auto rounded-full object-cover shadow-sm mb-4 bg-gray-50"
+                                        class="w-14 h-14 min-[380px]:w-16 min-[380px]:h-16 sm:w-24 sm:h-24 mx-auto rounded-full object-cover shadow-sm mb-3 sm:mb-4 bg-gray-50"
                                     />
                                     <div
-                                        class="text-xl sm:text-2xl font-black uppercase truncate text-black mb-1"
+                                        class="text-sm min-[380px]:text-base sm:text-2xl font-black uppercase truncate text-black mb-1"
                                     >
                                         {{
                                             getTeamName(liveMatch.team2_id) ||
@@ -205,7 +214,7 @@
                                         }}
                                     </div>
                                     <div
-                                        class="text-6xl sm:text-8xl font-black text-gray-900 leading-none"
+                                        class="text-5xl min-[380px]:text-6xl sm:text-8xl font-black text-gray-900 leading-none"
                                     >
                                         {{ liveMatch.team2_score || 0 }}
                                     </div>
@@ -236,7 +245,7 @@
                             </div>
 
                             <div
-                                class="flex justify-between items-center gap-4"
+                                class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-4"
                             >
                                 <div class="flex-1 text-center">
                                     <img
@@ -250,10 +259,10 @@
                                                 upcomingMatches[0].team1_id,
                                             )
                                         "
-                                        class="w-20 h-20 mx-auto rounded-full object-cover shadow-sm mb-3"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full object-cover shadow-sm mb-3"
                                     />
                                     <div
-                                        class="text-xl font-black uppercase truncate text-black"
+                                        class="text-base sm:text-xl font-black uppercase truncate text-black"
                                     >
                                         {{
                                             getTeamName(
@@ -278,10 +287,10 @@
                                                 upcomingMatches[0].team2_id,
                                             )
                                         "
-                                        class="w-20 h-20 mx-auto rounded-full object-cover shadow-sm mb-3"
+                                        class="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full object-cover shadow-sm mb-3"
                                     />
                                     <div
-                                        class="text-xl font-black uppercase truncate text-black"
+                                        class="text-base sm:text-xl font-black uppercase truncate text-black"
                                     >
                                         {{
                                             getTeamName(
@@ -370,7 +379,7 @@
                         <div
                             v-for="match in recentMatches.slice(0, 3)"
                             :key="match.id"
-                            class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100"
+                            class="interactive-card bg-white rounded-3xl p-5 shadow-sm border border-gray-100 hover:-translate-y-0.5 hover:shadow-md"
                         >
                             <div
                                 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between"
@@ -429,13 +438,13 @@
                 </div>
 
                 <div
-                    class="lg:col-span-3 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex flex-col max-h-[600px]"
+                    class="order-3 lg:col-span-3 bg-white rounded-3xl lg:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col max-h-[70vh] lg:max-h-[600px] mobile-fade-in"
                 >
                     <h2
                         class="text-lg font-black uppercase tracking-tight text-gray-800 mb-4 flex items-center gap-2"
                     >
                         <Icon name="mdi:star" class="text-yellow-400 text-xl" />
-                        Votazione MVP
+                        MVP
                     </h2>
 
                     <div class="relative mb-4">
@@ -446,8 +455,8 @@
                         <input
                             v-model="searchQuery"
                             type="text"
-                            placeholder="Cerca giocatori..."
-                            class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold uppercase tracking-wide focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all placeholder:text-gray-300"
+                            placeholder="Cerca giocatore"
+                            class="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-10 pr-4 text-xs font-bold uppercase tracking-wide focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-50 transition-all placeholder:text-gray-300"
                         />
                     </div>
 
@@ -457,7 +466,7 @@
                         <div
                             v-for="player in filteredPlayers"
                             :key="player.id"
-                            class="flex items-center justify-between p-3 bg-gray-50/80 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors group"
+                            class="interactive-card flex items-center justify-between p-3 bg-gray-50/80 rounded-2xl border border-gray-100 hover:border-gray-200 hover:bg-white transition-all group"
                         >
                             <div
                                 class="flex items-center gap-3 overflow-hidden"
@@ -493,7 +502,7 @@
                                 <button
                                     @click="voteForPlayer(player.id)"
                                     :disabled="hasVoted(player.id)"
-                                    class="w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm border"
+                                    class="w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shadow-sm border active:scale-90"
                                     :class="
                                         hasVoted(player.id)
                                             ? 'bg-green-50 border-green-200 text-green-500 cursor-not-allowed'
@@ -667,7 +676,7 @@ const loadData = async () => {
             supabase
                 .from("teams")
                 .select("*")
-                .eq("is_approved", true)
+                .eq("status", "approved")
                 .order("name"),
             supabase.from("matches").select("*"),
             supabase.from("players").select("*"),

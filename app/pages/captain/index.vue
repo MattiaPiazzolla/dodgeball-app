@@ -533,9 +533,12 @@ const saveEditPlayer = async (player: any) => {
 </script>
 
 <template>
-    <div class="max-w-6xl mx-auto py-12 px-4 sm:px-6">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-4xl font-black text-black tracking-tight uppercase italic">Quartier Generale Capitano</h1>
+    <div class="max-w-6xl mx-auto py-5 sm:py-12 px-4 sm:px-6">
+        <div class="flex items-center justify-between mb-6 sm:mb-8 mobile-fade-in">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-black text-black tracking-tight uppercase italic">La mia squadra</h1>
+                <p class="text-gray-500 font-medium mt-2">Nome, logo e rosa in un solo flusso.</p>
+            </div>
         </div>
 
         <div v-if="isLoading" class="flex items-center justify-center py-20 text-red-600 animate-pulse">
@@ -543,11 +546,35 @@ const saveEditPlayer = async (player: any) => {
         </div>
 
         <div v-else class="transition-all duration-500">
+            <div
+                v-if="currentStep < 3"
+                class="max-w-2xl mx-auto mb-6 grid grid-cols-3 gap-2 text-[10px] font-black uppercase tracking-widest text-center"
+            >
+                <div
+                    class="rounded-full py-2"
+                    :class="currentStep >= 1 ? 'bg-red-600 text-white' : 'bg-white text-gray-400'"
+                >
+                    Nome
+                </div>
+                <div
+                    class="rounded-full py-2"
+                    :class="currentStep >= 2 ? 'bg-red-600 text-white' : 'bg-white text-gray-400'"
+                >
+                    Logo
+                </div>
+                <div
+                    class="rounded-full py-2"
+                    :class="currentStep >= 3 ? 'bg-red-600 text-white' : 'bg-white text-gray-400'"
+                >
+                    Rosa
+                </div>
+            </div>
+
             <!-- Step 1: Team Info -->
-            <div v-if="currentStep === 1" class="max-w-2xl mx-auto bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4">
+            <div v-if="currentStep === 1" class="max-w-2xl mx-auto bg-white p-6 sm:p-12 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 mobile-fade-in">
                 <div class="mb-8 text-center">
-                    <h2 class="text-3xl font-black text-black tracking-tight uppercase">Crea la tua squadra</h2>
-                    <p class="text-gray-500 mt-3 font-medium text-lg">Qual è il nome della tua squadra di dodgeball?</p>
+                    <h2 class="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">Nome squadra</h2>
+                    <p class="text-gray-500 mt-3 font-medium sm:text-lg">Scegli il nome che vedranno pubblico e arbitri.</p>
                 </div>
                 
                 <form @submit.prevent="saveTeamInfo" class="space-y-6">
@@ -557,7 +584,7 @@ const saveEditPlayer = async (player: any) => {
                             type="text"
                             placeholder="es. The Average Joes"
                             required
-                            class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-50 transition-all outline-none text-black placeholder-gray-300 text-xl font-bold text-center uppercase"
+                            class="w-full px-5 sm:px-6 py-4 sm:py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-50 transition-all outline-none text-black placeholder-gray-300 text-lg sm:text-xl font-bold text-center uppercase"
                         />
                     </div>
                     
@@ -571,22 +598,22 @@ const saveEditPlayer = async (player: any) => {
                     
                     <button
                         type="submit"
-                        class="w-full bg-red-600 text-white px-8 py-5 rounded-2xl hover:bg-red-700 font-black text-lg uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-red-200"
+                        class="w-full bg-red-600 text-white px-8 py-4 sm:py-5 rounded-2xl hover:bg-red-700 font-black sm:text-lg uppercase tracking-widest active:scale-[0.98] transition-all shadow-lg shadow-red-200"
                     >
-                        Salva e Continua
+                        Continua
                     </button>
                 </form>
             </div>
 
             <!-- Step 2: Upload Logo -->
-            <div v-else-if="currentStep === 2" class="max-w-2xl mx-auto bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4">
+            <div v-else-if="currentStep === 2" class="max-w-2xl mx-auto bg-white p-6 sm:p-12 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 mobile-fade-in">
                 <div class="mb-8 text-center">
-                    <h2 class="text-3xl font-black text-black tracking-tight uppercase">Identità della Squadra</h2>
-                    <p class="text-gray-500 mt-3 font-medium text-lg">Carica un logo per <strong class="text-red-600">{{ teamName }}</strong> per farti notare.</p>
+                    <h2 class="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase">Logo</h2>
+                    <p class="text-gray-500 mt-3 font-medium sm:text-lg">Aggiungi un logo per <strong class="text-red-600">{{ teamName }}</strong>.</p>
                 </div>
 
                 <div class="flex flex-col items-center">
-                    <label class="relative group cursor-pointer w-48 h-48 rounded-full bg-gray-50 border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-red-500 hover:bg-red-50 transition-all duration-300">
+                    <label class="relative group cursor-pointer w-40 h-40 sm:w-48 sm:h-48 rounded-full bg-gray-50 border-4 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden hover:border-red-500 hover:bg-red-50 active:scale-[0.98] transition-all duration-300">
                         <img
                             v-if="previewUrl"
                             :src="previewUrl"
@@ -604,22 +631,22 @@ const saveEditPlayer = async (player: any) => {
                         />
                     </label>
 
-                    <p class="text-sm text-gray-400 mt-6 font-medium">Dimensione massima 10MB. PNG trasparenti consigliati.</p>
+                    <p class="text-sm text-gray-400 mt-6 font-medium text-center">Dimensione massima 10MB. PNG trasparenti consigliati.</p>
 
-                    <div v-if="previewUrl" class="mt-8 flex gap-4 w-full">
+                    <div v-if="previewUrl" class="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
                         <button
                             @click="previewUrl = null; fileToUpload = null;"
                             :disabled="isUploading"
-                            class="flex-1 px-6 py-4 text-base font-bold text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 active:scale-95 transition-all uppercase"
+                            class="flex-1 px-6 py-4 text-base font-bold text-gray-700 bg-gray-100 rounded-2xl hover:bg-gray-200 active:scale-[0.98] transition-all uppercase"
                         >
                             Annulla
                         </button>
                         <button
                             @click="confirmUpload"
                             :disabled="isUploading"
-                            class="flex-1 px-6 py-4 text-base font-bold text-white bg-red-600 rounded-2xl hover:bg-red-700 shadow-lg shadow-red-200 active:scale-95 transition-all uppercase"
+                            class="flex-1 px-6 py-4 text-base font-bold text-white bg-red-600 rounded-2xl hover:bg-red-700 shadow-lg shadow-red-200 active:scale-[0.98] transition-all uppercase"
                         >
-                            {{ isUploading ? 'Caricamento in corso...' : 'Conferma' }}
+                            {{ isUploading ? 'Caricamento...' : 'Salva logo' }}
                         </button>
                     </div>
 
@@ -636,17 +663,17 @@ const saveEditPlayer = async (player: any) => {
                         @click="currentStep = 3; fetchPlayers();"
                         class="mt-8 text-gray-400 hover:text-red-600 text-sm font-bold uppercase tracking-wide transition-colors"
                     >
-                        Salta per ora
+                        Continua senza logo
                     </button>
                 </div>
             </div>
 
             <!-- Step 3: Team Roster -->
-            <div v-else-if="currentStep === 3" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                    <div class="flex items-center gap-6 w-full">
+            <div v-else-if="currentStep === 3" class="mobile-fade-in">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 sm:gap-6 mb-6 sm:mb-10 bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-4 sm:gap-6 w-full">
                         <!-- Inline Logo Edit -->
-                        <label class="relative w-24 h-24 rounded-full overflow-hidden border-4 border-red-50 bg-gray-50 flex-shrink-0 cursor-pointer group flex items-center justify-center transition-all hover:border-red-200">
+                        <label class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-red-50 bg-gray-50 flex-shrink-0 cursor-pointer group flex items-center justify-center transition-all hover:border-red-200 active:scale-[0.98]">
                             <img
                                 v-if="teamLogoUrl"
                                 :src="teamLogoUrl"
@@ -668,27 +695,27 @@ const saveEditPlayer = async (player: any) => {
                             />
                         </label>
                         
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <!-- Inline Name Edit -->
                             <div v-if="isEditingTeamName" class="flex flex-col sm:flex-row gap-3 w-full max-w-md">
                                 <input
                                     v-model="inlineEditTeamName"
                                     type="text"
-                                    class="w-full bg-gray-50 px-4 py-2 rounded-xl text-black border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none uppercase font-black text-xl"
+                                    class="w-full bg-gray-50 px-4 py-3 rounded-2xl text-black border border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-50 outline-none uppercase font-black text-lg sm:text-xl transition-all"
                                 />
                                 <div class="flex gap-2">
-                                    <button @click="saveInlineTeamName" class="px-4 py-2 bg-red-600 text-white rounded-xl font-bold uppercase text-sm hover:bg-red-700 transition-colors">Salva</button>
-                                    <button @click="cancelInlineTeamName" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase text-sm hover:bg-gray-200 transition-colors">Annulla</button>
+                                    <button @click="saveInlineTeamName" class="flex-1 sm:flex-none px-4 py-2 bg-red-600 text-white rounded-xl font-bold uppercase text-sm hover:bg-red-700 transition-all">Salva</button>
+                                    <button @click="cancelInlineTeamName" class="flex-1 sm:flex-none px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase text-sm hover:bg-gray-200 transition-all">Annulla</button>
                                 </div>
                             </div>
                             
-                            <div v-else class="flex items-center gap-3">
-                                <h2 class="text-3xl font-black text-black tracking-tight uppercase">{{ teamName }}</h2>
-                                <button @click="startInlineEditTeamName" class="text-gray-400 hover:text-red-600 transition-colors bg-gray-50 hover:bg-red-50 p-2 rounded-full">
+                            <div v-else class="flex items-center gap-3 min-w-0">
+                                <h2 class="text-2xl sm:text-3xl font-black text-black tracking-tight uppercase truncate">{{ teamName }}</h2>
+                                <button @click="startInlineEditTeamName" class="text-gray-400 hover:text-red-600 transition-all bg-gray-50 hover:bg-red-50 p-2 rounded-full shrink-0">
                                     <Icon name="mdi:pencil" class="text-xl block" />
                                 </button>
                             </div>
-                            <p class="text-gray-500 mt-1 font-medium">Gestisci i tuoi giocatori e crea la tua squadra definitiva.</p>
+                            <p class="text-gray-500 mt-1 font-medium text-sm sm:text-base">Aggiungi, modifica o rimuovi i giocatori della rosa.</p>
                         </div>
                     </div>
                 </div>
@@ -696,7 +723,7 @@ const saveEditPlayer = async (player: any) => {
                 <!-- Add Player Form -->
                 <form
                     @submit.prevent="addPlayer"
-                    class="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[2.5rem] mb-12 items-center shadow-lg shadow-gray-100/50 border border-gray-100 transition-all focus-within:ring-4 focus-within:ring-red-50 focus-within:border-red-200"
+                    class="flex flex-col sm:flex-row gap-3 sm:gap-4 bg-white p-4 rounded-3xl sm:rounded-[2.5rem] mb-8 sm:mb-12 items-center shadow-lg shadow-gray-100/50 border border-gray-100 transition-all focus-within:ring-4 focus-within:ring-red-50 focus-within:border-red-200"
                 >
                     <div class="flex items-center justify-center pl-2">
                         <label class="cursor-pointer group flex items-center justify-center w-14 h-14 rounded-full bg-gray-50 border-2 border-gray-100 hover:border-red-400 hover:bg-red-50 transition-all overflow-hidden flex-shrink-0">
@@ -720,9 +747,9 @@ const saveEditPlayer = async (player: any) => {
                         <input
                             v-model="newPlayerName"
                             type="text"
-                            placeholder="NOME GIOCATORE"
+                            placeholder="Nome giocatore"
                             required
-                            class="w-full bg-transparent px-4 py-3 text-black placeholder-gray-300 outline-none font-bold text-lg uppercase tracking-wide"
+                            class="w-full bg-gray-50 sm:bg-transparent px-4 py-3 text-black placeholder-gray-300 outline-none font-bold text-base sm:text-lg uppercase tracking-wide rounded-2xl sm:rounded-none"
                         />
                     </div>
                     <div class="w-full h-px sm:w-px sm:h-10 bg-gray-100 hidden sm:block"></div>
@@ -732,7 +759,7 @@ const saveEditPlayer = async (player: any) => {
                             type="number"
                             placeholder="N."
                             required
-                            class="w-full bg-transparent px-4 py-3 text-red-600 placeholder-gray-300 outline-none font-black text-2xl"
+                            class="w-full bg-gray-50 sm:bg-transparent px-4 py-3 text-red-600 placeholder-gray-300 outline-none font-black text-2xl rounded-2xl sm:rounded-none"
                         />
                     </div>
                     
@@ -740,24 +767,24 @@ const saveEditPlayer = async (player: any) => {
                         <button
                             type="submit"
                             :disabled="isAddingPlayer"
-                            class="w-full sm:w-auto bg-red-600 text-white px-8 py-4 rounded-full text-sm font-black uppercase tracking-widest hover:bg-red-700 shadow-md shadow-red-200 active:scale-95 transition-all disabled:opacity-50"
+                            class="w-full sm:w-auto bg-red-600 text-white px-8 py-4 rounded-2xl sm:rounded-full text-sm font-black uppercase tracking-widest hover:bg-red-700 shadow-md shadow-red-200 active:scale-[0.98] transition-all disabled:opacity-50"
                         >
-                            {{ isAddingPlayer ? 'AGGIUNTA...' : 'AGGIUNGI' }}
+                            {{ isAddingPlayer ? 'Aggiunta...' : 'Aggiungi' }}
                         </button>
                     </div>
                 </form>
 
                 <!-- Player Cards Grid -->
-                <div v-if="players.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div v-if="players.length > 0" class="grid grid-cols-1 min-[460px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     <div
                         v-for="player in players"
                         :key="player.id"
-                        class="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 border border-gray-100 transition-all duration-300 flex flex-col group relative"
+                        class="interactive-card bg-white rounded-3xl sm:rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 border border-gray-100 transition-all duration-300 flex flex-col group relative"
                     >
                         <!-- View Mode -->
                         <div v-if="editingPlayerId !== player.id" class="flex flex-col h-full">
                             <!-- Photo Section -->
-                            <div class="relative h-64 bg-gray-50 flex items-center justify-center overflow-hidden border-b border-gray-100">
+                            <div class="relative h-56 sm:h-64 bg-gray-50 flex items-center justify-center overflow-hidden border-b border-gray-100">
                                 <img
                                     v-if="player.photo_url"
                                     :src="player.photo_url"
@@ -771,20 +798,20 @@ const saveEditPlayer = async (player: any) => {
                                 </div>
                                 
                                 <!-- Action Buttons Overlay -->
-                                <div 
-                                    class="absolute top-4 right-4 flex gap-2 transition-all duration-300"
-                                    :class="deletingPlayerId === player.id ? 'opacity-100 translate-y-0' : 'opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'"
+                                <div
+                                    class="absolute top-4 right-4 flex gap-2 transition-all duration-300 opacity-100 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0"
+                                    :class="deletingPlayerId === player.id ? 'opacity-100 translate-y-0' : ''"
                                 >
                                     <template v-if="deletingPlayerId !== player.id">
                                         <button
                                             @click="startEditPlayer(player)"
-                                            class="bg-white text-black hover:text-red-600 p-3 rounded-full shadow-lg transition-colors border border-gray-100 hover:scale-110 active:scale-95"
+                                            class="bg-white text-black hover:text-red-600 p-3 rounded-full shadow-lg transition-all border border-gray-100 hover:scale-110 active:scale-95"
                                         >
                                             <Icon name="mdi:pencil" class="text-lg" />
                                         </button>
                                         <button
                                             @click="deletingPlayerId = player.id"
-                                            class="bg-white text-black hover:text-red-600 p-3 rounded-full shadow-lg transition-colors border border-gray-100 hover:scale-110 active:scale-95"
+                                            class="bg-white text-black hover:text-red-600 p-3 rounded-full shadow-lg transition-all border border-gray-100 hover:scale-110 active:scale-95"
                                         >
                                             <Icon name="mdi:delete" class="text-lg" />
                                         </button>
@@ -812,13 +839,13 @@ const saveEditPlayer = async (player: any) => {
                             </div>
                             
                             <!-- Info Section -->
-                            <div class="p-6">
-                                <h3 class="font-black text-black text-2xl uppercase tracking-tight truncate">{{ player.name }}</h3>
+                            <div class="p-5 sm:p-6">
+                                <h3 class="font-black text-black text-xl sm:text-2xl uppercase tracking-tight truncate">{{ player.name }}</h3>
                             </div>
                         </div>
 
                         <!-- Edit Mode -->
-                        <div v-else class="flex flex-col h-full bg-white relative z-10 border-4 border-red-100 rounded-[2rem]">
+                        <div v-else class="flex flex-col h-full bg-white relative z-10 border-4 border-red-100 rounded-3xl sm:rounded-[2rem]">
                             <!-- Edit Photo -->
                             <label class="relative h-48 flex items-center justify-center cursor-pointer group/edit bg-gray-50 overflow-hidden border-b border-gray-100">
                                 <img
@@ -880,8 +907,8 @@ const saveEditPlayer = async (player: any) => {
                 
                 <div v-else class="text-center py-24 px-4 rounded-[2rem] bg-white border-2 border-dashed border-gray-200">
                     <Icon name="mdi:account-group-outline" class="text-6xl text-gray-200 mx-auto mb-4" />
-                    <h3 class="text-2xl font-black text-gray-400 uppercase tracking-wide">Rosa Vuota</h3>
-                    <p class="text-gray-400 mt-2 font-medium text-lg">Aggiungi il tuo primo giocatore usando il modulo sopra.</p>
+                    <h3 class="text-xl sm:text-2xl font-black text-gray-400 uppercase tracking-wide">Rosa Vuota</h3>
+                    <p class="text-gray-400 mt-2 font-medium sm:text-lg">Aggiungi il tuo primo giocatore usando il modulo sopra.</p>
                 </div>
 
                 <div v-if="message && currentStep === 3" class="flex justify-center mt-8">

@@ -6,11 +6,16 @@ const client = useSupabaseClient();
 const teams = ref<any[]>([]);
 const matches = ref<any[]>([]);
 const topMvpPlayers = ref<any[]>([]);
+const registrationsOpen = ref(true);
 const isLoading = ref(true);
 
 const fetchAll = async () => {
-    const [{ data: teamsData }, { data: matchesData }, { data: mvpData }] =
-        await Promise.all([
+    const [
+        { data: teamsData },
+        { data: matchesData },
+        { data: mvpData },
+        { data: settingsData },
+    ] = await Promise.all([
             client
                 .from("teams")
                 .select("*")
@@ -27,10 +32,16 @@ const fetchAll = async () => {
                 .gt("mvp_votes", 0)
                 .order("mvp_votes", { ascending: false })
                 .limit(5),
+            client
+                .from("app_settings")
+                .select("registrations_open")
+                .eq("id", 1)
+                .single(),
         ]);
     teams.value = teamsData || [];
     matches.value = matchesData || [];
     topMvpPlayers.value = mvpData || [];
+    registrationsOpen.value = settingsData?.registrations_open ?? true;
     isLoading.value = false;
 };
 
@@ -85,13 +96,31 @@ const setStatus = async (
     id: string,
     status: "approved" | "rejected" | "pending",
 ) => {
-    await client.from("teams").update({ status }).eq("id", id);
+    await client
+        .from("teams")
+        .update({ status, is_approved: status === "approved" })
+        .eq("id", id);
     await fetchAll();
 };
 
 const confirmingDeleteId = ref<string | null>(null);
 
 onMounted(fetchAll);
+
+const toggleRegistrations = async () => {
+    const nextValue = !registrationsOpen.value;
+    registrationsOpen.value = nextValue;
+
+    const { error } = await client
+        .from("app_settings")
+        .update({ registrations_open: nextValue })
+        .eq("id", 1);
+
+    if (error) {
+        registrationsOpen.value = !nextValue;
+        alert("Impossibile aggiornare le iscrizioni: " + error.message);
+    }
+};
 
 const translateStage = (stage: string) => {
     if (!stage) return "";
@@ -103,7 +132,7 @@ const translateStage = (stage: string) => {
 </script>
 
 <template>
-    <div class="max-w-6xl mx-auto px-4 py-8 space-y-10">
+    <div class="max-w-6xl mx-auto px-4 py-5 sm:py-8 space-y-6 sm:space-y-10 mobile-fade-in">
         <div
             v-if="isLoading"
             class="flex items-center justify-center py-24 text-red-500"
@@ -146,7 +175,7 @@ const translateStage = (stage: string) => {
 
                     <div class="relative z-10 w-full md:w-auto">
                         <NuxtLink
-                            to="/admin/knockouts"
+                            to="/admin/matches"
                             class="flex items-center justify-center gap-3 w-full md:w-auto px-8 py-5 bg-white text-red-600 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-all hover:-translate-y-1 hover:shadow-xl"
                         >
                             <Icon name="mdi:whistle" class="text-xl" />
@@ -162,9 +191,9 @@ const translateStage = (stage: string) => {
                 >
                     Pannello di Controllo
                 </h2>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <div
-                        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1"
+                        class="interactive-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1 hover:shadow-md"
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
@@ -175,7 +204,7 @@ const translateStage = (stage: string) => {
                         }}</span>
                     </div>
                     <div
-                        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1 relative overflow-hidden"
+                        class="interactive-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1 relative overflow-hidden hover:shadow-md"
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
@@ -200,7 +229,7 @@ const translateStage = (stage: string) => {
                         ></div>
                     </div>
                     <div
-                        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1"
+                        class="interactive-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1 hover:shadow-md"
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
@@ -214,7 +243,7 @@ const translateStage = (stage: string) => {
                         >
                     </div>
                     <div
-                        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1"
+                        class="interactive-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1 hover:shadow-md"
                     >
                         <span
                             class="text-xs font-bold uppercase tracking-wide text-gray-400"
@@ -230,6 +259,47 @@ const translateStage = (stage: string) => {
                 </div>
             </section>
 
+            <section>
+                <div
+                    class="interactive-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md"
+                >
+                    <div>
+                        <h2
+                            class="text-xs font-black uppercase tracking-widest text-gray-400"
+                        >
+                            Iscrizioni capitani
+                        </h2>
+                        <p class="text-lg font-black text-black uppercase mt-1">
+                            {{
+                                registrationsOpen
+                                    ? "Nuovi account aperti"
+                                    : "Nuovi account chiusi"
+                            }}
+                        </p>
+                        <p class="text-sm text-gray-500 font-medium mt-1">
+                            Quando sono chiuse, il pulsante di registrazione non
+                            appare nel portale capitano.
+                        </p>
+                    </div>
+                    <button
+                        @click="toggleRegistrations"
+                        class="relative w-16 h-9 rounded-full transition-colors shrink-0 active:scale-[0.98]"
+                        :class="registrationsOpen ? 'bg-green-500' : 'bg-gray-300'"
+                        :aria-pressed="registrationsOpen"
+                        title="Apri o chiudi iscrizioni"
+                    >
+                        <span
+                            class="absolute top-1 w-7 h-7 rounded-full bg-white shadow transition-transform"
+                            :class="
+                                registrationsOpen
+                                    ? 'translate-x-7 left-1'
+                                    : 'translate-x-0 left-1'
+                            "
+                        ></span>
+                    </button>
+                </div>
+            </section>
+
             <section v-if="nextMatch">
                 <h2
                     class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4"
@@ -237,9 +307,9 @@ const translateStage = (stage: string) => {
                     Prossimo Incontro
                 </h2>
                 <div
-                    class="bg-black text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6"
+                    class="bg-black text-white rounded-2xl p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between gap-5 sm:gap-6"
                 >
-                    <div class="flex items-center gap-4 flex-1">
+                    <div class="flex items-center gap-4 min-w-0 w-full">
                         <img
                             v-if="getTeamLogo(nextMatch.team1_id)"
                             :src="getTeamLogo(nextMatch.team1_id)"
@@ -255,7 +325,7 @@ const translateStage = (stage: string) => {
                             />
                         </div>
                         <span
-                            class="text-xl font-black uppercase tracking-tight"
+                            class="text-lg sm:text-xl font-black uppercase tracking-tight truncate"
                             >{{ getTeamName(nextMatch.team1_id) }}</span
                         >
                     </div>
@@ -276,11 +346,10 @@ const translateStage = (stage: string) => {
                             {{ translateStage(nextMatch.match_type) }}
                         </span>
                     </div>
-                    <div class="flex items-center gap-4 flex-1 justify-end">
+                    <div class="flex items-center gap-4 min-w-0 w-full justify-end">
                         <span
-                            class="text-xl font-black uppercase tracking-tight text-right"
+                            class="text-lg sm:text-xl font-black uppercase tracking-tight text-right truncate"
                             >{{
-                                getTeamName(nextMatch.nextMatch?.team2_id) ||
                                 getTeamName(nextMatch.team2_id)
                             }}</span
                         >
@@ -315,20 +384,20 @@ const translateStage = (stage: string) => {
                         v-if="topMvpPlayers.length === 0"
                         class="py-12 text-center text-gray-400 font-medium"
                     >
-                        Nessun voto MVP ancora inviato. 🗳️
+                        Nessun voto MVP ancora inviato.
                     </div>
                     <div v-else>
                         <div
                             v-for="(player, idx) in topMvpPlayers"
                             :key="player.id"
-                            class="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                            class="flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
                             :class="
                                 idx < topMvpPlayers.length - 1
                                     ? 'border-b border-gray-100'
                                     : ''
                             "
                         >
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                                 <span
                                     class="font-black text-lg w-6"
                                     :class="
@@ -357,10 +426,10 @@ const translateStage = (stage: string) => {
                                         class="text-gray-400"
                                     />
                                 </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2 min-w-0">
                                         <span
-                                            class="font-black uppercase tracking-tight text-black"
+                                            class="font-black uppercase tracking-tight text-black truncate"
                                             >{{ player.name }}</span
                                         >
                                         <span
@@ -379,7 +448,7 @@ const translateStage = (stage: string) => {
                             </div>
 
                             <div
-                                class="bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 font-black text-black text-sm shadow-inner flex items-center gap-2"
+                                class="bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 font-black text-black text-sm shadow-inner flex items-center gap-2 self-end min-[520px]:self-auto"
                             >
                                 <Icon
                                     name="mdi:thumb-up"
@@ -414,19 +483,19 @@ const translateStage = (stage: string) => {
                         v-if="pendingTeams.length === 0"
                         class="py-12 text-center text-gray-400 font-medium"
                     >
-                        Nessuna richiesta in sospeso. 🎉
+                        Nessuna richiesta in sospeso.
                     </div>
                     <div
                         v-for="(team, i) in pendingTeams"
                         :key="team.id"
-                        class="flex items-center justify-between px-6 py-4 hover:bg-yellow-50/40 transition-colors"
+                        class="flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-yellow-50/40 transition-colors"
                         :class="
                             i < pendingTeams.length - 1
                                 ? 'border-b border-gray-100'
                                 : ''
                         "
                     >
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3 sm:gap-4 min-w-0 w-full">
                             <img
                                 v-if="team.logo_url"
                                 :src="team.logo_url"
@@ -441,9 +510,9 @@ const translateStage = (stage: string) => {
                                     class="text-gray-400"
                                 />
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <span
-                                    class="font-black uppercase tracking-tight text-black block"
+                                    class="font-black uppercase tracking-tight text-black block truncate"
                                     >{{ team.name }}</span
                                 >
                                 <span class="text-xs text-gray-400 font-medium"
@@ -456,16 +525,16 @@ const translateStage = (stage: string) => {
                                 >
                             </div>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 w-full min-[520px]:w-auto">
                             <button
                                 @click="setStatus(team.id, 'approved')"
-                                class="px-4 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
+                                class="flex-1 min-[520px]:flex-none px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                             >
                                 Approva
                             </button>
                             <button
                                 @click="setStatus(team.id, 'rejected')"
-                                class="px-4 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
+                                class="flex-1 min-[520px]:flex-none px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                             >
                                 Rifiuta
                             </button>
@@ -495,14 +564,14 @@ const translateStage = (stage: string) => {
                     <div
                         v-for="(team, i) in approvedTeams"
                         :key="team.id"
-                        class="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                        class="flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
                         :class="
                             i < approvedTeams.length - 1
                                 ? 'border-b border-gray-100'
                                 : ''
                         "
                     >
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3 sm:gap-4 min-w-0 w-full">
                             <span
                                 class="text-xs font-black text-gray-300 w-5"
                                 >{{ i + 1 }}</span
@@ -522,11 +591,11 @@ const translateStage = (stage: string) => {
                                 />
                             </div>
                             <span
-                                class="font-black uppercase tracking-tight text-black"
+                                class="font-black uppercase tracking-tight text-black truncate"
                                 >{{ team.name }}</span
                             >
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2 w-full min-[520px]:w-auto justify-end">
                             <template v-if="confirmingDeleteId === team.id">
                                 <span
                                     class="text-xs font-bold text-red-600 uppercase tracking-wide"
@@ -537,13 +606,13 @@ const translateStage = (stage: string) => {
                                         setStatus(team.id, 'rejected');
                                         confirmingDeleteId = null;
                                     "
-                                    class="px-4 py-1.5 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
+                                    class="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
                                     Sì
                                 </button>
                                 <button
                                     @click="confirmingDeleteId = null"
-                                    class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
+                                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
                                     Annulla
                                 </button>
@@ -551,13 +620,13 @@ const translateStage = (stage: string) => {
                             <template v-else>
                                 <button
                                     @click="confirmingDeleteId = team.id"
-                                    class="px-4 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
+                                    class="px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
                                     Rimuovi
                                 </button>
                                 <NuxtLink
                                     :to="`/admin/teams/${team.id}`"
-                                    class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
+                                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                                 >
                                     Gestisci
                                 </NuxtLink>
@@ -582,14 +651,14 @@ const translateStage = (stage: string) => {
                     <div
                         v-for="(team, i) in rejectedTeams"
                         :key="team.id"
-                        class="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors opacity-60"
+                        class="flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors opacity-60"
                         :class="
                             i < rejectedTeams.length - 1
                                 ? 'border-b border-gray-100'
                                 : ''
                         "
                     >
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3 sm:gap-4 min-w-0 w-full">
                             <img
                                 v-if="team.logo_url"
                                 :src="team.logo_url"
@@ -605,13 +674,13 @@ const translateStage = (stage: string) => {
                                 />
                             </div>
                             <span
-                                class="font-black uppercase tracking-tight text-gray-500 line-through"
+                                class="font-black uppercase tracking-tight text-gray-500 line-through truncate"
                                 >{{ team.name }}</span
                             >
                         </div>
                         <button
                             @click="setStatus(team.id, 'pending')"
-                            class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
+                            class="w-full min-[520px]:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-xl font-bold uppercase text-xs tracking-wide transition-colors"
                         >
                             Ripristina
                         </button>

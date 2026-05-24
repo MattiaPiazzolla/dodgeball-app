@@ -42,6 +42,15 @@ const knockoutMatches = computed(() => {
             if (!byRound[m.round]) byRound[m.round] = [];
             byRound[m.round].push(m);
         });
+    Object.values(byRound).forEach((roundMatches) => {
+        roundMatches.sort(
+            (a, b) =>
+                (a.bracket_position ?? Number.MAX_SAFE_INTEGER) -
+                    (b.bracket_position ?? Number.MAX_SAFE_INTEGER) ||
+                (a.created_at || "").localeCompare(b.created_at || "") ||
+                a.id.localeCompare(b.id),
+        );
+    });
     return byRound;
 });
 
@@ -87,11 +96,36 @@ const displayName = (match: any, slot: 1 | 2) => {
     return "TBD";
 };
 
+const winnerPlaceholder = (round: number, matchNumber: number) =>
+    `Vincente incontro ${matchNumber} - turno ${round}`;
+
+const displayKnockoutName = (
+    match: any,
+    slot: 1 | 2,
+    roundNum: string | number,
+    matchIndex: number,
+) => {
+    const idKey = `team${slot}_id`;
+    const phKey = `team${slot}_placeholder`;
+
+    if (match[idKey]) return getTeamName(match[idKey]) || "Unknown";
+    if (match[phKey]) return match[phKey];
+
+    const round = Number(roundNum);
+    if (round > 1) {
+        const sourceMatchNumber = matchIndex * 2 + slot;
+        return winnerPlaceholder(round - 1, sourceMatchNumber);
+    }
+
+    return "DA DEFINIRE";
+};
+
 const formatTime = (t: string | null) => (t ? t.slice(0, 5) : null);
 
 const statusColor = (s: string) => {
     if (s === "completed") return "bg-green-100 text-green-700";
     if (s === "in_progress") return "bg-red-100 text-red-600 animate-pulse";
+    if (s === "retired") return "bg-yellow-100 text-yellow-700";
     return "bg-gray-100 text-gray-500";
 };
 
@@ -203,6 +237,19 @@ const openAddModal = () => {
 
 const saveAdd = async () => {
     const f = addForm.value;
+    const nextBracketPosition =
+        f.match_type === "knockout"
+            ? Math.max(
+                  0,
+                  ...matches.value
+                      .filter(
+                          (m) =>
+                              m.match_type === "knockout" &&
+                              Number(m.round) === Number(f.round),
+                      )
+                      .map((m) => m.bracket_position || 0),
+              ) + 1
+            : null;
     const payload: any = {
         match_type: f.match_type,
         round: f.match_type === "group" ? 1 : f.round,
@@ -215,6 +262,7 @@ const saveAdd = async () => {
         team2_placeholder:
             f.team2_type === "placeholder" ? f.team2_placeholder : null,
     };
+    if (nextBracketPosition) payload.bracket_position = nextBracketPosition;
     if (f.start_time) payload.start_time = f.start_time;
     const { error } = await supabase.from("matches").insert([payload]);
     if (error) {
@@ -291,6 +339,7 @@ const autoGenerateKnockout = async () => {
         newMatches.push({
             team1_id: knockoutTeams[i] || null,
             team2_id: knockoutTeams[i + 1] || null,
+            bracket_position: i / 2 + 1,
             round: 1,
             match_type: "knockout",
             status: "pending",
@@ -303,6 +352,9 @@ const autoGenerateKnockout = async () => {
             newMatches.push({
                 team1_id: null,
                 team2_id: null,
+                team1_placeholder: winnerPlaceholder(r - 1, i * 2 + 1),
+                team2_placeholder: winnerPlaceholder(r - 1, i * 2 + 2),
+                bracket_position: i + 1,
                 round: r,
                 match_type: "knockout",
                 status: "pending",
@@ -369,7 +421,7 @@ onMounted(loadData);
                                 : 'text-gray-400 hover:text-black'
                         "
                     >
-                        Fase a Gironi
+                        Gironi
                     </button>
                     <button
                         v-if="allGroupMatchesCompleted"
@@ -381,7 +433,7 @@ onMounted(loadData);
                                 : 'text-gray-400 hover:text-black'
                         "
                     >
-                        Fase a Eliminazione Diretta
+                        Eliminazione
                     </button>
                 </div>
 
@@ -394,19 +446,19 @@ onMounted(loadData);
                                 @click="clearKnockout"
                                 class="px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors"
                             >
-                                Cancella
+                                Cancella tabellone
                             </button>
                             <button
                                 @click="openAddModal"
                                 class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition-colors"
                             >
-                                + Aggiungi Incontro
+                                Aggiungi incontro
                             </button>
                             <button
                                 @click="autoGenerateKnockout"
                                 class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-black text-white hover:bg-gray-800 rounded-xl transition-colors shadow-md"
                             >
-                                Rigenera Tabellone
+                                Rigenera
                             </button>
                         </template>
                     </template>
@@ -415,19 +467,19 @@ onMounted(loadData);
                             @click="clearGroupMatches"
                             class="px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors"
                         >
-                            Cancella
+                            Cancella gironi
                         </button>
                         <button
                             @click="openAddModal"
                             class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition-colors"
                         >
-                            + Aggiungi Incontro
+                            Aggiungi incontro
                         </button>
                         <button
                             @click="autoGenerateGroupMatches"
                             class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-black text-white hover:bg-gray-800 rounded-xl transition-colors shadow-md"
                         >
-                            Genera Tutti
+                            Genera calendario
                         </button>
                     </template>
                 </div>
@@ -474,7 +526,7 @@ onMounted(loadData);
                                 class="flex items-center justify-center gap-3 px-10 py-5 bg-white text-red-600 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-all hover:-translate-y-1 hover:shadow-xl"
                             >
                                 <Icon name="mdi:whistle" class="text-2xl" />
-                                Genera Tabellone
+                                Genera tabellone
                             </button>
                         </div>
                     </div>
@@ -573,6 +625,21 @@ onMounted(loadData);
 
                                 <div v-else>
                                     <div
+                                        class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between"
+                                    >
+                                        <span
+                                            class="text-[10px] font-black uppercase tracking-widest text-gray-400"
+                                        >
+                                            Incontro {{ mIdx + 1 }}
+                                        </span>
+                                        <span
+                                            v-if="Number(roundNum) > 1"
+                                            class="text-[10px] font-bold uppercase tracking-wide text-red-500"
+                                        >
+                                            Da vincitori turno precedente
+                                        </span>
+                                    </div>
+                                    <div
                                         class="flex items-center gap-3 px-4 py-3 border-b border-gray-50"
                                     >
                                         <img
@@ -597,7 +664,14 @@ onMounted(loadData);
                                                     : 'text-gray-400'
                                             "
                                         >
-                                            {{ displayName(match, 1) }}
+                                            {{
+                                                displayKnockoutName(
+                                                    match,
+                                                    1,
+                                                    roundNum,
+                                                    mIdx,
+                                                )
+                                            }}
                                         </span>
                                     </div>
                                     <div
@@ -633,7 +707,14 @@ onMounted(loadData);
                                                     : 'text-gray-400'
                                             "
                                         >
-                                            {{ displayName(match, 2) }}
+                                            {{
+                                                displayKnockoutName(
+                                                    match,
+                                                    2,
+                                                    roundNum,
+                                                    mIdx,
+                                                )
+                                            }}
                                         </span>
                                     </div>
                                     <div

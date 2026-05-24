@@ -180,46 +180,90 @@ onMounted(fetchData);
 </script>
 
 <template>
-    <div v-if="team" class="max-w-2xl mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-4">Modifica Squadra</h1>
-        <input v-model="team.name" class="border p-2 w-full mb-2" />
-        <img
-            v-if="previewUrl"
-            :src="previewUrl"
-            class="w-20 h-20 my-2 object-cover border"
-        />
-        <input type="file" @change="onLogoSelected" class="block mb-2" />
-        <button
-            @click="updateTeam"
-            class="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-            Salva Squadra
-        </button>
+    <div v-if="team" class="max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
+        <div class="flex items-center gap-3">
+            <NuxtLink
+                to="/admin"
+                class="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black hover:border-gray-200 transition"
+            >
+                <Icon name="mdi:arrow-left" class="text-xl" />
+            </NuxtLink>
+            <div>
+                <h1 class="text-3xl font-black uppercase tracking-tight text-black">
+                    Modifica squadra
+                </h1>
+                <p class="text-gray-500 font-medium">
+                    Aggiorna identità e rosa senza cambiare pagina.
+                </p>
+            </div>
+        </div>
 
-        <h2 class="text-xl font-bold mt-8">Rosa</h2>
+        <section class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row gap-6 sm:items-center">
+                <label
+                    class="relative w-28 h-28 rounded-full bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center cursor-pointer hover:border-red-300 transition"
+                >
+                    <img
+                        v-if="previewUrl"
+                        :src="previewUrl"
+                        class="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <Icon v-else name="mdi:image-plus" class="text-3xl text-gray-300" />
+                    <input type="file" @change="onLogoSelected" class="hidden" />
+                </label>
+                <div class="flex-1 space-y-3">
+                    <label class="block text-xs font-black uppercase tracking-wide text-gray-500">
+                        Nome squadra
+                    </label>
+                    <input
+                        v-model="team.name"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-black uppercase text-black focus:bg-white focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none"
+                    />
+                </div>
+                <button
+                    @click="updateTeam"
+                    class="w-full sm:w-auto bg-black text-white px-6 py-3 rounded-xl font-black uppercase text-sm hover:bg-gray-800 transition"
+                >
+                    Salva
+                </button>
+            </div>
+        </section>
+
+        <h2 class="text-xs font-black uppercase tracking-widest text-gray-400">
+            Rosa
+        </h2>
         <div
             v-for="p in players"
             :key="p.id"
-            class="p-4 border-b flex flex-col gap-2"
+            class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm"
         >
-            <div class="flex items-center gap-4 mb-2">
+            <label class="w-16 h-16 rounded-full bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-400 overflow-hidden cursor-pointer shrink-0">
                 <img
                     v-if="p._previewUrl || p.photo_url"
                     :src="p._previewUrl || p.photo_url"
-                    class="w-16 h-16 rounded-full object-cover border"
+                    class="w-full h-full object-cover"
                 />
-                <div v-else class="w-16 h-16 rounded-full bg-gray-200 border flex items-center justify-center text-gray-400">
+                <template v-else>
                     <Icon name="mdi:account" class="text-2xl" />
-                </div>
-                <input type="file" @change="(e) => onPlayerPhotoSelected(e, p)" class="block text-sm" />
-            </div>
-            <input v-model="p.name" class="border p-1" placeholder="Nome" />
-            <input v-model="p.jersey_number" type="number" class="border p-1" placeholder="Numero di Maglia" />
+                </template>
+                <input type="file" @change="(e) => onPlayerPhotoSelected(e, p)" class="hidden" />
+            </label>
+            <input
+                v-model="p.name"
+                class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold uppercase focus:bg-white focus:border-red-500 outline-none"
+                placeholder="Nome"
+            />
+            <input
+                v-model="p.jersey_number"
+                type="number"
+                class="w-full sm:w-28 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-black text-red-600 focus:bg-white focus:border-red-500 outline-none"
+                placeholder="N."
+            />
             <button
                 @click="updatePlayer(p)"
-                class="bg-green-600 text-white p-1 rounded font-semibold mt-1"
+                class="bg-red-600 text-white px-5 py-3 rounded-xl font-black uppercase text-sm hover:bg-red-700 transition"
             >
-                Salva Giocatore
+                Salva
             </button>
         </div>
     </div>

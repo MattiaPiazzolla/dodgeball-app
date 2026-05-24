@@ -222,7 +222,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 
-definePageMeta({ middleware: ["admin"], layout: "admin" });
+definePageMeta({ middleware: ["admin"] });
 
 const translateStatus = (s: string) => {
     if (s === "pending") return "In attesa";

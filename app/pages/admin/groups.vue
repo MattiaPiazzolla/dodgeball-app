@@ -1,22 +1,22 @@
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+  <div class="max-w-6xl mx-auto px-4 py-5 sm:py-8 space-y-6 sm:space-y-8 mobile-fade-in">
 
     <!-- Top Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <h1 class="text-2xl font-black uppercase tracking-tight text-black">
+      <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
         Fasi a Gironi
       </h1>
 
-      <form @submit.prevent="createGroup" class="flex items-center gap-2">
+      <form @submit.prevent="createGroup" class="flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-2 w-full sm:w-auto">
         <input
           v-model="newGroupName"
           placeholder="Nome Gruppo (es. Gruppo A)"
           required
-          class="w-52 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:outline-none rounded-lg px-3 py-2 text-sm font-medium text-gray-800 placeholder-gray-400 transition-all"
+          class="w-full min-[420px]:w-56 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:ring-4 focus:ring-gray-100 focus:outline-none rounded-2xl px-4 py-3 text-sm font-medium text-gray-800 placeholder-gray-400 transition-all"
         />
         <button
           type="submit"
-          class="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 active:scale-95 transition-all whitespace-nowrap"
+          class="bg-black text-white px-4 py-3 rounded-2xl text-sm font-bold hover:bg-gray-800 active:scale-[0.98] transition-all whitespace-nowrap"
         >
           Crea Gruppo
         </button>
@@ -40,28 +40,29 @@
       <div
         v-for="group in groups"
         :key="group.id"
-        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-5"
+        class="interactive-card bg-white rounded-3xl sm:rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 flex flex-col gap-5 hover:shadow-md"
       >
         <!-- Card Header -->
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-3">
           <h2 class="text-lg font-black uppercase tracking-tight text-black">
             {{ group.name }}
           </h2>
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex flex-wrap items-center gap-2 shrink-0">
             <span class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
               {{ group.group_teams.length }} {{ group.group_teams.length === 1 ? 'Squadra' : 'Squadre' }}
             </span>
-            <button
+            <NuxtLink
+              to="/admin/matches"
               class="bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-gray-800 active:scale-95 transition-all whitespace-nowrap"
             >
-              Genera Partite
-            </button>
+              Vai agli incontri
+            </NuxtLink>
           </div>
         </div>
 
         <!-- Standings Table -->
-        <div class="overflow-hidden rounded-xl border border-gray-100">
-          <table class="w-full text-sm">
+        <div class="overflow-x-auto rounded-xl border border-gray-100 custom-scrollbar">
+          <table class="w-full min-w-[520px] text-sm">
             <thead>
               <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase text-xs tracking-wide">
                 <th class="px-4 py-2.5 text-left">#</th>
@@ -122,12 +123,12 @@
           <form
             v-if="availableTeams.length"
             @submit.prevent="addTeamToGroup(group.id)"
-            class="flex items-center gap-2"
+            class="flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-2"
           >
             <select
               v-model="selectedTeams[group.id]"
               required
-              class="flex-1 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:outline-none rounded-lg px-3 py-2 text-xs font-bold uppercase text-gray-700 transition-all"
+              class="flex-1 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:ring-4 focus:ring-gray-100 focus:outline-none rounded-2xl px-3 py-3 text-xs font-bold uppercase text-gray-700 transition-all"
             >
               <option value="" disabled>Aggiungi una squadra...</option>
               <option
@@ -140,7 +141,7 @@
             </select>
             <button
               type="submit"
-              class="bg-black text-white px-4 py-2 rounded-lg text-xs font-black hover:bg-gray-800 active:scale-95 transition-all"
+              class="bg-black text-white px-4 py-3 rounded-2xl text-xs font-black hover:bg-gray-800 active:scale-[0.98] transition-all"
             >
               Aggiungi
             </button>

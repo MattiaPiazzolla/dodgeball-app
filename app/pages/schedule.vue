@@ -1,12 +1,12 @@
 // pages/schedule.vue
 <template>
-    <div class="max-w-7xl mx-auto p-6 space-y-8 relative">
-        <div class="text-center space-y-4 mb-12">
-            <h1 class="text-4xl font-black uppercase tracking-tight text-black">
+    <div class="max-w-7xl mx-auto px-4 py-5 sm:p-6 space-y-6 sm:space-y-8 relative">
+        <div class="text-center space-y-3 mb-8 sm:mb-12 mobile-fade-in">
+            <h1 class="text-3xl sm:text-4xl font-black uppercase tracking-tight text-black">
                 Calendario del Torneo
             </h1>
             <p class="text-gray-500 font-medium">
-                Tabellone in tempo reale, classifiche dei gironi e orari delle partite.
+                Orari, risultati e classifiche in un unico posto.
             </p>
         </div>
 
@@ -19,11 +19,11 @@
 
         <div
             v-else
-            class="bg-white p-4 sm:p-8 rounded-3xl shadow-sm border border-gray-100"
+            class="bg-white p-3 sm:p-8 rounded-3xl shadow-sm border border-gray-100 mobile-fade-in"
         >
             <!-- Tabs -->
             <div
-                class="flex bg-gray-100 p-1 rounded-2xl w-full max-w-md mx-auto mb-10"
+                class="flex bg-gray-100 p-1 rounded-2xl w-full max-w-md mx-auto mb-8 sm:mb-10"
             >
                 <button
                     @click="activeTab = 'group'"
@@ -32,9 +32,9 @@
                             ? 'bg-white text-black shadow-sm'
                             : 'text-gray-500'
                     "
-                    class="flex-1 py-3 font-black uppercase tracking-wide text-sm rounded-xl transition-all"
+                    class="flex-1 py-3 font-black uppercase tracking-wide text-xs sm:text-sm rounded-xl transition-all active:scale-[0.98]"
                 >
-                    Fase a Gironi
+                    Gironi
                 </button>
                 <button
                     @click="activeTab = 'knockout'"
@@ -43,14 +43,14 @@
                             ? 'bg-white text-black shadow-sm'
                             : 'text-gray-500'
                     "
-                    class="flex-1 py-3 font-black uppercase tracking-wide text-sm rounded-xl transition-all"
+                    class="flex-1 py-3 font-black uppercase tracking-wide text-xs sm:text-sm rounded-xl transition-all active:scale-[0.98]"
                 >
-                    Fase a Eliminazione Diretta
+                    Eliminazione
                 </button>
             </div>
 
             <!-- GROUP STAGE -->
-            <div v-if="activeTab === 'group'" class="space-y-12">
+            <div v-if="activeTab === 'group'" class="space-y-5 sm:space-y-12">
                 <div
                     v-if="groups.length === 0"
                     class="text-center text-gray-400 py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200 font-bold uppercase tracking-wide"
@@ -61,29 +61,29 @@
                 <div
                     v-for="group in groups"
                     :key="group.id"
-                    class="grid grid-cols-1 xl:grid-cols-2 gap-8 bg-gray-50 p-6 rounded-3xl border border-gray-100"
+                    class="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-8 bg-gray-50 p-3 sm:p-6 rounded-3xl border border-gray-100"
                 >
                     <!-- Standings -->
                     <div>
                         <h3
-                            class="text-xl font-black text-black uppercase tracking-tight mb-4"
+                            class="text-lg sm:text-xl font-black text-black uppercase tracking-tight mb-4"
                         >
                             Classifica {{ group.name }}
                         </h3>
                         <div
                             class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
                         >
-                            <table class="w-full text-left text-sm">
+                            <table class="w-full table-fixed text-left text-xs sm:text-sm">
                                 <thead
                                     class="bg-gray-50 border-b border-gray-100"
                                 >
                                     <tr
                                         class="text-gray-400 font-bold uppercase tracking-wide text-xs"
                                     >
-                                        <th class="p-4">Squadra</th>
-                                        <th class="p-4 text-center">V</th>
-                                        <th class="p-4 text-center">P</th>
-                                        <th class="p-4 text-center text-black">
+                                        <th class="w-[52%] p-3 sm:p-4">Squadra</th>
+                                        <th class="w-[16%] p-3 sm:p-4 text-center">V</th>
+                                        <th class="w-[16%] p-3 sm:p-4 text-center">P</th>
+                                        <th class="w-[16%] p-3 sm:p-4 text-center text-black">
                                             Pt
                                         </th>
                                     </tr>
@@ -95,22 +95,22 @@
                                         class="border-b border-gray-50 last:border-0"
                                     >
                                         <td
-                                            class="p-4 font-black text-black uppercase"
+                                            class="p-3 sm:p-4 font-black text-black uppercase truncate"
                                         >
                                             {{ gt.teams?.name || "Unknown" }}
                                         </td>
                                         <td
-                                            class="p-4 text-center font-medium text-gray-600"
+                                            class="p-3 sm:p-4 text-center font-medium text-gray-600"
                                         >
                                             {{ gt.wins }}
                                         </td>
                                         <td
-                                            class="p-4 text-center font-medium text-gray-600"
+                                            class="p-3 sm:p-4 text-center font-medium text-gray-600"
                                         >
                                             {{ gt.losses }}
                                         </td>
                                         <td
-                                            class="p-4 text-center font-black text-red-600 text-base"
+                                            class="p-3 sm:p-4 text-center font-black text-red-600 text-base"
                                         >
                                             {{ gt.points }}
                                         </td>
@@ -123,7 +123,7 @@
                     <!-- Matches -->
                     <div>
                         <h3
-                            class="text-xl font-black text-black uppercase tracking-tight mb-4"
+                            class="text-lg sm:text-xl font-black text-black uppercase tracking-tight mb-4"
                         >
                             Partite
                         </h3>
@@ -131,7 +131,7 @@
                             <div
                                 v-for="match in groupedGroupMatches[group.id]"
                                 :key="match.id"
-                                class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-2 relative overflow-hidden"
+                                class="interactive-card bg-white border border-gray-100 rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col gap-2 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-md"
                                 :class="{
                                     'ring-2 ring-red-500':
                                         match.status === 'in_progress',
@@ -145,10 +145,10 @@
                                 </div>
 
                                 <div
-                                    class="flex items-center justify-between mt-2"
+                                    class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between mt-2"
                                 >
                                     <div
-                                        class="flex-1 text-right pr-4 font-black uppercase text-sm flex flex-col"
+                                        class="min-w-0 text-right pr-2 sm:pr-4 font-black uppercase text-xs sm:text-sm flex flex-col"
                                         :class="
                                             match.team1_id
                                                 ? 'text-black'
@@ -178,7 +178,7 @@
                                     </div>
 
                                     <div
-                                        class="flex flex-col items-center justify-center px-4 border-x border-gray-100 min-w-[100px]"
+                                        class="flex flex-col items-center justify-center px-2 sm:px-4 border-x border-gray-100 min-w-[76px] sm:min-w-[100px]"
                                     >
                                         <span
                                             class="text-xs font-bold mb-1 uppercase"
@@ -198,7 +198,7 @@
                                     </div>
 
                                     <div
-                                        class="flex-1 text-left pl-4 font-black uppercase text-sm flex flex-col"
+                                        class="min-w-0 text-left pl-2 sm:pl-4 font-black uppercase text-xs sm:text-sm flex flex-col"
                                         :class="
                                             match.team2_id
                                                 ? 'text-black'
@@ -250,17 +250,17 @@
             </div>
 
             <!-- KNOCKOUT BRACKET -->
-            <div v-if="activeTab === 'knockout'" class="overflow-x-auto pb-8">
+            <div v-if="activeTab === 'knockout'" class="overflow-x-auto pb-8 custom-scrollbar">
                 <div
                     v-if="Object.keys(groupedKnockoutMatches).length"
-                    class="flex gap-8 min-w-max mx-auto justify-center"
+                    class="flex gap-4 sm:gap-8 min-w-max mx-auto justify-start xl:justify-center"
                 >
                     <div
                         v-for="(
                             roundMatches, roundNum
                         ) in groupedKnockoutMatches"
                         :key="roundNum"
-                        class="flex flex-col gap-6 w-72"
+                        class="flex flex-col gap-4 sm:gap-6 w-[82vw] max-w-72 sm:w-72"
                     >
                         <h3
                             class="text-sm font-black text-black text-center uppercase tracking-widest bg-gray-50 py-3 rounded-xl border border-gray-100"
@@ -271,7 +271,7 @@
                         <div
                             v-for="(match, mIndex) in roundMatches"
                             :key="match.id"
-                            class="bg-white border rounded-2xl shadow-sm p-4 relative group overflow-hidden"
+                            class="interactive-card bg-white border rounded-2xl shadow-sm p-4 relative group overflow-hidden hover:-translate-y-0.5 hover:shadow-md"
                             :class="
                                 match.status === 'in_progress'
                                     ? 'border-red-500 ring-1 ring-red-500'
@@ -495,7 +495,7 @@ const loadData = async () => {
     const { data: tData } = await supabase
         .from("teams")
         .select("id, name")
-        .eq("is_approved", true);
+        .eq("status", "approved");
     if (tData) teams.value = tData;
 
     await loadGroupsAndStandings();
@@ -516,12 +516,12 @@ const loadData = async () => {
             // Update the match reactively
             matches.value[index] = { ...matches.value[index], ...updatedMatch };
 
-            // If it's a group match and status changed to finished, we should reload standings
+            // Reload standings as soon as a group match is resolved.
             if (
                 updatedMatch.match_type === "group" &&
-                ["finished", "retired"].includes(updatedMatch.status)
+                ["completed", "retired"].includes(updatedMatch.status)
             ) {
-                loadGroupsAndStandings(); // Re-fetch standings from DB silently
+                loadGroupsAndStandings();
             }
         }
     });

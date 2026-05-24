@@ -48,32 +48,37 @@ const handleLogin = async () => {
 
 <template>
     <div
-        class="max-w-md mx-auto mt-20 bg-white p-8 border rounded-lg shadow-sm"
+        class="max-w-md mx-4 sm:mx-auto mt-6 sm:mt-16 bg-white p-6 sm:p-8 border border-gray-100 rounded-3xl shadow-sm mobile-fade-in"
     >
-        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">
-            Accesso Amministratore
-        </h1>
+        <div class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-gray-900">
+                Admin
+            </h1>
+            <p class="text-gray-500 font-medium mt-2">
+                Gestisci squadre, gironi e incontri.
+            </p>
+        </div>
         <form @submit.prevent="handleLogin" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700"
+                <label class="block text-xs font-black uppercase tracking-wide text-gray-500"
                     >Email</label
                 >
                 <input
                     v-model="email"
                     type="email"
                     required
-                    class="mt-1 w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                    class="mt-1 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-gray-100 focus:border-black outline-none transition-all"
                 />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700"
+                <label class="block text-xs font-black uppercase tracking-wide text-gray-500"
                     >Password</label
                 >
                 <input
                     v-model="password"
                     type="password"
                     required
-                    class="mt-1 w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                    class="mt-1 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-gray-100 focus:border-black outline-none transition-all"
                 />
             </div>
             <p
@@ -85,7 +90,7 @@ const handleLogin = async () => {
             </p>
             <button
                 type="submit"
-                class="w-full bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 font-bold transition"
+                class="w-full bg-black text-white px-4 py-3 rounded-2xl hover:bg-gray-800 font-black uppercase tracking-wide transition-all active:scale-[0.98]"
             >
                 Accedi
             </button>
