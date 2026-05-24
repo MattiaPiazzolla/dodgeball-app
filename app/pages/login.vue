@@ -1,5 +1,20 @@
 // app/pages/login.vue
 <script setup lang="ts">
+definePageMeta({
+    middleware: async () => {
+        const client = useSupabaseClient();
+        const { data } = await client
+            .from("app_settings")
+            .select("registrations_open")
+            .eq("id", 1)
+            .single();
+
+        if (data?.registrations_open === false) {
+            return navigateTo("/");
+        }
+    },
+});
+
 const client = useSupabaseClient();
 const email = ref("");
 const password = ref("");
@@ -16,7 +31,10 @@ const loadRegistrationSettings = async () => {
         .single();
 
     registrationsOpen.value = data?.registrations_open ?? true;
-    if (!registrationsOpen.value) isSignUp.value = false;
+    if (!registrationsOpen.value) {
+        await navigateTo("/");
+        return;
+    }
     loadingSettings.value = false;
 };
 

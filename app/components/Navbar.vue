@@ -1,14 +1,26 @@
 // app/components/Navbar.vue
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 const { user, logout, role, fetchRole } = useAuth();
 
 const isMenuOpen = ref(false);
+const registrationsOpen = ref(false);
 const showAdminLogin = ref(false);
 const longPressTriggered = ref(false);
 const brandClickCount = ref(0);
 let adminRevealTimer: ReturnType<typeof setTimeout> | null = null;
 let brandClickResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+const loadRegistrationSettings = async () => {
+    const client = useSupabaseClient();
+    const { data } = await client
+        .from("app_settings")
+        .select("registrations_open")
+        .eq("id", 1)
+        .single();
+
+    registrationsOpen.value = data?.registrations_open ?? true;
+};
 
 const revealAdminLogin = () => {
     showAdminLogin.value = true;
@@ -73,6 +85,8 @@ onBeforeUnmount(() => {
     cancelAdminReveal();
     if (brandClickResetTimer) clearTimeout(brandClickResetTimer);
 });
+
+onMounted(loadRegistrationSettings);
 </script>
 
 <template>
@@ -84,7 +98,7 @@ onBeforeUnmount(() => {
         >
             <div class="flex items-center justify-between gap-3">
                 <NuxtLink
-                    to="/"
+                    to="/#live"
                     @pointerdown="startAdminReveal"
                     @pointerup="cancelAdminReveal"
                     @pointerleave="cancelAdminReveal"
@@ -118,30 +132,10 @@ onBeforeUnmount(() => {
                 <div
                     class="min-h-0 overflow-hidden sm:overflow-visible flex flex-col sm:flex-row sm:items-center gap-2"
                 >
-                <NuxtLink
-                    to="/"
-                    @click="closeMenu"
-                    class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl text-gray-500 hover:text-black hover:bg-gray-50 transition-all"
-                    active-class="bg-gray-100 text-black"
-                    >Live</NuxtLink
-                >
-                <NuxtLink
-                    to="/schedule"
-                    @click="closeMenu"
-                    class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl text-gray-500 hover:text-black hover:bg-gray-50 transition-all"
-                    active-class="bg-gray-100 text-black"
-                    >Calendario</NuxtLink
-                >
-                <NuxtLink
-                    to="/teams"
-                    @click="closeMenu"
-                    class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl text-gray-500 hover:text-black hover:bg-gray-50 transition-all"
-                    active-class="bg-gray-100 text-black"
-                    >Squadre</NuxtLink
-                >
                 <ClientOnly>
                     <template v-if="!user">
                         <NuxtLink
+                            v-if="registrationsOpen"
                             to="/login"
                             @click="closeMenu"
                             class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm shadow-red-200"
@@ -183,6 +177,7 @@ onBeforeUnmount(() => {
                         </template>
                         <template v-else>
                             <NuxtLink
+                                v-if="registrationsOpen"
                                 to="/captain"
                                 @click="closeMenu"
                                 class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm shadow-red-200"
@@ -196,14 +191,7 @@ onBeforeUnmount(() => {
                             Esci
                         </button>
                     </template>
-                    <template #fallback>
-                        <NuxtLink
-                            to="/login"
-                            @click="closeMenu"
-                            class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm shadow-red-200"
-                            >Capitano</NuxtLink
-                        >
-                    </template>
+                    <template #fallback></template>
                 </ClientOnly>
                 </div>
             </nav>
