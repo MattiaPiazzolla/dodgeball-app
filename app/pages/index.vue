@@ -272,12 +272,12 @@ onMounted(() => {
                                 INFO - ISMA
                             </span>
                         </div>
-                        <div class="flex items-center justify-center space-x-6">
-                            <a href="tel:3466424053" class="flex items-center text-white hover:text-primary">
-                                <Icon name="mdi:phone" class="mr-2" /> Call
+                        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8">
+                            <a href="tel:3466424053" class="flex items-center text-white hover:text-primary text-2xl sm:text-3xl font-bold">
+                                <Icon name="mdi:phone" class="mr-2 text-3xl sm:text-4xl" /> Call
                             </a>
-                            <a href="https://wa.me/3466424053" target="_blank" rel="noopener" class="flex items-center text-white hover:text-primary">
-                                <Icon name="mdi:whatsapp" class="mr-2" /> WhatsApp
+                            <a href="https://wa.me/3466424053" target="_blank" rel="noopener" class="flex items-center text-white hover:text-primary text-2xl sm:text-3xl font-bold">
+                                <Icon name="mdi:whatsapp" class="mr-2 text-3xl sm:text-4xl" /> WhatsApp
                             </a>
                         </div>
                         <p class="text-xs uppercase text-gray-400 font-bold tracking-wider pt-2">
