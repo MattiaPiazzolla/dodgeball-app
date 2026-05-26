@@ -203,6 +203,37 @@
                 </div>
             </div>
 
+            <!-- Content Format Accordions -->
+            <div class="space-y-4">
+                <div class="border-4 border-black bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)]">
+                    <button
+                        type="button"
+                        @click="isTeaserOpen = !isTeaserOpen"
+                        class="w-full px-5 py-4 flex items-center justify-between gap-4 bg-cement hover:bg-white transition-all text-left"
+                    >
+                        <span class="font-impact text-xl uppercase tracking-widest text-black">
+                            Teaser
+                        </span>
+                        <Icon
+                            name="mdi:chevron-down"
+                            class="text-3xl text-black transition-transform"
+                            :class="{ 'rotate-180': isTeaserOpen }"
+                        />
+                    </button>
+
+                    <div v-if="isTeaserOpen" class="border-t-4 border-black p-4 md:p-6 bg-cement">
+                        <AdminMatchTeaser
+                            v-if="team1 && team2"
+                            :match="match"
+                            :team1="team1"
+                            :team2="team2"
+                            :team1-players="team1Players"
+                            :team2-players="team2Players"
+                        />
+                    </div>
+                </div>
+            </div>
+
             <!-- Danger Zone -->
             <div class="pt-8 mt-8 border-t-4 border-black flex flex-col gap-4">
                 <button
@@ -240,7 +271,9 @@ const route = useRoute();
 const supabase = useSupabaseClient();
 const match = ref<any>(null);
 const teams = ref<any[]>([]);
+const players = ref<any[]>([]);
 const pending = ref(true);
+const isTeaserOpen = ref(false);
 
 // Timer logic
 const now = ref(Date.now());
@@ -273,8 +306,13 @@ const formattedTimer = computed(() => {
     return `${m}:${s}`;
 });
 
+const team1 = computed(() => teams.value.find((t) => t.id === match.value?.team1_id) || null);
+const team2 = computed(() => teams.value.find((t) => t.id === match.value?.team2_id) || null);
+const team1Players = computed(() => players.value.filter((p) => p.team_id === match.value?.team1_id));
+const team2Players = computed(() => players.value.filter((p) => p.team_id === match.value?.team2_id));
+
 const loadMatch = async () => {
-    const { data: tData } = await supabase.from("teams").select("id, name");
+    const { data: tData } = await supabase.from("teams").select("id, name, logo_url");
     if (tData) teams.value = tData;
 
     const { data } = await supabase
@@ -284,6 +322,15 @@ const loadMatch = async () => {
         .single();
     if (data) {
         match.value = data;
+        const teamIds = [data.team1_id, data.team2_id].filter(Boolean);
+        if (teamIds.length) {
+            const { data: pData } = await supabase
+                .from("players")
+                .select("id, team_id, name, jersey_number, photo_url")
+                .in("team_id", teamIds)
+                .order("jersey_number", { ascending: true });
+            if (pData) players.value = pData;
+        }
         startTimerSync();
     }
     pending.value = false;
@@ -441,5 +488,3 @@ onUnmounted(() => {
     if (timerInterval) clearInterval(timerInterval);
 });
 </script>
-
-
