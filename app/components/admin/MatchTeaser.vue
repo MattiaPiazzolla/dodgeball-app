@@ -29,7 +29,7 @@ const status = ref<'idle' | 'loading' | 'ready' | 'playing' | 'recording' | 'don
 const recordProgress = ref(0);
 
 // Exporter settings
-const customTitle = ref('DODGEBALL CHAMPIONSHIP');
+const customTitle = 'DODGEBALL XL';
 const customDateTime = ref('STASERA ORE 21:00');
 const customVenue = ref('ARENA SPORTIVA CENTRALE');
 const team1Color = ref('#D32F2F'); // Dodgeball Red
@@ -392,22 +392,74 @@ const drawPlayerAvatar = (ctx: CanvasRenderingContext2D, x: number, y: number, r
     // Name under badge
     ctx.save();
     ctx.translate(x, y);
-    ctx.font = `900 24px 'Barlow Condensed', 'Arial Black', sans-serif`;
+    const nameFontSize = clamp(radius * 0.26, 14, 24);
+    const maxNameWidth = radius * 2.5;
+    let playerName = player.name.toUpperCase();
+
+    ctx.font = `900 ${nameFontSize}px 'Barlow Condensed', 'Arial Black', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
+
+    while (ctx.measureText(playerName).width > maxNameWidth && playerName.length > 4) {
+        playerName = `${playerName.slice(0, -4)}...`;
+    }
     
     // Background plate for name
-    const textWidth = ctx.measureText(player.name.toUpperCase()).width + 20;
+    const textWidth = Math.min(ctx.measureText(playerName).width + 20, maxNameWidth + 24);
+    const plateH = nameFontSize + 14;
     ctx.fillStyle = 'rgba(0,0,0,0.85)';
-    drawSkewedRect(ctx, -textWidth / 2, radius + 15, textWidth, 38, 5);
+    drawSkewedRect(ctx, -textWidth / 2, radius + 12, textWidth, plateH, 5);
     ctx.fill();
     ctx.strokeStyle = glowColor;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(player.name.toUpperCase(), 0, radius + 22);
+    ctx.fillText(playerName, 0, radius + 18);
     ctx.restore();
+};
+
+const getRosterLayout = (count: number, centerX: number, centerY: number) => {
+    const columns = count <= 4 ? Math.max(count, 1) : count <= 6 ? 3 : count <= 8 ? 4 : 5;
+    const rows = Math.ceil(Math.max(count, 1) / columns);
+    const radius = clamp(Math.min(95, (860 / columns - 48) / 2, (500 / rows - 48) / 2), 42, 95);
+    const colGap = Math.min(230, radius * 2 + 42);
+    const rowGap = radius * 2 + 56;
+    const startY = centerY - ((rows - 1) * rowGap) / 2;
+
+    return { columns, radius, colGap, rowGap, startY, centerX };
+};
+
+const drawRosterPlayers = (
+    ctx: CanvasRenderingContext2D,
+    players: Player[],
+    color: string,
+    imagePrefix: string,
+    elapsed: number,
+    opacity: number,
+    centerY: number,
+    animationStart: number,
+    direction: 'down' | 'up'
+) => {
+    const layout = getRosterLayout(players.length, W / 2, centerY);
+
+    players.forEach((p, idx) => {
+        const pIntro = ease.spring(inv(elapsed, animationStart + idx * 0.06, animationStart + 0.75 + idx * 0.06));
+        if (pIntro <= 0) return;
+
+        const row = Math.floor(idx / layout.columns);
+        const col = idx % layout.columns;
+        const itemsInRow = Math.min(layout.columns, players.length - row * layout.columns);
+        const rowW = (itemsInRow - 1) * layout.colGap;
+        const px = layout.centerX - rowW / 2 + col * layout.colGap;
+        const py = layout.startY + row * layout.rowGap + Math.sin(elapsed * 2 + idx) * 6;
+
+        ctx.save();
+        ctx.translate(0, lerp(direction === 'down' ? 120 : -120, 0, pIntro));
+        ctx.globalAlpha = opacity * pIntro;
+        drawPlayerAvatar(ctx, px, py, layout.radius, p, color, `${imagePrefix}_${p.id}`);
+        ctx.restore();
+    });
 };
 
 // Particles setup
@@ -639,11 +691,11 @@ const animateTimeline = () => {
             ctx.fillText(props.team1.name.toUpperCase(), W / 2, 140);
             ctx.shadowBlur = 0;
 
-            // "SQUADRA ORIGINALE" subtitle
+            // Roster subtitle
             ctx.font = `900 24px 'Barlow Condensed', sans-serif`;
             ctx.fillStyle = team1Color.value;
             ctx.letterSpacing = '10px';
-            ctx.fillText('TEAM RED / ROSTER', W / 2 + 5, 240);
+            ctx.fillText('ROSTER COMPLETO', W / 2 + 5, 240);
             ctx.letterSpacing = '0px';
 
             // Draw Team 1 Logo
@@ -671,25 +723,7 @@ const animateTimeline = () => {
                 }
             }
 
-            // Draw Team 1 Roster collages
-            // Render first 4 players in a gorgeous glowing row
-            const showPlayers = props.team1Players.slice(0, 4);
-            showPlayers.forEach((p, idx) => {
-                const pIntro = ease.spring(inv(elapsed, 2.1 + idx * 0.15, 2.9 + idx * 0.15));
-                if (pIntro > 0) {
-                    const radius = 95;
-                    const spacing = 240;
-                    const totalW = (showPlayers.length - 1) * spacing;
-                    const px = W / 2 - totalW / 2 + idx * spacing;
-                    const py = 760 + Math.sin(elapsed * 2 + idx) * 8; // gentle float
-
-                    ctx.save();
-                    ctx.translate(0, lerp(120, 0, pIntro));
-                    ctx.globalAlpha = opacity * pIntro;
-                    drawPlayerAvatar(ctx, px, py, radius, p, team1Color.value, `t1_p_${p.id}`);
-                    ctx.restore();
-                }
-            });
+            drawRosterPlayers(ctx, props.team1Players, team1Color.value, 't1_p', elapsed, opacity, 790, 2.1, 'down');
 
             ctx.restore();
         }
@@ -714,11 +748,11 @@ const animateTimeline = () => {
             ctx.fillText(props.team2.name.toUpperCase(), W / 2, H - 240);
             ctx.shadowBlur = 0;
 
-            // "SQUADRA SFIDANTE" subtitle
+            // Roster subtitle
             ctx.font = `900 24px 'Barlow Condensed', sans-serif`;
             ctx.fillStyle = team2Color.value;
             ctx.letterSpacing = '10px';
-            ctx.fillText('TEAM ORANGE / ROSTER', W / 2 + 5, H - 320);
+            ctx.fillText('ROSTER COMPLETO', W / 2 + 5, H - 320);
             ctx.letterSpacing = '0px';
 
             // Draw Team 2 Logo
@@ -746,24 +780,7 @@ const animateTimeline = () => {
                 }
             }
 
-            // Draw Team 2 Roster collages
-            const showPlayers = props.team2Players.slice(0, 4);
-            showPlayers.forEach((p, idx) => {
-                const pIntro = ease.spring(inv(elapsed, 5.1 + idx * 0.15, 5.9 + idx * 0.15));
-                if (pIntro > 0) {
-                    const radius = 95;
-                    const spacing = 240;
-                    const totalW = (showPlayers.length - 1) * spacing;
-                    const px = W / 2 - totalW / 2 + idx * spacing;
-                    const py = H - 760 - Math.sin(elapsed * 2 + idx) * 8; // gentle float
-
-                    ctx.save();
-                    ctx.translate(0, lerp(-120, 0, pIntro));
-                    ctx.globalAlpha = opacity * pIntro;
-                    drawPlayerAvatar(ctx, px, py, radius, p, team2Color.value, `t2_p_${p.id}`);
-                    ctx.restore();
-                }
-            });
+            drawRosterPlayers(ctx, props.team2Players, team2Color.value, 't2_p', elapsed, opacity, H - 790, 5.1, 'up');
 
             ctx.restore();
         }
@@ -834,7 +851,7 @@ const animateTimeline = () => {
             ctx.fillStyle = '#FFFFFF';
             ctx.shadowColor = '#000';
             ctx.shadowBlur = 15;
-            ctx.fillText(customTitle.value.toUpperCase(), W / 2, H * 0.16 + Math.sin(elapsed * 4) * 4);
+            ctx.fillText(customTitle, W / 2, H * 0.16 + Math.sin(elapsed * 4) * 4);
 
             // ╔══ SKY-HIGH GLOWING VS BADGE ══╗
             const vsScale = lerp(3, 1, ease.spring(inv(elapsed, 7.7, 8.4))) * (1 + Math.sin(elapsed * 8) * 0.05);
@@ -1082,7 +1099,7 @@ const drawStaticFrame = () => {
     // Championship & Info Overlay Preview
     ctx.font = `italic 900 64px 'Impact', sans-serif`;
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(customTitle.value.toUpperCase(), W / 2, H * 0.16);
+    ctx.fillText(customTitle, W / 2, H * 0.16);
 
     const boxW = 860, boxH = 110;
     const bx = W / 2 - boxW / 2, by = H * 0.65;
@@ -1205,7 +1222,7 @@ onMounted(() => {
 });
 
 // React on changes to update the live preview static image
-watch([team1Color, team2Color, customTitle, customDateTime, customVenue], () => {
+watch([team1Color, team2Color, customDateTime, customVenue], () => {
     if (status.value === 'ready') {
         drawStaticFrame();
     }
@@ -1333,13 +1350,10 @@ onUnmounted(() => {
                 <!-- Text Customizer -->
                 <div class="space-y-4">
                     <div class="flex flex-col space-y-1">
-                        <label class="font-impact text-xs tracking-wider text-black">TITOLO / CATEGORIA</label>
-                        <input
-                            type="text"
-                            v-model="customTitle"
-                            placeholder="es. FINALE CAMPIONATO"
-                            class="px-4 py-2 border-2 border-black font-semibold text-black uppercase bg-cement focus:bg-white transition-all focus:outline-none"
-                        />
+                        <label class="font-impact text-xs tracking-wider text-black">TITOLO</label>
+                        <div class="px-4 py-2 border-2 border-black font-semibold text-black uppercase bg-white">
+                            {{ customTitle }}
+                        </div>
                     </div>
 
                     <div class="flex flex-col space-y-1">
