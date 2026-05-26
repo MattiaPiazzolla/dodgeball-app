@@ -30,12 +30,14 @@ const handleLogin = async () => {
             .from("users")
             .select("role")
             .eq("id", authData.user.id)
-            .single();
+            .maybeSingle();
 
         if (userError || userData?.role !== "admin") {
             await client.auth.signOut();
             isError.value = true;
-            message.value = "Accesso negato: solo per amministratori.";
+            message.value = userError 
+                ? `Errore di connessione: ${userError.message}` 
+                : "Accesso negato: solo per amministratori.";
             return;
         }
 

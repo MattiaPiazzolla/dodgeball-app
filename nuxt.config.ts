@@ -5,5 +5,8 @@ export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss", "@nuxt/icon", "@nuxtjs/supabase"],
   supabase: {
     redirect: false,
+    cookieOptions: {
+      secure: process.env.NODE_ENV === "production",
+    },
   },
 });

@@ -18,7 +18,7 @@ export const useAuth = () => {
       .from("users")
       .select("role")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("[useAuth] fetchRole error:", error.message);
