@@ -20,6 +20,12 @@ const editingMatch = ref<any | null>(null);
 // Delete state
 const confirmDeleteId = ref<string | null>(null);
 
+// Match Card Mobile Actions Modal
+const selectedMatchActions = ref<any | null>(null);
+
+// Mobile actions modal
+const showMobileActions = ref(false);
+
 // Add match modal
 const showAddModal = ref(false);
 const addForm = ref({
@@ -133,10 +139,10 @@ const displayKnockoutName = (
 const formatTime = (t: string | null) => (t ? t.slice(0, 5) : null);
 
 const statusColor = (s: string) => {
-    if (s === "completed") return "bg-green-100 text-green-700";
-    if (s === "in_progress") return "bg-red-100 text-red-600 animate-pulse";
-    if (s === "retired") return "bg-yellow-100 text-yellow-700";
-    return "bg-gray-100 text-gray-500";
+    if (s === "completed") return "bg-black text-white border-2 border-black font-impact uppercase tracking-widest";
+    if (s === "in_progress") return "bg-primary text-white border-2 border-black font-impact uppercase tracking-widest animate-pulse";
+    if (s === "retired") return "bg-yellow-400 text-black border-2 border-black font-impact uppercase tracking-widest";
+    return "bg-white text-secondary border-2 border-black font-impact uppercase tracking-widest";
 };
 
 const translateStage = (stage: string) => {
@@ -464,7 +470,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8 space-y-5 sm:space-y-6">
         <div
             v-if="isLoading"
             class="flex items-center justify-center py-24 text-red-500"
@@ -474,79 +480,90 @@ onUnmounted(() => {
 
         <template v-else>
             <div
-                class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                class="flex flex-col gap-3"
             >
-                <div
-                    class="flex bg-white border border-gray-200 rounded-xl p-1 gap-1 shadow-sm"
-                >
-                    <button
-                        @click="activeTab = 'group'"
-                        class="px-6 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all"
-                        :class="
-                            activeTab === 'group'
-                                ? 'bg-black text-white shadow-md'
-                                : 'text-gray-400 hover:text-black'
-                        "
+                <div class="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                    <div
+                        class="flex-1 flex bg-white border-4 border-black p-1 gap-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] sm:flex-none min-w-0"
                     >
-                        Gironi
-                    </button>
+                        <button
+                            @click="activeTab = 'group'"
+                            class="flex-1 sm:flex-none px-2 sm:px-6 py-2.5 text-sm font-impact uppercase tracking-widest transition-all border-2 border-transparent truncate"
+                            :class="
+                                activeTab === 'group'
+                                    ? 'bg-primary text-white border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                    : 'text-secondary hover:text-black'
+                            "
+                        >
+                            Gironi
+                        </button>
+                        <button
+                            v-if="allGroupMatchesCompleted"
+                            @click="activeTab = 'knockout'"
+                            class="flex-1 sm:flex-none px-2 sm:px-6 py-2.5 text-sm font-impact uppercase tracking-widest transition-all border-2 border-transparent truncate"
+                            :class="
+                                activeTab === 'knockout'
+                                    ? 'bg-primary text-white border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                    : 'text-secondary hover:text-black'
+                            "
+                        >
+                            Eliminazione
+                        </button>
+                    </div>
+
+                    <!-- Mobile actions button -->
                     <button
-                        v-if="allGroupMatchesCompleted"
-                        @click="activeTab = 'knockout'"
-                        class="px-6 py-2.5 rounded-lg text-sm font-black uppercase tracking-wide transition-all"
-                        :class="
-                            activeTab === 'knockout'
-                                ? 'bg-black text-white shadow-md'
-                                : 'text-gray-400 hover:text-black'
-                        "
+                        class="sm:hidden w-12 flex-shrink-0 flex items-center justify-center bg-white border-4 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all active:translate-y-1 active:shadow-[0px_0px_0px_rgba(0,0,0,1)]"
+                        @click="showMobileActions = true"
                     >
-                        Eliminazione
+                        <Icon name="mdi:dots-vertical" class="text-xl text-black" />
                     </button>
                 </div>
 
-                <div class="flex gap-2 flex-wrap">
+                <!-- Desktop Actions -->
+                <div class="hidden sm:flex gap-3 flex-wrap">
                     <template v-if="activeTab === 'knockout'">
                         <template
                             v-if="Object.keys(knockoutMatches).length > 0"
                         >
                             <button
                                 @click="clearKnockout"
-                                class="px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors"
+                                class="btn-skewed-secondary !text-primary !border-primary hover:!bg-primary hover:!text-white"
                             >
-                                Cancella tabellone
+                                <span class="btn-skewed-content text-xs">Cancella tabellone</span>
                             </button>
                             <button
                                 @click="openAddModal"
-                                class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition-colors"
+                                class="btn-skewed-secondary"
                             >
-                                Aggiungi incontro
+                                <span class="btn-skewed-content text-xs">Aggiungi incontro</span>
                             </button>
                             <button
                                 @click="autoGenerateKnockout"
-                                class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-black text-white hover:bg-gray-800 rounded-xl transition-colors shadow-md"
+                                class="btn-skewed"
                             >
-                                Rigenera
+                                <span class="btn-skewed-content text-xs">Rigenera</span>
                             </button>
                         </template>
                     </template>
                     <template v-else>
                         <button
                             @click="clearGroupMatches"
-                            class="px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors"
+                            class="btn-skewed-secondary !text-primary !border-primary hover:!bg-primary hover:!text-white"
                         >
-                            Cancella gironi
+                            <span class="btn-skewed-content text-xs">Cancella gironi</span>
                         </button>
                         <button
                             @click="openAddModal"
-                            class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition-colors"
+                            class="btn-skewed-secondary"
                         >
-                            Aggiungi incontro
+                            <span class="btn-skewed-content text-xs">Aggiungi incontro</span>
                         </button>
                         <button
                             @click="autoGenerateGroupMatches"
-                            class="px-4 py-2 text-sm font-bold uppercase tracking-wide bg-black text-white hover:bg-gray-800 rounded-xl transition-colors shadow-md"
+                            class="btn-skewed"
                         >
-                            Genera calendario
+                            <span class="btn-skewed-content text-xs">Genera calendario</span>
                         </button>
                     </template>
                 </div>
@@ -558,7 +575,7 @@ onUnmounted(() => {
                     class="animate-in fade-in slide-in-from-bottom-4 duration-500 py-8"
                 >
                     <div
-                        class="bg-gradient-to-r from-red-600 to-red-800 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center gap-6 text-center"
+                        class="card-grunge bg-primary border-4 border-black p-8 sm:p-12 relative overflow-hidden flex flex-col items-center justify-center gap-6 text-center"
                     >
                         <Icon
                             name="mdi:tournament"
@@ -568,7 +585,7 @@ onUnmounted(() => {
                             class="relative z-10 text-white space-y-4 max-w-lg"
                         >
                             <div
-                                class="flex items-center justify-center gap-2 text-yellow-300 font-bold uppercase tracking-widest text-xs"
+                                class="flex items-center justify-center gap-2 text-yellow-300 font-impact uppercase tracking-widest text-sm"
                             >
                                 <Icon
                                     name="mdi:check-decagram"
@@ -577,11 +594,11 @@ onUnmounted(() => {
                                 Fase a Gironi Completata
                             </div>
                             <h2
-                                class="text-4xl sm:text-5xl font-black uppercase tracking-tight leading-none"
+                                class="text-4xl sm:text-5xl font-impact uppercase tracking-widest leading-none text-white"
                             >
                                 Pronto per il Sorteggio
                             </h2>
-                            <p class="text-white/80 font-medium">
+                            <p class="text-gray-200 font-bold uppercase tracking-wider">
                                 Tutti gli incontri della fase a gironi sono stati
                                 risolti. Ora puoi generare il tabellone ufficiale
                                 a eliminazione diretta.
@@ -590,10 +607,10 @@ onUnmounted(() => {
                         <div class="relative z-10 mt-4">
                             <button
                                 @click="autoGenerateKnockout"
-                                class="flex items-center justify-center gap-3 px-10 py-5 bg-white text-red-600 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-all hover:-translate-y-1 hover:shadow-xl"
+                                class="flex items-center justify-center gap-3 px-10 py-5 bg-white text-primary border-4 border-black font-impact uppercase tracking-widest hover:bg-black hover:text-white hover:border-white transition-all shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transform -skew-x-6"
                             >
-                                <Icon name="mdi:whistle" class="text-2xl" />
-                                Genera tabellone
+                                <Icon name="mdi:whistle" class="text-2xl transform skew-x-6 block" />
+                                <span class="transform skew-x-6 block">Genera tabellone</span>
                             </button>
                         </div>
                     </div>
@@ -607,7 +624,7 @@ onUnmounted(() => {
                         >
                             <div class="text-center">
                                 <span
-                                    class="text-xs font-black uppercase tracking-widest text-white bg-black px-4 py-1.5 rounded-full"
+                                    class="text-sm font-impact uppercase tracking-widest text-white bg-black border-2 border-black px-4 py-1.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                                 >
                                     {{ roundLabel(Number(roundNum)) }}
                                 </span>
@@ -615,7 +632,12 @@ onUnmounted(() => {
                             <div
                                 v-for="(match, mIdx) in roundMatches"
                                 :key="match.id"
-                                class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                                class="card-grunge overflow-hidden transition-all"
+                                :class="
+                                    match.status === 'in_progress'
+                                        ? 'bg-red-50 !border-primary shadow-[0_0_15px_rgba(211,47,47,0.5)] ring-1 ring-primary'
+                                        : 'bg-white'
+                                "
                             >
                                 <div
                                     v-if="editingMatch?.id === match.id"
@@ -623,7 +645,7 @@ onUnmounted(() => {
                                 >
                                     <select
                                         v-model="editingMatch.team1_id"
-                                        class="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black focus:ring-2 focus:ring-black/10 outline-none uppercase"
+                                        class="w-full bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest uppercase outline-none focus:border-primary transition-all"
                                     >
                                         <option value="">DA DEFINIRE</option>
                                         <option
@@ -636,7 +658,7 @@ onUnmounted(() => {
                                     </select>
                                     <select
                                         v-model="editingMatch.team2_id"
-                                        class="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black focus:ring-2 focus:ring-black/10 outline-none uppercase"
+                                        class="w-full bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest uppercase outline-none focus:border-primary transition-all"
                                     >
                                         <option value="">DA DEFINIRE</option>
                                         <option
@@ -653,17 +675,17 @@ onUnmounted(() => {
                                             type="number"
                                             min="1"
                                             placeholder="Turno"
-                                            class="w-1/3 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none"
+                                            class="w-1/3 bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest outline-none focus:border-primary transition-all"
                                         />
                                         <input
                                             v-model="editingMatch.start_time"
                                             type="time"
-                                            class="flex-1 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none"
+                                            class="flex-1 bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest outline-none focus:border-primary transition-all"
                                         />
                                     </div>
                                     <select
                                         v-model="editingMatch.status"
-                                        class="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none uppercase"
+                                        class="w-full bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest uppercase outline-none focus:border-primary transition-all"
                                     >
                                         <option value="pending">In attesa</option>
                                         <option value="in_progress">
@@ -677,13 +699,13 @@ onUnmounted(() => {
                                     <div class="flex gap-2 pt-1">
                                         <button
                                             @click="saveEdit"
-                                            class="flex-1 bg-black text-white py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-800 transition-colors"
+                                            class="btn-skewed flex-1 !text-xs py-2"
                                         >
                                             Salva
                                         </button>
                                         <button
                                             @click="cancelEdit"
-                                            class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-200 transition-colors"
+                                            class="btn-skewed-secondary flex-1 !text-xs py-2"
                                         >
                                             Annulla
                                         </button>
@@ -692,147 +714,312 @@ onUnmounted(() => {
 
                                 <div v-else>
                                     <div
-                                        class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between"
+                                        class="relative p-4 sm:p-6 bg-white"
                                     >
-                                        <span
-                                            class="text-[10px] font-black uppercase tracking-widest text-gray-400"
-                                        >
-                                            Incontro {{ mIdx + 1 }}
-                                        </span>
-                                        <span
-                                            v-if="Number(roundNum) > 1"
-                                            class="text-[10px] font-bold uppercase tracking-wide text-red-500"
-                                        >
-                                            Da vincitori turno precedente
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50"
-                                    >
-                                        <img
-                                            v-if="getTeamLogo(match.team1_id)"
-                                            :src="getTeamLogo(match.team1_id)"
-                                            class="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                                        />
-                                        <div
-                                            v-else
-                                            class="w-7 h-7 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center"
-                                        >
-                                            <Icon
-                                                name="mdi:shield-outline"
-                                                class="text-gray-400 text-sm"
-                                            />
-                                        </div>
-                                        <span
-                                            class="text-sm font-black uppercase tracking-tight truncate"
-                                            :class="
-                                                match.team1_id
-                                                    ? 'text-black'
-                                                    : 'text-gray-400'
-                                            "
-                                        >
-                                            {{
-                                                displayKnockoutName(
-                                                    match,
-                                                    1,
-                                                    roundNum,
-                                                    mIdx,
-                                                )
-                                            }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="flex items-center justify-center py-1 bg-gray-50"
-                                    >
-                                        <span
-                                            class="text-xs font-black text-gray-400 uppercase tracking-widest"
-                                            >vs</span
-                                        >
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-3 px-4 py-3 border-t border-gray-50"
-                                    >
-                                        <img
-                                            v-if="getTeamLogo(match.team2_id)"
-                                            :src="getTeamLogo(match.team2_id)"
-                                            class="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                                        />
-                                        <div
-                                            v-else
-                                            class="w-7 h-7 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center"
-                                        >
-                                            <Icon
-                                                name="mdi:shield-outline"
-                                                class="text-gray-400 text-sm"
-                                            />
-                                        </div>
-                                        <span
-                                            class="text-sm font-black uppercase tracking-tight truncate"
-                                            :class="
-                                                match.team2_id
-                                                    ? 'text-black'
-                                                    : 'text-gray-400'
-                                            "
-                                        >
-                                            {{
-                                                displayKnockoutName(
-                                                    match,
-                                                    2,
-                                                    roundNum,
-                                                    mIdx,
-                                                )
-                                            }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-t border-gray-100"
-                                    >
-                                        <div class="flex items-center gap-2">
-                                            <span
-                                                v-if="
-                                                    formatTime(match.start_time)
-                                                "
-                                                class="text-xs font-bold text-gray-700"
+                                        <!-- Top Right Actions -->
+                                        <div class="absolute top-2 right-2 flex items-center gap-2">
+                                            <!-- Desktop Actions -->
+                                            <div class="hidden sm:flex gap-1">
+                                                <template
+                                                    v-if="
+                                                        confirmDeleteId === match.id
+                                                    "
+                                                >
+                                                    <button
+                                                        @click="
+                                                            deleteMatch(match.id)
+                                                        "
+                                                        class="text-xs font-black text-red-600 hover:text-red-800 uppercase px-2"
+                                                    >
+                                                        Sì
+                                                    </button>
+                                                    <button
+                                                        @click="
+                                                            confirmDeleteId = null
+                                                        "
+                                                        class="text-xs font-black text-gray-400 hover:text-gray-600 uppercase px-2"
+                                                    >
+                                                        No
+                                                    </button>
+                                                </template>
+                                                <template v-else>
+                                                    <NuxtLink
+                                                        :to="`/admin/match/${match.id}`"
+                                                        class="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                                                        title="Ref Match"
+                                                    >
+                                                        <Icon
+                                                            name="mdi:whistle"
+                                                            class="text-base"
+                                                        />
+                                                    </NuxtLink>
+                                                    <button
+                                                        @click="startEdit(match)"
+                                                        class="text-gray-400 hover:text-black transition-colors p-1"
+                                                        title="Edit"
+                                                    >
+                                                        <Icon
+                                                            name="mdi:pencil"
+                                                            class="text-base"
+                                                        />
+                                                    </button>
+                                                    <button
+                                                        @click="
+                                                            confirmDeleteId =
+                                                                match.id
+                                                        "
+                                                        class="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                                        title="Delete"
+                                                    >
+                                                        <Icon
+                                                            name="mdi:delete-outline"
+                                                            class="text-base"
+                                                        />
+                                                    </button>
+                                                </template>
+                                            </div>
+
+                                            <!-- Mobile Actions Button -->
+                                            <button
+                                                class="sm:hidden text-gray-400 hover:text-black transition-colors p-1 active:translate-y-0.5"
+                                                @click="selectedMatchActions = match"
                                             >
-                                                {{
-                                                    formatTime(match.start_time)
-                                                }}
-                                            </span>
-                                            <span
-                                                v-else
-                                                class="text-xs font-bold text-red-400"
-                                                >Nessun orario</span
-                                            >
+                                                <Icon name="mdi:dots-vertical" class="text-xl" />
+                                            </button>
+                                        </div>
+
+                                        <!-- Top Left Status -->
+                                        <div class="absolute top-2 left-2">
                                             <span
                                                 :class="
                                                     statusColor(match.status)
                                                 "
-                                                class="text-xs font-bold px-2 py-0.5 rounded-full capitalize"
+                                                class="text-[10px] font-impact tracking-widest px-2 py-0.5 border-2 border-black uppercase"
                                             >
                                                 {{
                                                     translateStatus(match.status)
                                                 }}
                                             </span>
                                         </div>
-                                        <div class="flex gap-1">
+
+                                        <!-- Knockout Label -->
+                                        <div class="text-center mb-4 sm:mb-6 mt-4">
+                                            <span class="text-xs font-impact uppercase tracking-widest text-secondary block">
+                                                Incontro {{ mIdx + 1 }}
+                                            </span>
+                                            <span
+                                                v-if="Number(roundNum) > 1"
+                                                class="text-[10px] font-impact uppercase tracking-widest text-primary block mt-0.5"
+                                            >
+                                                Da vincitori
+                                            </span>
+                                        </div>
+
+                                        <!-- Main Match Content -->
+                                        <div class="flex items-center justify-between gap-2 sm:gap-4">
+                                            <!-- Team 1 -->
+                                            <div class="flex-1 flex flex-col items-center gap-2 min-w-0">
+                                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-cement border-2 border-black flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        v-if="getTeamLogo(match.team1_id)"
+                                                        :src="getTeamLogo(match.team1_id)"
+                                                        class="w-full h-full object-cover"
+                                                    />
+                                                    <Icon
+                                                        v-else
+                                                        name="mdi:shield-outline"
+                                                        class="text-gray-400 text-2xl"
+                                                    />
+                                                </div>
+                                                <span
+                                                    class="font-impact uppercase tracking-widest text-center text-sm sm:text-base leading-tight break-words max-w-full"
+                                                    :class="
+                                                        match.team1_id
+                                                            ? 'text-black'
+                                                            : 'text-gray-400'
+                                                    "
+                                                >
+                                                    {{ displayKnockoutName(match, 1, roundNum, mIdx) }}
+                                                </span>
+                                            </div>
+
+                                            <!-- Center (VS / Scores / Time) -->
+                                            <div class="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px]">
+                                                <template v-if="match.status === 'completed' || match.status === 'finished'">
+                                                    <div class="flex items-center gap-2 font-black text-2xl sm:text-3xl font-impact tracking-tighter">
+                                                        <span>{{ match.team1_score ?? 0 }}</span>
+                                                        <span class="text-secondary text-lg">-</span>
+                                                        <span>{{ match.team2_score ?? 0 }}</span>
+                                                    </div>
+                                                </template>
+                                                <template v-else>
+                                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black text-white flex items-center justify-center font-impact italic text-sm sm:text-base">VS</div>
+                                                </template>
+
+                                                <span
+                                                    v-if="formatTime(match.start_time)"
+                                                    class="mt-2 text-xs sm:text-sm font-impact tracking-widest text-secondary"
+                                                >
+                                                    {{ formatTime(match.start_time) }}
+                                                </span>
+                                            </div>
+
+                                            <!-- Team 2 -->
+                                            <div class="flex-1 flex flex-col items-center gap-2 min-w-0">
+                                                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-cement border-2 border-black flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        v-if="getTeamLogo(match.team2_id)"
+                                                        :src="getTeamLogo(match.team2_id)"
+                                                        class="w-full h-full object-cover"
+                                                    />
+                                                    <Icon
+                                                        v-else
+                                                        name="mdi:shield-outline"
+                                                        class="text-gray-400 text-2xl"
+                                                    />
+                                                </div>
+                                                <span
+                                                    class="font-impact uppercase tracking-widest text-center text-sm sm:text-base leading-tight break-words max-w-full"
+                                                    :class="
+                                                        match.team2_id
+                                                            ? 'text-black'
+                                                            : 'text-gray-400'
+                                                    "
+                                                >
+                                                    {{ displayKnockoutName(match, 2, roundNum, mIdx) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else>
+                <div
+                    v-if="Object.keys(groupMatches).length === 0"
+                    class="card-grunge bg-cement p-12 flex flex-col items-center justify-center text-secondary border-dashed"
+                >
+                    <Icon
+                        name="mdi:table-large"
+                        class="text-6xl mb-4 opacity-30"
+                    />
+                    <p class="font-impact uppercase tracking-widest text-lg">
+                        Nessun incontro dei gironi ancora
+                    </p>
+                    <p class="text-sm mt-1 font-bold">
+                        Genera tutti gli incontri dei gironi o aggiungili manualmente
+                    </p>
+                </div>
+                <div v-else class="space-y-6">
+                    <div
+                        v-for="(groupMatchList, groupId) in groupMatches"
+                        :key="groupId"
+                        class="card-grunge bg-white overflow-hidden"
+                    >
+                        <div
+                            class="px-6 py-4 bg-cement border-b-4 border-black flex items-center justify-between"
+                        >
+                            <h3
+                                class="font-impact text-xl uppercase tracking-widest text-black"
+                            >
+                                {{ getGroupName(String(groupId)) }}
+                            </h3>
+                            <span
+                                class="text-xs font-impact tracking-widest text-secondary border-2 border-black bg-white px-3 py-1 uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                            >
+                                {{ groupMatchList.length }} incontri
+                            </span>
+                        </div>
+                        <div class="divide-y-2 divide-black">
+                            <div
+                                v-for="match in groupMatchList"
+                                :key="match.id"
+                            >
+                                <div
+                                    v-if="editingMatch?.id === match.id"
+                                    class="p-4 space-y-3"
+                                >
+                                    <div class="flex gap-2">
+                                        <select
+                                            v-model="editingMatch.team1_id"
+                                            class="flex-1 bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest uppercase outline-none focus:border-primary transition-all"
+                                        >
+                                            <option value="">DA DEFINIRE</option>
+                                            <option
+                                                v-for="t in teams"
+                                                :key="t.id"
+                                                :value="t.id"
+                                            >
+                                                {{ t.name }}
+                                            </option>
+                                        </select>
+                                        <span
+                                            class="text-gray-400 font-black text-sm self-center"
+                                            >vs</span
+                                        >
+                                        <select
+                                            v-model="editingMatch.team2_id"
+                                            class="flex-1 bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest uppercase outline-none focus:border-primary transition-all"
+                                        >
+                                            <option value="">DA DEFINIRE</option>
+                                            <option
+                                                v-for="t in teams"
+                                                :key="t.id"
+                                                :value="t.id"
+                                            >
+                                                {{ t.name }}
+                                            </option>
+                                        </select>
+                                        <input
+                                            v-model="editingMatch.start_time"
+                                            type="time"
+                                            class="w-32 bg-white border-4 border-black px-3 py-2.5 text-sm font-impact tracking-widest outline-none focus:border-primary transition-all"
+                                        />
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button
+                                            @click="saveEdit"
+                                            class="btn-skewed flex-1 !text-xs py-2"
+                                        >
+                                            Salva
+                                        </button>
+                                        <button
+                                            @click="cancelEdit"
+                                            class="btn-skewed-secondary flex-1 !text-xs py-2"
+                                        >
+                                            Annulla
+                                        </button>
+                                    </div>
+                                </div>
+                                <div
+                                    v-else
+                                    class="relative p-4 sm:p-6 transition-colors"
+                                    :class="
+                                        match.status === 'in_progress'
+                                            ? 'bg-red-50 shadow-[inset_4px_0_0_var(--primary)]'
+                                            : 'hover:bg-gray-50'
+                                    "
+                                >
+                                    <!-- Top Right Actions -->
+                                    <div class="absolute top-2 right-2 flex items-center gap-2">
+                                        <!-- Desktop Actions -->
+                                        <div class="hidden sm:flex items-center gap-1">
                                             <template
-                                                v-if="
-                                                    confirmDeleteId === match.id
-                                                "
+                                                v-if="confirmDeleteId === match.id"
                                             >
                                                 <button
-                                                    @click="
-                                                        deleteMatch(match.id)
-                                                    "
+                                                    @click="deleteMatch(match.id)"
                                                     class="text-xs font-black text-red-600 hover:text-red-800 uppercase px-2"
                                                 >
                                                     Sì
                                                 </button>
                                                 <button
-                                                    @click="
-                                                        confirmDeleteId = null
-                                                    "
-                                                    class="text-xs font-black text-gray-400 hover:text-gray-600 uppercase px-2"
+                                                    @click="confirmDeleteId = null"
+                                                    class="text-xs font-black text-gray-400 hover:text-black uppercase px-2"
                                                 >
                                                     No
                                                 </button>
@@ -851,7 +1038,6 @@ onUnmounted(() => {
                                                 <button
                                                     @click="startEdit(match)"
                                                     class="text-gray-400 hover:text-black transition-colors p-1"
-                                                    title="Edit"
                                                 >
                                                     <Icon
                                                         name="mdi:pencil"
@@ -859,12 +1045,8 @@ onUnmounted(() => {
                                                     />
                                                 </button>
                                                 <button
-                                                    @click="
-                                                        confirmDeleteId =
-                                                            match.id
-                                                    "
+                                                    @click="confirmDeleteId = match.id"
                                                     class="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                                    title="Delete"
                                                 >
                                                     <Icon
                                                         name="mdi:delete-outline"
@@ -873,241 +1055,100 @@ onUnmounted(() => {
                                                 </button>
                                             </template>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div v-else>
-                <div
-                    v-if="Object.keys(groupMatches).length === 0"
-                    class="flex flex-col items-center justify-center py-24 text-gray-400"
-                >
-                    <Icon
-                        name="mdi:table-large"
-                        class="text-6xl mb-4 opacity-30"
-                    />
-                    <p class="font-bold uppercase tracking-wide">
-                        Nessun incontro dei gironi ancora
-                    </p>
-                    <p class="text-sm mt-1">
-                        Genera tutti gli incontri dei gironi o aggiungili manualmente
-                    </p>
-                </div>
-                <div v-else class="space-y-6">
-                    <div
-                        v-for="(groupMatchList, groupId) in groupMatches"
-                        :key="groupId"
-                        class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
-                    >
-                        <div
-                            class="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
-                        >
-                            <h3
-                                class="font-black uppercase tracking-tight text-black"
-                            >
-                                {{ getGroupName(String(groupId)) }}
-                            </h3>
-                            <span
-                                class="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100"
-                            >
-                                {{ groupMatchList.length }} incontri
-                            </span>
-                        </div>
-                        <div class="divide-y divide-gray-50">
-                            <div
-                                v-for="match in groupMatchList"
-                                :key="match.id"
-                            >
-                                <div
-                                    v-if="editingMatch?.id === match.id"
-                                    class="p-4 space-y-3"
-                                >
-                                    <div class="flex gap-2">
-                                        <select
-                                            v-model="editingMatch.team1_id"
-                                            class="flex-1 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none uppercase"
+                                        <!-- Mobile Actions Button -->
+                                        <button
+                                            class="sm:hidden text-gray-400 hover:text-black transition-colors p-1 active:translate-y-0.5"
+                                            @click="selectedMatchActions = match"
                                         >
-                                            <option value="">DA DEFINIRE</option>
-                                            <option
-                                                v-for="t in teams"
-                                                :key="t.id"
-                                                :value="t.id"
-                                            >
-                                                {{ t.name }}
-                                            </option>
-                                        </select>
+                                            <Icon name="mdi:dots-vertical" class="text-xl" />
+                                        </button>
+                                    </div>
+
+                                    <!-- Top Left Status -->
+                                    <div class="absolute top-2 left-2">
                                         <span
-                                            class="text-gray-400 font-black text-sm self-center"
-                                            >vs</span
+                                            :class="statusColor(match.status)"
+                                            class="text-[10px] font-impact tracking-widest px-2 py-0.5 border-2 border-black uppercase"
                                         >
-                                        <select
-                                            v-model="editingMatch.team2_id"
-                                            class="flex-1 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none uppercase"
-                                        >
-                                            <option value="">DA DEFINIRE</option>
-                                            <option
-                                                v-for="t in teams"
-                                                :key="t.id"
-                                                :value="t.id"
-                                            >
-                                                {{ t.name }}
-                                            </option>
-                                        </select>
-                                        <input
-                                            v-model="editingMatch.start_time"
-                                            type="time"
-                                            class="w-32 bg-gray-50 rounded-xl px-3 py-2.5 text-sm font-bold border border-gray-200 focus:border-black outline-none"
-                                        />
+                                            {{ translateStatus(match.status) }}
+                                        </span>
                                     </div>
-                                    <div class="flex gap-2">
-                                        <button
-                                            @click="saveEdit"
-                                            class="flex-1 bg-black text-white py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-800"
-                                        >
-                                            Salva
-                                        </button>
-                                        <button
-                                            @click="cancelEdit"
-                                            class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-xs font-black uppercase hover:bg-gray-200"
-                                        >
-                                            Annulla
-                                        </button>
-                                    </div>
-                                </div>
-                                <div
-                                    v-else
-                                    class="flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors"
-                                >
-                                    <div
-                                        class="flex items-center gap-3 flex-1 min-w-0"
-                                    >
-                                        <div
-                                            class="flex items-center gap-2 flex-1 min-w-0"
-                                        >
-                                            <img
-                                                v-if="
-                                                    getTeamLogo(match.team1_id)
-                                                "
-                                                :src="
-                                                    getTeamLogo(match.team1_id)
-                                                "
-                                                class="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                                            />
+
+                                    <!-- Main Match Content -->
+                                    <div class="mt-8 flex items-center justify-between gap-2 sm:gap-4">
+                                        <!-- Team 1 -->
+                                        <div class="flex-1 flex flex-col items-center gap-2 min-w-0">
+                                            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white border-2 border-black flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                <img
+                                                    v-if="getTeamLogo(match.team1_id)"
+                                                    :src="getTeamLogo(match.team1_id)"
+                                                    class="w-full h-full object-cover"
+                                                />
+                                                <Icon
+                                                    v-else
+                                                    name="mdi:shield"
+                                                    class="text-secondary text-2xl"
+                                                />
+                                            </div>
                                             <span
-                                                class="font-black uppercase text-sm truncate"
+                                                class="font-impact uppercase tracking-widest text-center text-sm sm:text-base leading-tight break-words max-w-full"
                                                 :class="
                                                     match.team1_id
                                                         ? 'text-black'
-                                                        : 'text-gray-400'
+                                                        : 'text-secondary'
                                                 "
-                                                >{{
-                                                    displayName(match, 1)
-                                                }}</span
                                             >
+                                                {{ displayName(match, 1) }}
+                                            </span>
                                         </div>
-                                        <span
-                                            class="text-xs font-black text-gray-400 px-3 flex-shrink-0"
-                                            >VS</span
-                                        >
-                                        <div
-                                            class="flex items-center gap-2 flex-1 min-w-0 justify-end"
-                                        >
+
+                                        <!-- Center (VS / Scores / Time) -->
+                                        <div class="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px]">
+                                            <template v-if="match.status === 'completed' || match.status === 'finished'">
+                                                <div class="flex items-center gap-2 font-black text-2xl sm:text-3xl font-impact tracking-tighter">
+                                                    <span>{{ match.team1_score ?? 0 }}</span>
+                                                    <span class="text-secondary text-lg">-</span>
+                                                    <span>{{ match.team2_score ?? 0 }}</span>
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black text-white flex items-center justify-center font-impact italic text-sm sm:text-base">VS</div>
+                                            </template>
+
                                             <span
-                                                class="font-black uppercase text-sm truncate text-right"
+                                                v-if="formatTime(match.start_time)"
+                                                class="mt-2 text-xs sm:text-sm font-impact tracking-widest text-secondary"
+                                            >
+                                                {{ formatTime(match.start_time) }}
+                                            </span>
+                                        </div>
+
+                                        <!-- Team 2 -->
+                                        <div class="flex-1 flex flex-col items-center gap-2 min-w-0">
+                                            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white border-2 border-black flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                <img
+                                                    v-if="getTeamLogo(match.team2_id)"
+                                                    :src="getTeamLogo(match.team2_id)"
+                                                    class="w-full h-full object-cover"
+                                                />
+                                                <Icon
+                                                    v-else
+                                                    name="mdi:shield"
+                                                    class="text-secondary text-2xl"
+                                                />
+                                            </div>
+                                            <span
+                                                class="font-impact uppercase tracking-widest text-center text-sm sm:text-base leading-tight break-words max-w-full"
                                                 :class="
                                                     match.team2_id
                                                         ? 'text-black'
-                                                        : 'text-gray-400'
+                                                        : 'text-secondary'
                                                 "
-                                                >{{
-                                                    displayName(match, 2)
-                                                }}</span
                                             >
-                                            <img
-                                                v-if="
-                                                    getTeamLogo(match.team2_id)
-                                                "
-                                                :src="
-                                                    getTeamLogo(match.team2_id)
-                                                "
-                                                class="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                                            />
+                                                {{ displayName(match, 2) }}
+                                            </span>
                                         </div>
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-3 ml-4 flex-shrink-0"
-                                    >
-                                        <span
-                                            v-if="formatTime(match.start_time)"
-                                            class="text-xs font-bold text-gray-600"
-                                            >{{
-                                                formatTime(match.start_time)
-                                            }}</span
-                                        >
-                                        <span
-                                            v-else
-                                            class="text-xs font-bold text-red-400"
-                                            >Nessun orario</span
-                                        >
-                                        <span
-                                            :class="statusColor(match.status)"
-                                            class="text-xs font-bold px-2 py-0.5 rounded-full capitalize hidden sm:inline"
-                                            >{{
-                                                translateStatus(match.status)
-                                            }}</span
-                                        >
-                                        <template
-                                            v-if="confirmDeleteId === match.id"
-                                        >
-                                            <button
-                                                @click="deleteMatch(match.id)"
-                                                class="text-xs font-black text-red-600 uppercase"
-                                            >
-                                                Sì
-                                            </button>
-                                            <button
-                                                @click="confirmDeleteId = null"
-                                                class="text-xs font-black text-gray-400 uppercase"
-                                            >
-                                                No
-                                            </button>
-                                        </template>
-                                        <template v-else>
-                                            <NuxtLink
-                                                :to="`/admin/match/${match.id}`"
-                                                class="text-blue-500 hover:text-blue-700 transition-colors p-1"
-                                                title="Ref Match"
-                                            >
-                                                <Icon
-                                                    name="mdi:whistle"
-                                                    class="text-base"
-                                                />
-                                            </NuxtLink>
-                                            <button
-                                                @click="startEdit(match)"
-                                                class="text-gray-400 hover:text-black transition-colors p-1"
-                                            >
-                                                <Icon
-                                                    name="mdi:pencil"
-                                                    class="text-base"
-                                                />
-                                            </button>
-                                            <button
-                                                @click="
-                                                    confirmDeleteId = match.id
-                                                "
-                                                class="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                            >
-                                                <Icon
-                                                    name="mdi:delete-outline"
-                                                    class="text-base"
-                                                />
-                                            </button>
-                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -1123,7 +1164,7 @@ onUnmounted(() => {
             @click.self="showAddModal = false"
         >
             <div
-                class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4"
+                class="card-grunge bg-white w-full max-w-md p-6 sm:p-8 space-y-4"
             >
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-black uppercase tracking-tight">
@@ -1140,14 +1181,14 @@ onUnmounted(() => {
                 <div class="space-y-3">
                     <div>
                         <label
-                            class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
+                            class="text-xs font-impact uppercase tracking-widest text-secondary mb-1 block"
                             >Tipo</label
                         >
-                        <div class="flex bg-gray-100 p-1 rounded-xl">
+                        <div class="flex border-4 border-black">
                             <button
                                 @click="addForm.match_type = 'knockout'"
                                 :disabled="!allGroupMatchesCompleted"
-                                class="flex-1 py-2 text-sm font-black uppercase rounded-lg transition-all"
+                                class="flex-1 py-2 text-sm font-impact uppercase transition-all"
                                 :class="[
                                     addForm.match_type === 'knockout'
                                         ? 'bg-white shadow-sm text-black'
@@ -1161,7 +1202,7 @@ onUnmounted(() => {
                             </button>
                             <button
                                 @click="addForm.match_type = 'group'"
-                                class="flex-1 py-2 text-sm font-black uppercase rounded-lg transition-all"
+                                class="flex-1 py-2 text-sm font-impact uppercase transition-all"
                                 :class="
                                     addForm.match_type === 'group'
                                         ? 'bg-white shadow-sm text-black'
@@ -1175,12 +1216,12 @@ onUnmounted(() => {
 
                     <div v-if="addForm.match_type === 'group'">
                         <label
-                            class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
+                            class="text-xs font-impact uppercase tracking-widest text-secondary mb-1 block"
                             >Girone</label
                         >
                         <select
                             v-model="addForm.group_id"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm uppercase focus:border-black focus:ring-2 focus:ring-black/10 outline-none"
+                            class="w-full bg-white border-4 border-black px-3 py-2.5 font-impact text-sm uppercase focus:border-primary outline-none transition-all"
                         >
                             <option value="">-- Seleziona Girone --</option>
                             <option
@@ -1195,26 +1236,26 @@ onUnmounted(() => {
 
                     <div v-if="addForm.match_type === 'knockout'">
                         <label
-                            class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
+                            class="text-xs font-impact uppercase tracking-widest text-secondary mb-1 block"
                             >Turno</label
                         >
                         <input
                             v-model="addForm.round"
                             type="number"
                             min="1"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm focus:border-black outline-none"
+                            class="w-full bg-white border-4 border-black px-3 py-2.5 font-impact text-sm focus:border-primary outline-none transition-all"
                         />
                     </div>
 
                     <div>
                         <label
-                            class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
+                            class="text-xs font-impact uppercase tracking-widest text-secondary mb-1 block"
                             >Squadra 1</label
                         >
-                        <div class="flex bg-gray-100 p-1 rounded-xl mb-2">
+                        <div class="flex border-4 border-black mb-3">
                             <button
                                 @click="addForm.team1_type = 'team'"
-                                class="flex-1 py-1.5 text-xs font-black uppercase rounded-lg transition-all"
+                                class="flex-1 py-1.5 text-xs font-impact uppercase transition-all"
                                 :class="
                                     addForm.team1_type === 'team'
                                         ? 'bg-white shadow-sm text-black'
@@ -1225,7 +1266,7 @@ onUnmounted(() => {
                             </button>
                             <button
                                 @click="addForm.team1_type = 'placeholder'"
-                                class="flex-1 py-1.5 text-xs font-black uppercase rounded-lg transition-all"
+                                class="flex-1 py-1.5 text-xs font-impact uppercase transition-all"
                                 :class="
                                     addForm.team1_type === 'placeholder'
                                         ? 'bg-white shadow-sm text-black'
@@ -1238,7 +1279,7 @@ onUnmounted(() => {
                         <select
                             v-if="addForm.team1_type === 'team'"
                             v-model="addForm.team1_id"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm uppercase focus:border-black outline-none"
+                            class="w-full bg-white border-4 border-black px-3 py-2.5 font-impact text-sm uppercase focus:border-primary outline-none transition-all"
                         >
                             <option value="">-- Seleziona Squadra --</option>
                             <option
@@ -1253,19 +1294,19 @@ onUnmounted(() => {
                             v-else
                             v-model="addForm.team1_placeholder"
                             placeholder="es. Vincitore Partita 3"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm focus:border-black outline-none"
+                            class="w-full bg-white border-4 border-black px-3 py-2.5 font-impact text-sm focus:border-primary outline-none transition-all"
                         />
                     </div>
 
                     <div>
                         <label
-                            class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
+                            class="text-xs font-impact uppercase tracking-widest text-secondary mb-1 block"
                             >Squadra 2</label
                         >
-                        <div class="flex bg-gray-100 p-1 rounded-xl mb-2">
+                        <div class="flex border-4 border-black mb-3">
                             <button
                                 @click="addForm.team2_type = 'team'"
-                                class="flex-1 py-1.5 text-xs font-black uppercase rounded-lg transition-all"
+                                class="flex-1 py-1.5 text-xs font-impact uppercase transition-all"
                                 :class="
                                     addForm.team2_type === 'team'
                                         ? 'bg-white shadow-sm text-black'
@@ -1276,7 +1317,7 @@ onUnmounted(() => {
                             </button>
                             <button
                                 @click="addForm.team2_type = 'placeholder'"
-                                class="flex-1 py-1.5 text-xs font-black uppercase rounded-lg transition-all"
+                                class="flex-1 py-1.5 text-xs font-impact uppercase transition-all"
                                 :class="
                                     addForm.team2_type === 'placeholder'
                                         ? 'bg-white shadow-sm text-black'
@@ -1289,7 +1330,7 @@ onUnmounted(() => {
                         <select
                             v-if="addForm.team2_type === 'team'"
                             v-model="addForm.team2_id"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm uppercase focus:border-black outline-none"
+                            class="w-full bg-white border-4 border-black px-3 py-2.5 font-impact text-sm uppercase focus:border-primary outline-none transition-all"
                         >
                             <option value="">-- Seleziona Squadra --</option>
                             <option
@@ -1304,19 +1345,19 @@ onUnmounted(() => {
                             v-else
                             v-model="addForm.team2_placeholder"
                             placeholder="es. Vincitore Partita 4"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm focus:border-black outline-none"
+                            class="w-full bg-white border-4 border-black px-3 py-2.5 font-impact text-sm focus:border-primary outline-none transition-all"
                         />
                     </div>
 
                     <div>
                         <label
-                            class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1 block"
+                            class="text-xs font-impact uppercase tracking-widest text-secondary mb-1 block"
                             >Orario di inizio (opzionale)</label
                         >
                         <input
                             v-model="addForm.start_time"
                             type="time"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-sm focus:border-black outline-none"
+                            class="w-full bg-white border-4 border-black px-3 py-2.5 font-impact text-sm focus:border-primary outline-none transition-all"
                         />
                     </div>
                 </div>
@@ -1324,16 +1365,175 @@ onUnmounted(() => {
                 <div class="flex gap-3 pt-2">
                     <button
                         @click="showAddModal = false"
-                        class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-black uppercase text-sm hover:bg-gray-200 transition-colors"
+                        class="btn-skewed-secondary flex-1 text-sm"
                     >
                         Annulla
                     </button>
                     <button
                         @click="saveAdd"
-                        class="flex-1 bg-black text-white py-3 rounded-xl font-black uppercase text-sm hover:bg-gray-800 transition-colors shadow-md"
+                        class="btn-skewed flex-1 text-sm"
                     >
                         Salva
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Actions Modal -->
+        <div
+            v-if="showMobileActions"
+            class="fixed inset-0 bg-black/80 flex items-end justify-center z-[100] p-4 sm:hidden animate-in fade-in duration-200"
+            @click.self="showMobileActions = false"
+        >
+            <div
+                class="bg-cement w-full max-w-sm border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] p-5 space-y-4 animate-in slide-in-from-bottom-8 duration-300"
+            >
+                <div class="flex justify-between items-center mb-2 border-b-4 border-black pb-3">
+                    <h3 class="font-impact uppercase tracking-widest text-lg">Azioni</h3>
+                    <button
+                        @click="showMobileActions = false"
+                        class="text-gray-500 hover:text-black"
+                    >
+                        <Icon name="mdi:close" class="text-2xl" />
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <template v-if="activeTab === 'knockout'">
+                        <template v-if="Object.keys(knockoutMatches).length > 0">
+                            <button
+                                @click="
+                                    clearKnockout();
+                                    showMobileActions = false;
+                                "
+                                class="btn-skewed-secondary !text-primary !border-primary hover:!bg-primary hover:!text-white w-full"
+                            >
+                                <span class="btn-skewed-content text-sm">Cancella tabellone</span>
+                            </button>
+                            <button
+                                @click="
+                                    openAddModal();
+                                    showMobileActions = false;
+                                "
+                                class="btn-skewed-secondary w-full"
+                            >
+                                <span class="btn-skewed-content text-sm">Aggiungi incontro</span>
+                            </button>
+                            <button
+                                @click="
+                                    autoGenerateKnockout();
+                                    showMobileActions = false;
+                                "
+                                class="btn-skewed w-full"
+                            >
+                                <span class="btn-skewed-content text-sm">Rigenera</span>
+                            </button>
+                        </template>
+                    </template>
+                    <template v-else>
+                        <button
+                            @click="
+                                clearGroupMatches();
+                                showMobileActions = false;
+                            "
+                            class="btn-skewed-secondary !text-primary !border-primary hover:!bg-primary hover:!text-white w-full"
+                        >
+                            <span class="btn-skewed-content text-sm">Cancella gironi</span>
+                        </button>
+                        <button
+                            @click="
+                                openAddModal();
+                                showMobileActions = false;
+                            "
+                            class="btn-skewed-secondary w-full"
+                        >
+                            <span class="btn-skewed-content text-sm">Aggiungi incontro</span>
+                        </button>
+                        <button
+                            @click="
+                                autoGenerateGroupMatches();
+                                showMobileActions = false;
+                            "
+                            class="btn-skewed w-full"
+                        >
+                            <span class="btn-skewed-content text-sm">Genera calendario</span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Card Mobile Actions Modal -->
+        <div
+            v-if="selectedMatchActions"
+            class="fixed inset-0 bg-black/80 flex items-end justify-center z-[110] p-4 sm:hidden animate-in fade-in duration-200"
+            @click.self="selectedMatchActions = null; confirmDeleteId = null;"
+        >
+            <div
+                class="bg-cement w-full max-w-sm border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] p-5 space-y-4 animate-in slide-in-from-bottom-8 duration-300"
+            >
+                <div class="flex justify-between items-center mb-2 border-b-4 border-black pb-3">
+                    <h3 class="font-impact uppercase tracking-widest text-lg">Azioni Incontro</h3>
+                    <button
+                        @click="selectedMatchActions = null; confirmDeleteId = null;"
+                        class="text-gray-500 hover:text-black"
+                    >
+                        <Icon name="mdi:close" class="text-2xl" />
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <template v-if="confirmDeleteId === selectedMatchActions.id">
+                        <p class="font-impact text-red-600 text-center uppercase mb-2">Confermi l'eliminazione?</p>
+                        <button
+                            @click="
+                                deleteMatch(selectedMatchActions.id);
+                                selectedMatchActions = null;
+                            "
+                            class="btn-skewed-secondary !text-red-600 !border-red-600 hover:!bg-red-600 hover:!text-white w-full"
+                        >
+                            <span class="btn-skewed-content text-sm">Sì, elimina</span>
+                        </button>
+                        <button
+                            @click="confirmDeleteId = null"
+                            class="btn-skewed-secondary w-full"
+                        >
+                            <span class="btn-skewed-content text-sm">Annulla</span>
+                        </button>
+                    </template>
+                    <template v-else>
+                        <NuxtLink
+                            :to="`/admin/match/${selectedMatchActions.id}`"
+                            class="btn-skewed flex justify-center py-3"
+                            @click="selectedMatchActions = null"
+                        >
+                            <span class="btn-skewed-content text-base flex items-center gap-2">
+                                <Icon name="mdi:whistle" class="text-xl" />
+                                Arbitra
+                            </span>
+                        </NuxtLink>
+                        <button
+                            @click="
+                                startEdit(selectedMatchActions);
+                                selectedMatchActions = null;
+                            "
+                            class="btn-skewed-secondary w-full py-3"
+                        >
+                            <span class="btn-skewed-content text-base flex items-center gap-2 justify-center text-black">
+                                <Icon name="mdi:pencil" class="text-xl" />
+                                Modifica
+                            </span>
+                        </button>
+                        <button
+                            @click="confirmDeleteId = selectedMatchActions.id"
+                            class="btn-skewed-secondary !text-red-600 !border-red-600 hover:!bg-red-600 hover:!text-white w-full py-3"
+                        >
+                            <span class="btn-skewed-content text-base flex items-center gap-2 justify-center">
+                                <Icon name="mdi:delete-outline" class="text-xl" />
+                                Elimina
+                            </span>
+                        </button>
+                    </template>
                 </div>
             </div>
         </div>

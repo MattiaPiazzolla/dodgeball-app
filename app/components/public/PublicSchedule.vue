@@ -2,37 +2,35 @@
 <template>
     <div class="space-y-6 sm:space-y-8 relative">
         <div class="text-center space-y-3 mb-8 sm:mb-12 mobile-fade-in">
-            <h1 class="text-3xl sm:text-4xl font-black uppercase tracking-tight text-black">
+            <h1 class="font-impact text-4xl sm:text-5xl text-black">
                 Calendario del Torneo
             </h1>
             <p class="text-gray-500 font-medium">
-                Orari, risultati e classifiche in un unico posto.
+                Orari, incontri, risultati in tempo reale e classifiche dei gironi.
             </p>
+            <div class="w-16 h-1 bg-primary mx-auto"></div>
         </div>
 
         <div
             v-if="pending"
-            class="text-center text-gray-500 py-12 font-bold animate-pulse uppercase tracking-widest"
+            class="text-center text-primary py-12 font-impact text-xl animate-pulse tracking-wider"
         >
-            Caricamento Calendario...
+            CARICAMENTO CALENDARIO...
         </div>
 
-        <div
-            v-else
-            class="bg-white p-3 sm:p-8 rounded-3xl shadow-sm border border-gray-100 mobile-fade-in"
-        >
-            <!-- Tabs -->
+        <div v-else class="mobile-fade-in">
+            <!-- Tabs — full width on mobile -->
             <div
-                class="flex bg-gray-100 p-1 rounded-2xl w-full max-w-md mx-auto mb-8 sm:mb-10"
+                class="flex border-2 border-black w-full max-w-md mx-auto mb-6 sm:mb-10 shadow-[2px_2px_0px_rgba(0,0,0,1)] bg-white"
             >
                 <button
                     @click="activeTab = 'group'"
                     :class="
                         activeTab === 'group'
-                            ? 'bg-white text-black shadow-sm'
-                            : 'text-gray-500'
+                            ? 'bg-black text-white border-r-2 border-black'
+                            : 'text-secondary hover:bg-gray-100 border-r-2 border-black'
                     "
-                    class="flex-1 py-3 font-black uppercase tracking-wide text-xs sm:text-sm rounded-xl transition-all active:scale-[0.98]"
+                    class="flex-1 py-3 font-impact uppercase tracking-wider text-xs sm:text-sm transition-all text-center select-none"
                 >
                     Gironi
                 </button>
@@ -40,20 +38,20 @@
                     @click="activeTab = 'knockout'"
                     :class="
                         activeTab === 'knockout'
-                            ? 'bg-white text-black shadow-sm'
-                            : 'text-gray-500'
+                            ? 'bg-black text-white'
+                            : 'text-secondary hover:bg-gray-100'
                     "
-                    class="flex-1 py-3 font-black uppercase tracking-wide text-xs sm:text-sm rounded-xl transition-all active:scale-[0.98]"
+                    class="flex-1 py-3 font-impact uppercase tracking-wider text-xs sm:text-sm transition-all text-center select-none"
                 >
                     Eliminazione
                 </button>
             </div>
 
             <!-- GROUP STAGE -->
-            <div v-if="activeTab === 'group'" class="space-y-5 sm:space-y-12">
+            <div v-if="activeTab === 'group'" class="space-y-8 sm:space-y-12">
                 <div
                     v-if="groups.length === 0"
-                    class="text-center text-gray-400 py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200 font-bold uppercase tracking-wide"
+                    class="text-center text-secondary py-16 bg-white border-4 border-black font-impact tracking-widest uppercase shadow-[4px_4px_0px_rgba(0,0,0,1)]"
                 >
                     La fase a gironi non è stata ancora sorteggiata.
                 </div>
@@ -61,64 +59,60 @@
                 <div
                     v-for="group in groups"
                     :key="group.id"
-                    class="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-8 bg-gray-50 p-3 sm:p-6 rounded-3xl border border-gray-100"
+                    class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 bg-cement p-3 sm:p-6 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]"
                 >
                     <!-- Standings -->
-                    <div>
+                    <div class="space-y-4">
                         <h3
-                            class="text-lg sm:text-xl font-black text-black uppercase tracking-tight mb-4"
+                            class="text-xl font-impact text-black tracking-wider"
                         >
                             Classifica {{ group.name }}
                         </h3>
                         <div
-                            class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
+                            class="bg-white border-2 border-black overflow-hidden shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                         >
                             <table class="w-full table-fixed text-left text-xs sm:text-sm">
                                 <thead
-                                    class="bg-gray-50 border-b border-gray-100"
+                                    class="bg-secondary text-white border-b-2 border-black font-impact tracking-wider uppercase text-xs"
                                 >
-                                    <tr
-                                        class="text-gray-400 font-bold uppercase tracking-wide text-xs"
-                                    >
-                                        <th class="w-[52%] p-3 sm:p-4">Squadra</th>
-                                        <th class="w-[16%] p-3 sm:p-4 text-center">V</th>
-                                        <th class="w-[16%] p-3 sm:p-4 text-center">P</th>
-                                        <th class="w-[16%] p-3 sm:p-4 text-center text-black">
-                                            Pt
-                                        </th>
+                                    <tr>
+                                        <th class="w-[52%] p-3">Squadra</th>
+                                        <th class="w-[16%] p-3 text-center">V</th>
+                                        <th class="w-[16%] p-3 text-center">P</th>
+                                        <th class="w-[16%] p-3 text-center text-primary">Pt</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="divide-y-2 divide-black">
                                     <tr
                                         v-for="gt in group.group_teams"
                                         :key="gt.id"
-                                        class="border-b border-gray-50 last:border-0"
+                                        class="hover:bg-gray-50 transition-colors"
                                     >
-                                        <td class="p-3 sm:p-4">
+                                        <td class="p-3">
                                             <div class="flex items-center gap-2 min-w-0">
                                                 <PublicTeamLogo
                                                     :src="gt.teams?.logo_url"
                                                     :alt="gt.teams?.name"
-                                                    size-class="w-7 h-7"
+                                                    size-class="w-7 h-7 border border-black shadow-[1px_1px_0px_rgba(0,0,0,1)] rounded-none"
                                                     icon-class="text-sm"
                                                 />
-                                                <span class="font-black text-black uppercase truncate">
+                                                <span class="font-impact text-sm text-black truncate">
                                                     {{ gt.teams?.name || "Unknown" }}
                                                 </span>
                                             </div>
                                         </td>
                                         <td
-                                            class="p-3 sm:p-4 text-center font-medium text-gray-600"
+                                            class="p-3 text-center font-bold text-secondary"
                                         >
                                             {{ gt.wins }}
                                         </td>
                                         <td
-                                            class="p-3 sm:p-4 text-center font-medium text-gray-600"
+                                            class="p-3 text-center font-bold text-secondary"
                                         >
                                             {{ gt.losses }}
                                         </td>
                                         <td
-                                            class="p-3 sm:p-4 text-center font-black text-red-600 text-base"
+                                            class="p-3 text-center font-impact text-primary text-lg"
                                         >
                                             {{ gt.points }}
                                         </td>
@@ -129,9 +123,9 @@
                     </div>
 
                     <!-- Matches -->
-                    <div>
+                    <div class="space-y-4">
                         <h3
-                            class="text-lg sm:text-xl font-black text-black uppercase tracking-tight mb-4"
+                            class="text-xl font-impact text-black tracking-wider"
                         >
                             Partite
                         </h3>
@@ -139,24 +133,27 @@
                             <div
                                 v-for="match in groupedGroupMatches[group.id]"
                                 :key="match.id"
-                                class="interactive-card bg-white border border-gray-100 rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col gap-2 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-md"
-                                :class="{
-                                    'ring-2 ring-red-500':
-                                        match.status === 'in_progress',
-                                }"
+                                class="border-2 border-black p-3 sm:p-4 flex flex-col gap-2 relative overflow-hidden transition-all hover:translate-y-[-1px]"
+                                :class="
+                                    match.status === 'in_progress'
+                                        ? 'bg-red-50 !border-primary shadow-[0_0_15px_rgba(211,47,47,0.5)] ring-1 ring-primary'
+                                        : 'bg-white shadow-[3px_3px_0px_rgba(0,0,0,1)]'
+                                "
                             >
                                 <div
                                     v-if="match.status === 'in_progress'"
-                                    class="absolute top-0 left-0 right-0 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest text-center py-0.5 animate-pulse"
+                                    class="absolute top-0 left-0 right-0 bg-primary text-white text-[10px] font-impact tracking-widest text-center py-1 animate-pulse"
                                 >
                                     ORA IN DIRETTA
                                 </div>
 
                                 <div
-                                    class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between mt-2"
+                                    class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between"
+                                    :class="match.status === 'in_progress' ? 'mt-4' : 'mt-2'"
                                 >
+                                    <!-- Team 1 -->
                                     <div
-                                        class="min-w-0 text-right pr-2 sm:pr-4 font-black uppercase text-xs sm:text-sm flex flex-col items-end"
+                                        class="min-w-0 text-right pr-2 sm:pr-4 font-impact text-xs sm:text-sm flex flex-col items-end"
                                         :class="
                                             match.team1_id
                                                 ? 'text-black'
@@ -170,7 +167,7 @@
                                             <PublicTeamLogo
                                                 :src="getTeamLogo(match.team1_id)"
                                                 :alt="getTeamName(match.team1_id)"
-                                                size-class="w-8 h-8"
+                                                size-class="w-8 h-8 border border-black shadow-[1px_1px_0px_rgba(0,0,0,1)] rounded-none"
                                                 icon-class="text-base"
                                             />
                                         </div>
@@ -182,39 +179,34 @@
                                                     'retired',
                                                 ].includes(match.status)
                                             "
-                                            class="text-2xl mt-1"
+                                            class="text-2xl mt-1 font-impact"
                                             :class="
                                                 match.winner_id ===
                                                 match.team1_id
-                                                    ? 'text-green-500'
-                                                    : ''
+                                                    ? 'text-primary'
+                                                    : 'text-gray-400'
                                             "
                                             >{{ match.team1_score || 0 }}</span
                                         >
                                     </div>
 
+                                    <!-- Divider vs -->
                                     <div
-                                        class="flex flex-col items-center justify-center px-2 sm:px-4 border-x border-gray-100 min-w-[76px] sm:min-w-[100px]"
+                                        class="flex flex-col items-center justify-center px-2 sm:px-4 border-x-2 border-black min-w-[76px] sm:min-w-[100px]"
                                     >
                                         <span
-                                            class="text-xs font-bold mb-1 uppercase"
-                                            :class="
-                                                match.start_time
-                                                    ? 'text-red-600'
-                                                    : 'text-gray-400'
-                                            "
-                                            >{{
-                                                match.start_time || "DA DEFINIRE"
-                                            }}</span
+                                            class="text-[10px] font-impact mb-1 tracking-wider text-primary min-h-[15px]"
+                                            >{{ match.start_time || "" }}</span
                                         >
                                         <span
-                                            class="bg-gray-100 text-gray-500 text-[10px] font-black px-2 py-0.5 rounded-full uppercase"
+                                            class="bg-secondary text-white text-[9px] font-impact px-2 py-0.5 transform -skew-x-6 tracking-widest border border-black"
                                             >VS</span
                                         >
                                     </div>
 
+                                    <!-- Team 2 -->
                                     <div
-                                        class="min-w-0 text-left pl-2 sm:pl-4 font-black uppercase text-xs sm:text-sm flex flex-col"
+                                        class="min-w-0 text-left pl-2 sm:pl-4 font-impact text-xs sm:text-sm flex flex-col"
                                         :class="
                                             match.team2_id
                                                 ? 'text-black'
@@ -225,7 +217,7 @@
                                             <PublicTeamLogo
                                                 :src="getTeamLogo(match.team2_id)"
                                                 :alt="getTeamName(match.team2_id)"
-                                                size-class="w-8 h-8"
+                                                size-class="w-8 h-8 border border-black shadow-[1px_1px_0px_rgba(0,0,0,1)] rounded-none"
                                                 icon-class="text-base"
                                             />
                                             <span class="truncate">{{
@@ -240,31 +232,32 @@
                                                     'retired',
                                                 ].includes(match.status)
                                             "
-                                            class="text-2xl mt-1"
+                                            class="text-2xl mt-1 font-impact"
                                             :class="
                                                 match.winner_id ===
                                                 match.team2_id
-                                                    ? 'text-green-500'
-                                                    : ''
+                                                    ? 'text-primary'
+                                                    : 'text-gray-400'
                                             "
                                             >{{ match.team2_score || 0 }}</span
                                         >
                                     </div>
                                 </div>
+                                
                                 <div class="text-center mt-1">
                                     <span
                                         v-if="
                                             match.status !== 'pending' &&
                                             match.status !== 'in_progress'
                                         "
-                                        class="text-[10px] font-bold uppercase tracking-widest text-gray-400 bg-gray-50 px-2 py-1 rounded"
+                                        class="text-[9px] font-impact uppercase tracking-widest text-white bg-secondary px-2 py-0.5 border border-black transform -skew-x-6"
                                         >{{ translateStatus(match.status) }}</span
                                     >
                                 </div>
                             </div>
                             <div
                                 v-if="!groupedGroupMatches[group.id]?.length"
-                                class="text-center text-gray-400 text-sm font-bold uppercase py-4"
+                                class="text-center text-gray-400 text-xs font-impact uppercase py-4"
                             >
                                 Nessun incontro programmato
                             </div>
@@ -277,7 +270,7 @@
             <div v-if="activeTab === 'knockout'" class="overflow-x-auto pb-8 custom-scrollbar">
                 <div
                     v-if="Object.keys(groupedKnockoutMatches).length"
-                    class="flex gap-4 sm:gap-8 min-w-max mx-auto justify-start xl:justify-center"
+                    class="flex gap-6 sm:gap-8 min-w-max mx-auto justify-start xl:justify-center p-2"
                 >
                     <div
                         v-for="(
@@ -287,7 +280,7 @@
                         class="flex flex-col gap-4 sm:gap-6 w-[82vw] max-w-72 sm:w-72"
                     >
                         <h3
-                            class="text-sm font-black text-black text-center uppercase tracking-widest bg-gray-50 py-3 rounded-xl border border-gray-100"
+                            class="text-sm font-impact text-white text-center uppercase tracking-widest bg-secondary py-3 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                         >
                             Turno {{ roundNum }}
                         </h3>
@@ -295,24 +288,24 @@
                         <div
                             v-for="(match, mIndex) in roundMatches"
                             :key="match.id"
-                            class="interactive-card bg-white border rounded-2xl shadow-sm p-4 relative group overflow-hidden hover:-translate-y-0.5 hover:shadow-md"
+                            class="border-2 border-black p-4 relative group overflow-hidden transition-all hover:translate-y-[-1px]"
                             :class="
                                 match.status === 'in_progress'
-                                    ? 'border-red-500 ring-1 ring-red-500'
-                                    : 'border-gray-100'
+                                    ? 'bg-red-50 !border-primary shadow-[0_0_15px_rgba(211,47,47,0.5)] ring-1 ring-primary'
+                                    : 'bg-white shadow-[3px_3px_0px_rgba(0,0,0,1)]'
                             "
                         >
                             <div
                                 v-if="match.status === 'in_progress'"
-                                class="absolute top-0 left-0 right-0 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest text-center py-0.5 animate-pulse z-10"
+                                class="absolute top-0 left-0 right-0 bg-primary text-white text-[10px] font-impact tracking-widest text-center py-1 z-10 animate-pulse"
                             >
                                 ORA IN DIRETTA
                             </div>
 
                             <div
-                                class="absolute -top-1 -left-1 bg-black text-white text-[10px] font-black px-2 py-1 rounded-br-lg shadow-sm z-20"
+                                class="absolute -top-0.5 -left-0.5 bg-black text-white text-[10px] font-impact px-2 py-0.5 z-20 border-r-2 border-b-2 border-black"
                                 :class="{
-                                    'mt-4': match.status === 'in_progress',
+                                    'mt-5': match.status === 'in_progress',
                                 }"
                             >
                                 M{{ mIndex + 1 }}
@@ -321,25 +314,25 @@
                             <div
                                 class="flex flex-col gap-2"
                                 :class="{
-                                    'mt-4': match.status === 'in_progress',
+                                    'mt-5': match.status === 'in_progress',
                                 }"
                             >
                                 <!-- Team 1 -->
                                 <div
-                                    class="flex justify-between items-center px-3 py-3 bg-gray-50 rounded-xl border border-gray-100"
+                                    class="flex justify-between items-center px-3 py-2 bg-white border-2 border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]"
                                 >
                                     <div class="flex items-center gap-2 min-w-0">
                                         <PublicTeamLogo
                                             :src="getTeamLogo(match.team1_id)"
                                             :alt="getTeamName(match.team1_id)"
-                                            size-class="w-8 h-8"
-                                            icon-class="text-base"
+                                            size-class="w-7 h-7 border border-black rounded-none shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                            icon-class="text-xs"
                                         />
                                         <span
-                                            class="truncate"
+                                            class="truncate font-impact text-sm"
                                             :class="
                                                 match.team1_id
-                                                    ? 'font-black text-black uppercase text-sm'
+                                                    ? 'text-black'
                                                     : 'text-gray-400 font-medium text-xs uppercase'
                                             "
                                         >
@@ -363,10 +356,10 @@
                                                 'retired',
                                             ].includes(match.status)
                                         "
-                                        class="font-black text-lg"
+                                        class="font-impact text-lg"
                                         :class="
                                             match.winner_id === match.team1_id
-                                                ? 'text-green-500'
+                                                ? 'text-primary'
                                                 : 'text-gray-400'
                                         "
                                     >
@@ -375,30 +368,30 @@
                                 </div>
 
                                 <div
-                                    class="flex justify-center -my-3 z-10 relative"
+                                    class="flex justify-center -my-3.5 z-10 relative"
                                 >
                                     <span
-                                        class="bg-white text-gray-400 text-[10px] font-black px-2 py-0.5 rounded-full border border-gray-100 uppercase"
+                                        class="bg-secondary text-white text-[9px] font-impact px-2 py-0.5 rounded-none border border-black transform -skew-x-6 uppercase tracking-wider"
                                         >VS</span
                                     >
                                 </div>
 
                                 <!-- Team 2 -->
                                 <div
-                                    class="flex justify-between items-center px-3 py-3 bg-gray-50 rounded-xl border border-gray-100"
+                                    class="flex justify-between items-center px-3 py-2 bg-white border-2 border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]"
                                 >
                                     <div class="flex items-center gap-2 min-w-0">
                                         <PublicTeamLogo
                                             :src="getTeamLogo(match.team2_id)"
                                             :alt="getTeamName(match.team2_id)"
-                                            size-class="w-8 h-8"
-                                            icon-class="text-base"
+                                            size-class="w-7 h-7 border border-black rounded-none shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                            icon-class="text-xs"
                                         />
                                         <span
-                                            class="truncate"
+                                            class="truncate font-impact text-sm"
                                             :class="
                                                 match.team2_id
-                                                    ? 'font-black text-black uppercase text-sm'
+                                                    ? 'text-black'
                                                     : 'text-gray-400 font-medium text-xs uppercase'
                                             "
                                         >
@@ -422,10 +415,10 @@
                                                 'retired',
                                             ].includes(match.status)
                                         "
-                                        class="font-black text-lg"
+                                        class="font-impact text-lg"
                                         :class="
                                             match.winner_id === match.team2_id
-                                                ? 'text-green-500'
+                                                ? 'text-primary'
                                                 : 'text-gray-400'
                                         "
                                     >
@@ -438,21 +431,16 @@
                                 class="mt-4 flex justify-between items-center px-1"
                             >
                                 <span
-                                    class="text-xs font-bold uppercase tracking-widest"
-                                    :class="
-                                        match.start_time
-                                            ? 'text-red-600'
-                                            : 'text-gray-400'
-                                    "
+                                    class="text-xs font-impact tracking-wider text-primary min-w-[30px]"
                                 >
-                                    {{ match.start_time || "ORARIO DA DEFINIRE" }}
+                                    {{ match.start_time || "" }}
                                 </span>
                                 <span
                                     v-if="
                                         match.status !== 'pending' &&
                                         match.status !== 'in_progress'
                                     "
-                                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400 bg-gray-50 px-2 py-1 rounded"
+                                    class="text-[9px] font-impact uppercase tracking-widest text-white bg-secondary px-2 py-0.5 border border-black transform -skew-x-6"
                                 >
                                     {{ translateStatus(match.status) }}
                                 </span>
@@ -462,7 +450,7 @@
                 </div>
                 <div
                     v-else
-                    class="text-center text-gray-400 py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200 font-bold uppercase tracking-wide"
+                    class="text-center text-secondary py-16 bg-white border-4 border-black font-impact tracking-widest uppercase shadow-[4px_4px_0px_rgba(0,0,0,1)]"
                 >
                     Il tabellone a eliminazione diretta non è stato ancora generato.
                 </div>

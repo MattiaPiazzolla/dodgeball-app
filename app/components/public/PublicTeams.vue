@@ -2,99 +2,104 @@
 <template>
     <div class="space-y-6 sm:space-y-8">
         <div class="text-center space-y-3 mb-8 sm:mb-12 mobile-fade-in">
-            <h1 class="text-3xl sm:text-4xl font-black uppercase tracking-tight text-black">
+            <h1 class="font-impact text-4xl sm:text-5xl text-black">
                 Squadre Partecipanti
             </h1>
             <p class="text-gray-500 font-medium">
-                Apri una squadra per vedere rosa e candidati MVP.
+                Apri una squadra per vedere la rosa dei giocatori e votare i candidati MVP.
             </p>
+            <div class="w-16 h-1 bg-primary mx-auto"></div>
         </div>
 
         <div
             v-if="pending"
-            class="text-center text-gray-500 py-12 font-bold animate-pulse"
+            class="text-center text-primary py-12 font-impact text-xl animate-pulse tracking-wider"
         >
             CARICAMENTO SQUADRE...
         </div>
 
         <div
             v-else-if="teams.length"
-            class="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+            class="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
         >
             <div
                 v-for="team in teams"
                 :key="team.id"
                 @click="openModal(team)"
-                class="interactive-card bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center min-h-[200px] sm:min-h-[230px] cursor-pointer group"
+                class="card-grunge p-6 text-center flex flex-col items-center justify-center min-h-[220px] sm:min-h-[240px] cursor-pointer group"
             >
                 <PublicTeamLogo
                     :src="team.logo_url"
                     :alt="team.name"
-                    size-class="w-20 h-20 sm:w-24 sm:h-24 mb-4 group-hover:bg-red-50 group-hover:text-red-500 group-hover:scale-105 transition-all"
+                    size-class="w-20 h-20 sm:w-24 sm:h-24 mb-4 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-105 transition-all border-2 border-black rounded-none shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                     icon-class="text-5xl"
                 />
                 <h2
-                    class="text-lg sm:text-xl font-black uppercase text-black tracking-wide"
+                    class="font-impact text-xl text-black tracking-wide"
                 >
                     {{ team.name }}
                 </h2>
-                <span class="text-xs font-bold text-red-500 uppercase mt-2"
-                    >Vedi rosa</span
-                >
+                
+                <span class="text-xs font-impact text-primary uppercase mt-3 px-3 py-1 border-2 border-black group-hover:bg-black group-hover:text-white transition-all transform -skew-x-6 shadow-[1px_1px_0px_rgba(0,0,0,1)]">
+                    Vedi rosa
+                </span>
             </div>
         </div>
 
         <div
             v-else
-            class="text-center text-gray-400 py-16 bg-gray-50 rounded-3xl border border-dashed border-gray-200 font-bold uppercase tracking-wide"
+            class="text-center text-secondary py-16 bg-white border-4 border-black font-impact tracking-widest uppercase shadow-[4px_4px_0px_rgba(0,0,0,1)]"
         >
             Nessuna squadra è stata ancora approvata.
         </div>
 
-        <!-- Team Details Modal -->
+        <!-- Team Details Modal — full screen -->
         <div
             v-if="showModal"
-            class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 mobile-fade-in"
+            class="fixed inset-0 bg-white z-50 flex flex-col mobile-fade-in"
         >
+            <!-- Sticky Header -->
             <div
-                class="bg-white rounded-t-[2rem] sm:rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92dvh] overflow-y-auto custom-scrollbar"
+                class="sticky top-0 bg-white border-b-4 border-black px-5 py-4 sm:px-8 sm:py-5 flex justify-between items-center z-10 shadow-[0_4px_0px_rgba(0,0,0,1)] flex-shrink-0"
             >
-                <div
-                    class="sticky top-0 bg-white/90 backdrop-blur-md px-5 py-4 sm:p-6 border-b border-gray-100 flex justify-between items-center z-10"
+                <h2
+                    class="font-impact text-2xl sm:text-4xl text-black tracking-widest uppercase truncate pr-4"
                 >
-                    <h2
-                        class="text-xl sm:text-2xl font-black uppercase text-black tracking-tight truncate pr-4"
-                    >
-                        {{ selectedTeam?.name }}
-                    </h2>
-                    <button
-                        @click="closeModal"
-                        class="text-gray-400 hover:text-red-600 transition-all bg-gray-50 hover:bg-red-50 p-2 rounded-full shrink-0 active:scale-90"
-                    >
-                        <Icon name="mdi:close" class="text-xl block" />
-                    </button>
-                </div>
+                    {{ selectedTeam?.name }}
+                </h2>
+                <button
+                    @click="closeModal"
+                    class="text-secondary hover:text-white transition-all bg-white border-2 border-black hover:bg-primary p-2 shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none"
+                >
+                    <span class="relative w-5 h-5 flex items-center justify-center">
+                        <span class="absolute block w-5 h-0.5 bg-current rotate-45"></span>
+                        <span class="absolute block w-5 h-0.5 bg-current -rotate-45"></span>
+                    </span>
+                </button>
+            </div>
 
-                <div class="p-4 sm:p-6">
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar bg-cement">
+                <div class="max-w-4xl mx-auto px-4 sm:px-8 py-8">
                     <div
                         v-if="loadingRoster"
-                        class="text-center text-gray-500 py-8 font-bold animate-pulse uppercase tracking-widest"
+                        class="text-center text-primary py-20 font-impact text-xl animate-pulse uppercase tracking-widest"
                     >
                         Caricamento giocatori...
                     </div>
 
                     <div
                         v-else-if="roster.length"
-                        class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
                     >
                         <div
                             v-for="player in roster"
                             :key="player.id"
-                            class="interactive-card flex items-center justify-between bg-gray-50 border border-gray-100 p-3 sm:p-4 rounded-2xl hover:border-gray-200 hover:bg-white transition-all"
+                            class="flex items-center justify-between bg-white border-2 border-black p-4 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all"
                         >
                             <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                                 <div
-                                    class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-sm flex items-center justify-center text-gray-400"
+                                    class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 border-2 border-black overflow-hidden flex-shrink-0 flex items-center justify-center text-gray-400 shadow-[1px_1px_0px_rgba(0,0,0,1)]"
                                 >
                                     <img
                                         v-if="player.photo_url"
@@ -110,7 +115,7 @@
                                 </div>
                                 <div class="min-w-0">
                                     <div
-                                        class="font-black text-black uppercase text-sm truncate"
+                                        class="font-impact text-base text-black tracking-wide truncate"
                                     >
                                         {{ player.name }}
                                     </div>
@@ -121,7 +126,7 @@
                                         "{{ player.nickname }}"
                                     </div>
                                     <div
-                                        class="text-red-600 font-black text-sm mt-1"
+                                        class="text-primary font-impact text-lg mt-0.5"
                                     >
                                         #{{ player.jersey_number || "00" }}
                                     </div>
@@ -135,11 +140,11 @@
                                 <button
                                     @click="voteForPlayer(player.id)"
                                     :disabled="hasVoted(player.id)"
-                                    class="w-11 h-11 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shadow-sm border active:scale-90"
+                                    class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black active:scale-90"
                                     :class="
                                         hasVoted(player.id)
-                                            ? 'bg-green-100 border-green-200 text-green-600 cursor-not-allowed'
-                                            : 'bg-white border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:shadow'
+                                            ? 'bg-green-500 border-black text-white cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,1)]'
+                                            : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                     "
                                 >
                                     <Icon
@@ -152,7 +157,7 @@
                                     />
                                 </button>
                                 <span
-                                    class="text-[10px] font-black uppercase text-gray-400 tracking-wider"
+                                    class="text-[10px] font-impact uppercase text-secondary tracking-widest mt-1"
                                 >
                                     {{ player.mvp_votes || 0 }} Voti
                                 </span>
@@ -162,7 +167,7 @@
 
                     <div
                         v-else
-                        class="text-center text-gray-400 py-12 font-bold uppercase tracking-wide border-2 border-dashed border-gray-100 rounded-2xl"
+                        class="text-center text-secondary py-20 font-impact tracking-wider border-4 border-dashed border-black bg-white shadow-[3px_3px_0px_rgba(0,0,0,1)]"
                     >
                         Nessun giocatore trovato per questa squadra.
                     </div>

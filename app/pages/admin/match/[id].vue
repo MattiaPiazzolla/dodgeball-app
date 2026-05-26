@@ -4,11 +4,11 @@
         <div class="flex items-center gap-4 mb-6">
             <NuxtLink
                 to="/admin/matches"
-                class="bg-gray-100 p-3 rounded-full hover:bg-gray-200"
+                class="bg-white border-2 border-black p-3 hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)]"
             >
                 <Icon name="mdi:arrow-left" class="text-xl" />
             </NuxtLink>
-            <h1 class="text-2xl font-black uppercase">Console Arbitro</h1>
+            <h1 class="text-3xl font-impact uppercase tracking-widest text-black">Console Arbitro</h1>
         </div>
 
         <div
@@ -22,43 +22,43 @@
             <!-- Match Controls -->
             <div
                 v-if="match.status === 'pending'"
-                class="bg-white p-8 rounded-3xl shadow-sm border-2 border-dashed border-gray-200 text-center"
+                class="card-grunge bg-cement p-8 text-center"
             >
-                <h2 class="text-xl font-black uppercase mb-4 text-gray-400">
+                <h2 class="text-2xl font-impact uppercase tracking-widest mb-6 text-secondary">
                     L'incontro è pronto
                 </h2>
                 <button
                     @click="startMatch"
-                    class="w-full py-6 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-2xl font-black uppercase tracking-widest shadow-xl transition-transform hover:-translate-y-1"
+                    class="btn-skewed w-full max-w-sm mx-auto"
                 >
-                    Inizia Incontro
+                    <span class="btn-skewed-content text-2xl">Inizia Incontro</span>
                 </button>
             </div>
 
             <!-- Timer & Status Display -->
             <div
                 v-if="match.status !== 'pending'"
-                class="bg-black text-white p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center relative overflow-hidden"
+                class="bg-black text-white p-6 flex flex-col items-center justify-center relative overflow-hidden border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)]"
             >
                 <div
                     v-if="match.status === 'in_progress'"
-                    class="absolute top-0 w-full text-[10px] font-black uppercase tracking-widest text-center py-1"
+                    class="absolute top-0 w-full text-xs font-impact uppercase tracking-widest text-center py-2"
                     :class="
                         match.is_timer_running
-                            ? 'bg-red-600 animate-pulse'
-                            : 'bg-yellow-500 text-black'
+                            ? 'bg-primary border-b-2 border-black animate-pulse'
+                            : 'bg-accent text-black border-b-2 border-black'
                     "
                 >
                     {{ match.is_timer_running ? "Ora in Diretta" : "In Pausa" }}
                 </div>
 
                 <div
-                    class="text-6xl font-black font-mono tracking-tighter mt-4"
+                    class="text-7xl font-impact tracking-widest mt-6"
                     :class="{
-                        'text-red-500':
+                        'text-primary':
                             match.status === 'in_progress' &&
                             match.is_timer_running,
-                        'text-yellow-500':
+                        'text-accent':
                             match.status === 'in_progress' &&
                             !match.is_timer_running,
                     }"
@@ -66,32 +66,32 @@
                     {{ formattedTimer }}
                 </div>
 
-                <div class="mt-6 flex flex-wrap justify-center gap-2">
+                <div class="mt-6 flex flex-wrap justify-center gap-4">
                     <template v-if="match.status === 'in_progress'">
                         <button
                             v-if="match.is_timer_running"
                             @click="pauseMatch"
-                            class="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black rounded-xl text-xs font-black uppercase tracking-wide transition-colors"
+                            class="btn-skewed-secondary !bg-accent !text-black !border-black"
                         >
-                            Pausa Tempo
+                            <span class="btn-skewed-content text-sm">Pausa Tempo</span>
                         </button>
                         <button
                             v-else
                             @click="resumeMatch"
-                            class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-wide transition-colors"
+                            class="btn-skewed-secondary !bg-green-500 !text-black !border-black"
                         >
-                            Riprendi Tempo
+                            <span class="btn-skewed-content text-sm">Riprendi Tempo</span>
                         </button>
                         <button
                             @click="endMatch('completed')"
-                            class="px-6 py-3 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-black uppercase tracking-wide transition-colors"
+                            class="btn-skewed-secondary !bg-white !text-black !border-black"
                         >
-                            Termina Incontro
+                            <span class="btn-skewed-content text-sm">Termina Incontro</span>
                         </button>
                     </template>
                     <div
                         v-else
-                        class="px-6 py-3 bg-white/10 rounded-xl text-xs font-black uppercase tracking-wide text-gray-300"
+                        class="px-6 py-3 border-2 border-white text-sm font-impact uppercase tracking-widest text-white shadow-[2px_2px_0px_rgba(255,255,255,1)]"
                     >
                         {{ translateStatus(match.status) }}
                     </div>
@@ -99,118 +99,122 @@
             </div>
 
             <!-- Scoreboard (Always Editable Now) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Team 1 -->
                 <div
-                    class="bg-white border-2 rounded-3xl p-6 text-center shadow-sm"
+                    class="card-grunge bg-white p-6 text-center transition-all"
                     :class="
                         match.winner_id === match.team1_id
-                            ? 'border-green-500'
-                            : 'border-gray-100'
+                            ? '!border-primary !shadow-[4px_4px_0px_rgba(211,47,47,1)]'
+                            : ''
                     "
                 >
                     <h2
-                        class="text-xl font-black uppercase mb-4 line-clamp-1"
+                        class="text-2xl font-impact uppercase tracking-widest mb-4 line-clamp-1 text-black"
                         :title="getTeamName(match.team1_id)"
                     >
                         {{ getTeamName(match.team1_id) || "DA DEFINIRE" }}
                     </h2>
-                    <div class="text-7xl font-black mb-6">
+                    <div class="text-8xl font-impact mb-6 text-black">
                         {{ match.team1_score || 0 }}
                     </div>
-                    <div class="flex gap-2 justify-center">
+                    <div class="flex gap-4 justify-center">
                         <button
                             @click="updateScore('team1_score', -1)"
-                            class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl text-2xl font-black hover:bg-red-200"
+                            class="w-16 h-16 bg-white border-4 border-black text-black text-3xl font-impact hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center"
                         >
-                            -1
+                            -
                         </button>
                         <button
                             @click="updateScore('team1_score', 1)"
-                            class="flex-1 h-16 bg-green-100 text-green-700 rounded-2xl text-2xl font-black hover:bg-green-200"
+                            class="flex-1 h-16 bg-white border-4 border-black text-black text-3xl font-impact hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center"
                         >
-                            +1
+                            +
                         </button>
                     </div>
                     <button
                         @click="setWinner(match.team1_id)"
-                        class="w-full mt-4 py-3 rounded-xl font-black uppercase text-sm"
+                        class="w-full mt-6"
                         :class="
                             match.winner_id === match.team1_id
-                                ? 'bg-green-500 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'btn-skewed'
+                                : 'btn-skewed-secondary'
                         "
                     >
-                        {{
-                            match.winner_id === match.team1_id
-                                ? "Vincitore"
-                                : "Imposta Vincitore"
-                        }}
+                        <span class="btn-skewed-content">
+                            {{
+                                match.winner_id === match.team1_id
+                                    ? "Vincitore"
+                                    : "Imposta Vincitore"
+                            }}
+                        </span>
                     </button>
                 </div>
 
                 <!-- Team 2 -->
                 <div
-                    class="bg-white border-2 rounded-3xl p-6 text-center shadow-sm"
+                    class="card-grunge bg-white p-6 text-center transition-all"
                     :class="
                         match.winner_id === match.team2_id
-                            ? 'border-green-500'
-                            : 'border-gray-100'
+                            ? '!border-primary !shadow-[4px_4px_0px_rgba(211,47,47,1)]'
+                            : ''
                     "
                 >
                     <h2
-                        class="text-xl font-black uppercase mb-4 line-clamp-1"
+                        class="text-2xl font-impact uppercase tracking-widest mb-4 line-clamp-1 text-black"
                         :title="getTeamName(match.team2_id)"
                     >
                         {{ getTeamName(match.team2_id) || "DA DEFINIRE" }}
                     </h2>
-                    <div class="text-7xl font-black mb-6">
+                    <div class="text-8xl font-impact mb-6 text-black">
                         {{ match.team2_score || 0 }}
                     </div>
-                    <div class="flex gap-2 justify-center">
+                    <div class="flex gap-4 justify-center">
                         <button
                             @click="updateScore('team2_score', -1)"
-                            class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl text-2xl font-black hover:bg-red-200"
+                            class="w-16 h-16 bg-white border-4 border-black text-black text-3xl font-impact hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center"
                         >
-                            -1
+                            -
                         </button>
                         <button
                             @click="updateScore('team2_score', 1)"
-                            class="flex-1 h-16 bg-green-100 text-green-700 rounded-2xl text-2xl font-black hover:bg-green-200"
+                            class="flex-1 h-16 bg-white border-4 border-black text-black text-3xl font-impact hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)] flex items-center justify-center"
                         >
-                            +1
+                            +
                         </button>
                     </div>
                     <button
                         @click="setWinner(match.team2_id)"
-                        class="w-full mt-4 py-3 rounded-xl font-black uppercase text-sm"
+                        class="w-full mt-6"
                         :class="
                             match.winner_id === match.team2_id
-                                ? 'bg-green-500 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'btn-skewed'
+                                : 'btn-skewed-secondary'
                         "
                     >
-                        {{
-                            match.winner_id === match.team2_id
-                                ? "Vincitore"
-                                : "Imposta Vincitore"
-                        }}
+                        <span class="btn-skewed-content">
+                            {{
+                                match.winner_id === match.team2_id
+                                    ? "Vincitore"
+                                    : "Imposta Vincitore"
+                            }}
+                        </span>
                     </button>
                 </div>
             </div>
 
             <!-- Danger Zone -->
-            <div class="pt-6 mt-6 border-t border-gray-200 flex flex-col gap-3">
+            <div class="pt-8 mt-8 border-t-4 border-black flex flex-col gap-4">
                 <button
                     v-if="match.winner_id"
                     @click="setWinner(null)"
-                    class="w-full py-4 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase text-xs hover:bg-gray-200 transition-colors"
+                    class="w-full py-4 bg-cement text-secondary border-4 border-black font-impact uppercase tracking-widest text-sm hover:bg-black hover:text-white transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                 >
                     Rimuovi Vincitore
                 </button>
                 <button
                     @click="resetMatch"
-                    class="w-full py-4 text-red-500 font-bold uppercase text-xs hover:text-red-700 transition-colors"
+                    class="w-full py-4 bg-white text-primary border-4 border-primary font-impact uppercase tracking-widest text-sm hover:bg-primary hover:text-white transition-all shadow-[2px_2px_0px_rgba(211,47,47,1)]"
                 >
                     Ripristina Incontro a In attesa (Azzera Punteggi e Tempo)
                 </button>

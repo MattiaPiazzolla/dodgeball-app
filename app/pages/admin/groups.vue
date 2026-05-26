@@ -3,7 +3,7 @@
 
     <!-- Top Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+      <h1 class="text-3xl sm:text-4xl font-impact uppercase tracking-widest text-black">
         Fasi a Gironi
       </h1>
 
@@ -12,13 +12,13 @@
           v-model="newGroupName"
           placeholder="Nome Gruppo (es. Gruppo A)"
           required
-          class="w-full min-[420px]:w-56 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:ring-4 focus:ring-gray-100 focus:outline-none rounded-2xl px-4 py-3 text-sm font-medium text-gray-800 placeholder-gray-400 transition-all"
+          class="w-full min-[420px]:w-56 bg-white border-4 border-black focus:border-primary focus:outline-none px-4 py-3 text-sm font-impact uppercase tracking-widest text-black placeholder-secondary transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)]"
         />
         <button
           type="submit"
-          class="bg-black text-white px-4 py-3 rounded-2xl text-sm font-bold hover:bg-gray-800 active:scale-[0.98] transition-all whitespace-nowrap"
+          class="btn-skewed whitespace-nowrap"
         >
-          Crea Gruppo
+          <span class="btn-skewed-content text-sm">Crea Gruppo</span>
         </button>
       </form>
     </div>
@@ -26,13 +26,13 @@
     <!-- Empty State -->
     <div
       v-if="!groups.length"
-      class="flex flex-col items-center justify-center py-24 text-center"
+      class="card-grunge bg-white flex flex-col items-center justify-center py-24 text-center"
     >
-      <div class="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mb-5">
-        <Icon name="mdi:trophy-outline" class="text-4xl text-gray-300" />
+      <div class="w-20 h-20 bg-cement border-4 border-black flex items-center justify-center mb-5 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+        <Icon name="mdi:trophy-outline" class="text-4xl text-secondary" />
       </div>
-      <p class="text-gray-500 font-semibold text-base mb-1">Nessun gruppo ancora</p>
-      <p class="text-gray-400 text-sm">Crea il tuo primo gruppo per iniziare.</p>
+      <p class="text-secondary font-impact text-xl uppercase tracking-widest mb-1">Nessun gruppo ancora</p>
+      <p class="text-gray-500 text-sm font-bold uppercase tracking-widest">Crea il tuo primo gruppo per iniziare.</p>
     </div>
 
     <!-- Groups Grid -->
@@ -40,37 +40,37 @@
       <div
         v-for="group in groups"
         :key="group.id"
-        class="interactive-card bg-white rounded-3xl sm:rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 flex flex-col gap-5 hover:shadow-md"
+        class="card-grunge bg-white p-4 sm:p-6 flex flex-col gap-5"
       >
         <!-- Card Header -->
         <div class="flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-3">
-          <h2 class="text-lg font-black uppercase tracking-tight text-black">
+          <h2 class="text-2xl font-impact uppercase tracking-widest text-black">
             {{ group.name }}
           </h2>
           <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <span class="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+            <span class="text-xs font-impact tracking-widest text-secondary border-2 border-black px-3 py-1 bg-cement shadow-[2px_2px_0px_rgba(0,0,0,1)] uppercase">
               {{ group.group_teams.length }} {{ group.group_teams.length === 1 ? 'Squadra' : 'Squadre' }}
             </span>
             <NuxtLink
               to="/admin/matches"
-              class="bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-gray-800 active:scale-95 transition-all whitespace-nowrap"
+              class="btn-skewed-secondary whitespace-nowrap px-3 py-1"
             >
-              Vai agli incontri
+              <span class="btn-skewed-content text-xs">Vai agli incontri</span>
             </NuxtLink>
           </div>
         </div>
 
         <!-- Standings Table -->
-        <div class="overflow-x-auto rounded-xl border border-gray-100 custom-scrollbar">
+        <div class="overflow-x-auto border-4 border-black custom-scrollbar bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]">
           <table class="w-full min-w-[520px] text-sm">
             <thead>
-              <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold uppercase text-xs tracking-wide">
-                <th class="px-4 py-2.5 text-left">#</th>
-                <th class="px-4 py-2.5 text-left">Squadra</th>
-                <th class="px-4 py-2.5 text-center">V</th>
-                <th class="px-4 py-2.5 text-center">P</th>
-                <th class="px-4 py-2.5 text-center text-red-500">Pt</th>
-                <th class="px-4 py-2.5"></th>
+              <tr class="bg-black text-white font-impact uppercase text-xs tracking-widest border-b-4 border-black">
+                <th class="px-4 py-3 text-left">#</th>
+                <th class="px-4 py-3 text-left">Squadra</th>
+                <th class="px-4 py-3 text-center">V</th>
+                <th class="px-4 py-3 text-center">P</th>
+                <th class="px-4 py-3 text-center text-primary">Pt</th>
+                <th class="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -79,38 +79,38 @@
                   v-for="(gt, index) in group.group_teams"
                   :key="gt.id"
                   :class="[
-                    'border-b border-gray-50 last:border-0 transition-colors',
-                    index === 0 ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50'
+                    'border-b-2 border-black last:border-0 transition-colors',
+                    index === 0 ? 'bg-primary/10 hover:bg-primary/20' : 'hover:bg-gray-100'
                   ]"
                 >
-                  <td class="px-4 py-3 text-xs font-bold text-gray-400">
+                  <td class="px-4 py-3 text-sm font-impact text-secondary">
                     {{ index + 1 }}
                   </td>
-                  <td class="px-4 py-3 font-black uppercase text-black text-xs tracking-wide">
+                  <td class="px-4 py-3 font-impact uppercase text-black text-sm tracking-wide">
                     {{ gt.teams.name }}
                   </td>
-                  <td class="px-4 py-3 text-center font-medium text-gray-500">
+                  <td class="px-4 py-3 text-center font-bold text-secondary">
                     {{ gt.wins }}
                   </td>
-                  <td class="px-4 py-3 text-center font-medium text-gray-500">
+                  <td class="px-4 py-3 text-center font-bold text-secondary">
                     {{ gt.losses }}
                   </td>
-                  <td class="px-4 py-3 text-center font-black text-red-600">
+                  <td class="px-4 py-3 text-center font-impact text-lg text-primary">
                     {{ gt.points }}
                   </td>
                   <td class="px-4 py-3 text-right">
                     <button
                       @click="removeTeam(gt.id)"
                       title="Remove from group"
-                      class="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"
+                      class="text-secondary hover:text-primary transition-colors p-1"
                     >
-                      <Icon name="mdi:close" class="text-base" />
+                      <Icon name="mdi:close-thick" class="text-xl" />
                     </button>
                   </td>
                 </tr>
               </template>
               <tr v-else>
-                <td colspan="6" class="px-4 py-8 text-center text-gray-400 text-xs font-medium">
+                <td colspan="6" class="px-4 py-8 text-center text-secondary text-sm font-impact uppercase tracking-widest bg-cement">
                   Nessuna squadra ancora assegnata.
                 </td>
               </tr>
@@ -128,7 +128,7 @@
             <select
               v-model="selectedTeams[group.id]"
               required
-              class="flex-1 bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white focus:ring-4 focus:ring-gray-100 focus:outline-none rounded-2xl px-3 py-3 text-xs font-bold uppercase text-gray-700 transition-all"
+              class="flex-1 bg-white border-4 border-black focus:border-primary focus:outline-none px-3 py-3 text-xs font-impact uppercase tracking-widest text-black transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)]"
             >
               <option value="" disabled>Aggiungi una squadra...</option>
               <option
@@ -141,12 +141,12 @@
             </select>
             <button
               type="submit"
-              class="bg-black text-white px-4 py-3 rounded-2xl text-xs font-black hover:bg-gray-800 active:scale-[0.98] transition-all"
+              class="btn-skewed px-4"
             >
-              Aggiungi
+              <span class="btn-skewed-content text-xs">Aggiungi</span>
             </button>
           </form>
-          <p v-else class="text-xs text-gray-400 font-medium">
+          <p v-else class="text-xs text-secondary font-impact uppercase tracking-widest bg-cement p-3 border-2 border-black inline-block shadow-[2px_2px_0px_rgba(0,0,0,1)]">
             Tutte le squadre assegnate.
           </p>
         </div>

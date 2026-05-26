@@ -1,5 +1,8 @@
 // app/pages/login.vue
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useSupabaseClient } from "#imports";
+
 definePageMeta({
     middleware: async () => {
         const client = useSupabaseClient();
@@ -71,70 +74,79 @@ onMounted(loadRegistrationSettings);
 </script>
 
 <template>
-    <div
-        class="max-w-md mx-4 sm:mx-auto mt-6 sm:mt-16 p-6 sm:p-8 bg-white rounded-3xl shadow-sm border border-gray-100 mobile-fade-in"
-    >
-        <div class="text-center mb-8">
-            <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-gray-900">
-                {{ isSignUp ? "Crea account" : "Area capitano" }}
-            </h1>
-            <p class="text-gray-500 font-medium mt-2">
+    <div class="min-h-[80vh] flex items-center justify-center bg-cement py-12 px-4 sm:px-6 lg:px-8">
+        <div
+            class="max-w-md w-full card-grunge bg-white p-6 sm:p-8 space-y-6 sm:space-y-8 mobile-fade-in"
+        >
+            <div class="text-center space-y-3">
+                <h1 class="font-impact text-3xl sm:text-4xl text-secondary leading-none">
+                    {{ isSignUp ? "Crea account" : "Area capitano" }}
+                </h1>
+                <p class="text-gray-500 text-sm font-medium mt-2">
+                    {{
+                        isSignUp
+                            ? "Registrati per creare la tua squadra."
+                            : "Accedi per gestire logo e rosa."
+                    }}
+                </p>
+                <div class="w-12 h-0.5 bg-primary mx-auto"></div>
+                <p
+                    v-if="!loadingSettings && !registrationsOpen"
+                    class="mt-4 text-xs font-impact tracking-widest text-white bg-primary border-2 border-black rounded-none px-4 py-2 uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                >
+                    Nuove iscrizioni chiuse
+                </p>
+            </div>
+            
+            <form @submit.prevent="handleAuth" class="space-y-5">
+                <div class="space-y-1">
+                    <label class="block text-xs font-impact tracking-wider text-secondary uppercase"
+                        >Email</label
+                    >
+                    <input
+                        v-model="email"
+                        type="email"
+                        required
+                        class="w-full px-4 py-3 bg-white border-2 border-black rounded-none focus:bg-gray-50 focus:border-primary outline-none transition-all font-body"
+                    />
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-impact tracking-wider text-secondary uppercase"
+                        >Password</label
+                    >
+                    <input
+                        v-model="password"
+                        type="password"
+                        required
+                        class="w-full px-4 py-3 bg-white border-2 border-black rounded-none focus:bg-gray-50 focus:border-primary outline-none transition-all font-body"
+                    />
+                </div>
+                
+                <p v-if="errorMsg" class="text-primary text-xs font-impact tracking-widest uppercase">
+                    ⚠ {{ errorMsg }}
+                </p>
+                
+                <div class="pt-2">
+                    <button
+                        type="submit"
+                        class="btn-skewed w-full"
+                    >
+                        <span class="btn-skewed-content">{{ isSignUp ? "Registrati" : "Accedi" }}</span>
+                    </button>
+                </div>
+            </form>
+            
+            <button
+                v-if="registrationsOpen"
+                @click="isSignUp = !isSignUp"
+                class="mt-4 text-xs font-impact tracking-widest text-secondary hover:text-primary w-full text-center uppercase transition-colors"
+            >
                 {{
                     isSignUp
-                        ? "Registrati per creare la tua squadra."
-                        : "Accedi per gestire logo e rosa."
+                        ? "[ Hai già un account? Accedi ]"
+                        : "[ Nuovo capitano? Crea account ]"
                 }}
-            </p>
-            <p
-                v-if="!loadingSettings && !registrationsOpen"
-                class="mt-4 text-xs font-black uppercase tracking-widest text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3"
-            >
-                Nuove iscrizioni chiuse
-            </p>
-        </div>
-        <form @submit.prevent="handleAuth" class="space-y-4">
-            <div>
-                <label class="block text-xs font-black uppercase tracking-wide text-gray-500"
-                    >Email</label
-                >
-                <input
-                    v-model="email"
-                    type="email"
-                    required
-                    class="mt-1 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-red-50 focus:border-red-500 outline-none transition-all"
-                />
-            </div>
-            <div>
-                <label class="block text-xs font-black uppercase tracking-wide text-gray-500"
-                    >Password</label
-                >
-                <input
-                    v-model="password"
-                    type="password"
-                    required
-                    class="mt-1 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-red-50 focus:border-red-500 outline-none transition-all"
-                />
-            </div>
-            <p v-if="errorMsg" class="text-red-500 text-sm font-semibold">
-                {{ errorMsg }}
-            </p>
-            <button
-                type="submit"
-                class="w-full bg-red-600 text-white py-3 rounded-2xl hover:bg-red-700 font-black uppercase tracking-wide transition-all shadow-md shadow-red-200 active:scale-[0.98]"
-            >
-                {{ isSignUp ? "Registrati" : "Accedi" }}
             </button>
-        </form>
-        <button
-            v-if="registrationsOpen"
-            @click="isSignUp = !isSignUp"
-            class="mt-5 text-sm text-gray-500 hover:text-red-600 w-full text-center font-bold transition-colors"
-        >
-            {{
-                isSignUp
-                    ? "Hai già un account? Accedi"
-                    : "Nuovo capitano? Crea account"
-            }}
-        </button>
+        </div>
     </div>
 </template>

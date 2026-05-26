@@ -103,12 +103,13 @@ onMounted(loadRegistrationSettings);
 
 <template>
     <header
-        class="bg-white/90 text-black border-b border-gray-100 sticky top-0 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/75"
+        class="bg-white text-black border-b-4 border-black sticky top-0 z-40 shadow-sm"
     >
         <div
-            class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-0 sm:gap-4"
         >
-            <div class="flex items-center justify-between gap-3">
+            <!-- Logo row — always visible -->
+            <div class="flex items-center justify-between gap-3 min-h-[48px]">
                 <NuxtLink
                     to="/#live"
                     @pointerdown="startAdminReveal"
@@ -116,35 +117,42 @@ onMounted(loadRegistrationSettings);
                     @pointerleave="cancelAdminReveal"
                     @pointercancel="cancelAdminReveal"
                     @click="handleBrandClick"
-                    class="text-lg sm:text-xl font-black italic tracking-tight uppercase transition-transform hover:-translate-y-0.5"
-                    >Dodgeball Urbania</NuxtLink
+                    class="font-impact text-2xl sm:text-3xl tracking-wider text-secondary transition-all hover:text-primary flex items-center gap-1.5 select-none"
                 >
+                    DODGEBALL <span class="bg-primary text-white px-2 py-0.5 border-2 border-black inline-block transform -skew-x-12 shadow-[2px_2px_0px_rgba(0,0,0,1)]">XL</span>
+                </NuxtLink>
                 <button
                     v-if="hasMobileMenuItems"
                     type="button"
-                    class="sm:hidden inline-flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-black transition-all active:scale-95"
+                    class="sm:hidden inline-flex flex-col h-11 w-11 items-center justify-center gap-[5px] border-2 border-black bg-white text-black transition-all hover:bg-primary hover:text-white active:bg-primary active:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                     :aria-expanded="isMenuOpen"
                     aria-label="Apri menu"
                     @click="isMenuOpen = !isMenuOpen"
                 >
-                    <Icon
-                        :name="isMenuOpen ? 'mdi:close' : 'mdi:menu'"
-                        class="text-2xl transition-transform"
-                        :class="isMenuOpen ? 'rotate-90' : 'rotate-0'"
-                    />
+                    <span v-if="!isMenuOpen" class="flex flex-col gap-[5px] items-center justify-center">
+                        <span class="block w-5 h-0.5 bg-current transition-all"></span>
+                        <span class="block w-5 h-0.5 bg-current transition-all"></span>
+                        <span class="block w-5 h-0.5 bg-current transition-all"></span>
+                    </span>
+                    <span v-else class="relative w-5 h-5 flex items-center justify-center">
+                        <span class="absolute block w-5 h-0.5 bg-current rotate-45"></span>
+                        <span class="absolute block w-5 h-0.5 bg-current -rotate-45"></span>
+                    </span>
                 </button>
             </div>
+
+            <!-- Nav — collapses on mobile, horizontal on desktop -->
             <nav
                 v-if="hasMobileMenuItems"
-                class="grid gap-2 text-sm font-black uppercase tracking-wide transition-all duration-300 sm:flex sm:items-center sm:overflow-x-auto"
+                class="grid text-sm transition-all duration-300 sm:flex sm:items-center sm:overflow-x-auto sm:pb-0"
                 :class="
                     isMenuOpen
-                        ? 'grid-rows-[1fr] opacity-100'
+                        ? 'grid-rows-[1fr] opacity-100 border-t-2 border-black mt-2 sm:border-0 sm:mt-0'
                         : 'grid-rows-[0fr] opacity-0 sm:opacity-100'
                 "
             >
                 <div
-                    class="min-h-0 overflow-hidden sm:overflow-visible flex flex-col sm:flex-row sm:items-center gap-2"
+                    class="min-h-0 overflow-hidden sm:overflow-visible flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-3 sm:pt-0"
                 >
                 <ClientOnly>
                     <template v-if="!user">
@@ -152,7 +160,7 @@ onMounted(loadRegistrationSettings);
                             v-if="registrationsOpen"
                             to="/login"
                             @click="closeMenu"
-                            class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm shadow-red-200"
+                            class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 bg-primary text-white font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-black hover:bg-accent sm:hover:-translate-y-0.5 transition-all text-center sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-accent"
                         >
                             Capitano
                         </NuxtLink>
@@ -160,7 +168,7 @@ onMounted(loadRegistrationSettings);
                             v-if="showAdminLogin"
                             to="/admin/login"
                             @click="closeMenu"
-                            class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl bg-black text-white hover:bg-gray-800 transition-all"
+                            class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 bg-secondary text-white font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-black hover:bg-gray-800 sm:hover:-translate-y-0.5 transition-all text-center sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-gray-800"
                         >
                             Admin
                         </NuxtLink>
@@ -170,22 +178,22 @@ onMounted(loadRegistrationSettings);
                             <NuxtLink
                                 to="/admin"
                                 @click="closeMenu"
-                                class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl text-gray-500 hover:text-black hover:bg-gray-50 transition-all"
-                                active-class="bg-gray-100 text-black"
+                                class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 text-secondary hover:text-primary font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-transparent sm:hover:border-black transition-all text-center"
+                                active-class="bg-black text-white !border-black"
                                 >Admin</NuxtLink
                             >
                             <NuxtLink
                                 to="/admin/matches"
                                 @click="closeMenu"
-                                class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl text-gray-500 hover:text-black hover:bg-gray-50 transition-all"
-                                active-class="bg-gray-100 text-black"
+                                class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 text-secondary hover:text-primary font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-transparent sm:hover:border-black transition-all text-center"
+                                active-class="bg-black text-white !border-black"
                                 >Incontri</NuxtLink
                             >
                             <NuxtLink
                                 to="/admin/groups"
                                 @click="closeMenu"
-                                class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl text-gray-500 hover:text-black hover:bg-gray-50 transition-all"
-                                active-class="bg-gray-100 text-black"
+                                class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 text-secondary hover:text-primary font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-transparent sm:hover:border-black transition-all text-center"
+                                active-class="bg-black text-white !border-black"
                                 >Gironi</NuxtLink
                             >
                         </template>
@@ -194,13 +202,13 @@ onMounted(loadRegistrationSettings);
                                 v-if="registrationsOpen"
                                 to="/captain"
                                 @click="closeMenu"
-                                class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm shadow-red-200"
+                                class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 bg-primary text-white font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-black hover:bg-accent sm:hover:-translate-y-0.5 transition-all text-center sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-accent"
                                 >La mia squadra</NuxtLink
                             >
                         </template>
                         <button
                             @click="handleLogout"
-                            class="px-3 py-3 sm:py-2 rounded-2xl sm:rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all text-left"
+                            class="flex items-center justify-center w-full sm:w-auto min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 bg-white text-secondary font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-black hover:bg-red-600 hover:text-white transition-all text-center sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-red-600 active:text-white"
                         >
                             Esci
                         </button>
@@ -212,3 +220,4 @@ onMounted(loadRegistrationSettings);
         </div>
     </header>
 </template>
+

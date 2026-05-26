@@ -13,14 +13,14 @@
                 class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start"
             >
                 <div
-                    class="order-2 lg:order-1 lg:col-span-3 bg-white rounded-3xl lg:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col gap-5 sm:gap-6 mobile-fade-in"
+                    class="order-2 lg:order-1 lg:col-span-3 bg-white border-4 border-black p-4 sm:p-6 shadow-[4px_4px_0px_rgba(0,0,0,1)] flex flex-col gap-5 sm:gap-6 mobile-fade-in"
                 >
                     <h2
-                        class="text-lg font-black uppercase tracking-tight text-gray-800 flex items-center gap-2"
+                        class="text-xl font-impact tracking-wider text-black flex items-center gap-2"
                     >
                         <Icon
                             name="mdi:format-list-numbered"
-                            class="text-red-500 text-xl"
+                            class="text-primary text-xl"
                         />
                         Classifiche
                     </h2>
@@ -32,16 +32,16 @@
                             class="space-y-3"
                         >
                             <h3
-                                class="text-xs font-bold text-gray-400 uppercase tracking-widest"
+                                class="text-xs font-impact text-secondary uppercase tracking-wider"
                             >
                                 {{ group.name }}
                             </h3>
                             <div
-                                class="bg-gray-50/80 rounded-2xl border border-gray-100 overflow-hidden"
+                                class="bg-white border-2 border-black overflow-hidden shadow-[1px_1px_0px_rgba(0,0,0,1)]"
                             >
                                 <table class="w-full text-left text-xs">
                                     <thead
-                                        class="bg-gray-100/50 text-gray-400 uppercase tracking-wider"
+                                        class="bg-secondary text-white font-impact tracking-wider uppercase text-[10px]"
                                     >
                                         <tr>
                                             <th class="py-2.5 px-3 font-bold">
@@ -53,7 +53,7 @@
                                                 V-P
                                             </th>
                                             <th
-                                                class="py-2.5 px-3 text-right font-black text-black"
+                                                class="py-2.5 px-3 text-right font-black text-white"
                                             >
                                                 Pt
                                             </th>
@@ -104,13 +104,13 @@
 
                 <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col gap-4 sm:gap-6">
                     <div
-                        class="bg-white rounded-[1.75rem] sm:rounded-[2.5rem] px-4 py-8 sm:p-12 shadow-sm border-2 sm:border-4 relative overflow-hidden transition-all duration-500 flex flex-col justify-center min-h-[360px] sm:min-h-[420px] mobile-fade-in"
+                        class="bg-white border-4 border-black px-4 py-8 sm:p-12 relative overflow-hidden transition-all flex flex-col justify-center min-h-[360px] sm:min-h-[420px] mobile-fade-in"
                         :class="
                             liveMatch
                                 ? liveMatch.is_timer_running
-                                    ? 'border-red-500 shadow-[0_10px_40px_rgba(220,38,38,0.15)]'
-                                    : 'border-yellow-400'
-                                : 'border-gray-100'
+                                    ? '!border-primary shadow-[6px_6px_0px_var(--primary)]'
+                                    : '!border-yellow-500 shadow-[6px_6px_0px_rgba(251,192,45,1)]'
+                                : 'shadow-[4px_4px_0px_rgba(0,0,0,1)]'
                         "
                     >
                         <template v-if="liveMatch">
@@ -131,17 +131,17 @@
 
                             <div class="text-center mt-4 mb-10">
                                 <span
-                                    class="font-mono text-5xl min-[380px]:text-6xl sm:text-7xl font-black tracking-tight drop-shadow-sm transition-colors"
+                                    class="font-mono text-5xl min-[380px]:text-6xl sm:text-7xl font-black tracking-tight transition-colors"
                                     :class="
                                         liveMatch.is_timer_running
-                                            ? 'text-red-600'
-                                            : 'text-yellow-500'
+                                            ? 'text-primary'
+                                            : 'text-yellow-600'
                                     "
                                 >
                                     {{ formattedTimer }}
                                 </span>
                                 <div
-                                    class="text-gray-400 font-bold uppercase tracking-widest mt-2 text-xs"
+                                    class="text-secondary font-impact uppercase tracking-widest mt-2 text-xs"
                                 >
                                     {{ translateStage(liveMatch.match_type) }}
                                 </div>
@@ -158,7 +158,7 @@
                                         icon-class="text-3xl sm:text-5xl"
                                     />
                                     <div
-                                        class="text-sm min-[380px]:text-base sm:text-2xl font-black uppercase truncate text-black mb-1"
+                                        class="font-impact text-sm min-[380px]:text-base sm:text-2xl text-secondary mb-1"
                                     >
                                         {{
                                             getTeamName(liveMatch.team1_id) ||
@@ -166,16 +166,16 @@
                                         }}
                                     </div>
                                     <div
-                                        class="text-5xl min-[380px]:text-6xl sm:text-8xl font-black text-gray-900 leading-none"
+                                        class="text-5xl min-[380px]:text-6xl sm:text-8xl font-impact text-black leading-none"
                                     >
                                         {{ liveMatch.team1_score || 0 }}
                                     </div>
                                 </div>
                                 <div
-                                    class="px-3 py-2 sm:px-4 sm:py-3 bg-gray-100 rounded-2xl shadow-inner"
+                                    class="px-3 py-2 sm:px-4 sm:py-3 bg-secondary text-white border-2 border-black transform -skew-x-6 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                                 >
                                     <span
-                                        class="text-gray-400 text-sm sm:text-xl font-black uppercase tracking-widest"
+                                        class="text-white text-sm sm:text-xl font-impact uppercase tracking-widest block transform skew-x-6"
                                         >VS</span
                                     >
                                 </div>
@@ -187,7 +187,7 @@
                                         icon-class="text-3xl sm:text-5xl"
                                     />
                                     <div
-                                        class="text-sm min-[380px]:text-base sm:text-2xl font-black uppercase truncate text-black mb-1"
+                                        class="font-impact text-sm min-[380px]:text-base sm:text-2xl text-secondary mb-1"
                                     >
                                         {{
                                             getTeamName(liveMatch.team2_id) ||
@@ -195,7 +195,7 @@
                                         }}
                                     </div>
                                     <div
-                                        class="text-5xl min-[380px]:text-6xl sm:text-8xl font-black text-gray-900 leading-none"
+                                        class="text-5xl min-[380px]:text-6xl sm:text-8xl font-impact text-black leading-none"
                                     >
                                         {{ liveMatch.team2_score || 0 }}
                                     </div>
@@ -219,9 +219,10 @@
                                     Prossimo Incontro
                                 </h2>
                                 <p
-                                    class="text-red-500 font-bold uppercase tracking-widest text-sm mt-1"
+                                    v-if="upcomingMatches[0].start_time"
+                                    class="text-red-500 font-bold uppercase tracking-widest text-sm mt-1 min-h-[20px]"
                                 >
-                                    {{ upcomingMatches[0].start_time || "DA DEFINIRE" }}
+                                    {{ upcomingMatches[0].start_time }}
                                 </p>
                             </div>
 
@@ -341,14 +342,14 @@
 
                     <div
                         v-if="liveMatch"
-                        class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-100 mobile-fade-in space-y-5"
+                        class="bg-white border-4 border-black p-4 sm:p-6 shadow-[4px_4px_0px_rgba(0,0,0,1)] mobile-fade-in space-y-5"
                     >
                         <div
                             class="flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                         >
                             <div>
                                 <h2
-                                    class="text-lg font-black uppercase tracking-tight text-black"
+                                    class="font-impact text-xl text-black tracking-wider"
                                 >
                                     MVP della partita
                                 </h2>
@@ -365,10 +366,10 @@
                                 <div
                                     v-for="(player, index) in rankedLivePlayers.slice(0, 3)"
                                     :key="player.id"
-                                    class="shrink-0 flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl px-3 py-2"
+                                    class="shrink-0 flex items-center gap-2 bg-white border-2 border-black px-3 py-1.5 shadow-[1px_1px_0px_rgba(0,0,0,1)]"
                                 >
                                     <span
-                                        class="text-xs font-black"
+                                        class="text-xs font-impact"
                                         :class="
                                             index === 0
                                                 ? 'text-yellow-500'
@@ -379,22 +380,22 @@
                                         >#{{ index + 1 }}</span
                                     >
                                     <span
-                                        class="max-w-24 truncate text-xs font-black uppercase text-black"
+                                        class="max-w-24 truncate text-xs font-impact tracking-wider uppercase text-black"
                                         >{{ player.name }}</span
                                     >
                                     <span
-                                        class="text-xs font-black text-red-600"
+                                        class="text-xs font-impact text-primary"
                                         >{{ player.mvp_votes || 0 }}</span
                                     >
                                 </div>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div
                                 v-for="teamRoster in liveTeamRosters"
                                 :key="teamRoster.teamId || teamRoster.name"
-                                class="bg-gray-50/80 border border-gray-100 rounded-3xl p-3 sm:p-4"
+                                class="bg-cement border-2 border-black p-3 sm:p-4 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                             >
                                 <div class="flex items-center gap-3 mb-3">
                                     <PublicTeamLogo
@@ -424,13 +425,13 @@
                                     <div
                                         v-for="player in teamRoster.players"
                                         :key="player.id"
-                                        class="interactive-card flex items-center justify-between gap-3 bg-white rounded-2xl border border-gray-100 p-3 hover:border-gray-200"
+                                        class="flex items-center justify-between gap-3 bg-white border-2 border-black p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-gray-50 transition-all rounded-none"
                                     >
                                         <div
                                             class="flex items-center gap-3 min-w-0"
                                         >
                                             <div
-                                                class="w-11 h-11 rounded-full bg-gray-100 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 text-gray-300"
+                                                class="w-11 h-11 border-2 border-black bg-white flex items-center justify-center overflow-hidden shrink-0 text-gray-400 shadow-[1px_1px_0px_rgba(0,0,0,1)] rounded-none"
                                             >
                                                 <img
                                                     v-if="player.photo_url"
@@ -446,12 +447,12 @@
                                             </div>
                                             <div class="min-w-0">
                                                 <p
-                                                    class="font-black uppercase text-sm text-black truncate"
+                                                    class="font-impact text-sm text-black tracking-wide truncate"
                                                 >
                                                     {{ player.name }}
                                                 </p>
                                                 <p
-                                                    class="text-[10px] font-bold uppercase tracking-widest text-gray-400"
+                                                    class="text-[10px] font-impact tracking-wider text-primary uppercase"
                                                 >
                                                     #{{ player.jersey_number || "00" }}
                                                 </p>
@@ -462,7 +463,7 @@
                                             class="flex items-center gap-2 shrink-0"
                                         >
                                             <span
-                                                class="w-9 text-center text-sm font-black text-red-600"
+                                                class="w-9 text-center text-sm font-impact text-primary"
                                                 >{{ player.mvp_votes || 0 }}</span
                                             >
                                             <button
@@ -471,12 +472,12 @@
                                                     hasVotedInLiveMatch ||
                                                     hasVoted(player.id)
                                                 "
-                                                class="w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-sm border active:scale-90"
+                                                class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black rounded-none active:scale-90"
                                                 :class="
                                                     hasVotedInLiveMatch ||
                                                     hasVoted(player.id)
-                                                        ? 'bg-green-50 border-green-200 text-green-500 cursor-not-allowed'
-                                                        : 'bg-white border-gray-200 text-gray-300 hover:text-red-500 hover:border-red-200 hover:shadow-md'
+                                                        ? 'bg-green-500 border-black text-white cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,1)]'
+                                                        : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                                 "
                                                 :title="
                                                     hasVotedInLiveMatch
@@ -512,10 +513,10 @@
 
                     <section
                         v-if="lastMatch"
-                        class="relative overflow-hidden bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 sm:p-7 mobile-fade-in"
+                        class="relative overflow-hidden bg-white border-4 border-black p-5 sm:p-7 mobile-fade-in shadow-[4px_4px_0px_rgba(0,0,0,1)]"
                     >
                         <div
-                            class="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-red-50 result-pulse"
+                            class="absolute -right-12 -top-12 w-40 h-40 bg-primary/20 blur-xl result-pulse"
                         ></div>
                         <div
                             class="relative flex flex-col gap-5"
@@ -525,24 +526,24 @@
                             >
                                 <div>
                                     <p
-                                        class="text-[10px] font-black uppercase tracking-[0.24em] text-red-500"
+                                        class="text-[10px] font-impact uppercase tracking-[0.24em] text-primary"
                                     >
                                         Ultimo incontro
                                     </p>
                                     <h2
-                                        class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black mt-1"
+                                        class="font-impact text-2xl sm:text-3xl text-black mt-1"
                                     >
                                         {{
                                             getTeamName(lastMatch.winner_id) ||
                                             "Risultato finale"
                                         }}
-                                        <span class="text-red-600">vince</span>
+                                        <span class="text-primary italic">vince</span>
                                     </h2>
                                 </div>
                                 <div
-                                    class="self-start sm:self-auto px-4 py-2 rounded-full bg-black text-white text-[10px] font-black uppercase tracking-widest shadow-md"
+                                    class="self-start sm:self-auto px-4 py-1.5 bg-secondary text-white text-[10px] font-impact uppercase tracking-widest border-2 border-black transform -skew-x-6 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                                 >
-                                    {{ translateStage(lastMatch.match_type) }}
+                                    <span class="block transform skew-x-6">{{ translateStage(lastMatch.match_type) }}</span>
                                 </div>
                             </div>
 
@@ -584,15 +585,15 @@
                                     class="flex flex-col items-center justify-center gap-2 px-1"
                                 >
                                     <div
-                                        class="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shadow-inner result-vs"
+                                        class="w-12 h-12 bg-secondary border-2 border-black flex items-center justify-center shadow-[1px_1px_0px_rgba(0,0,0,1)] result-vs transform -skew-x-6"
                                     >
                                         <span
-                                            class="text-gray-400 font-black text-xs uppercase"
+                                            class="text-white font-impact text-xs uppercase tracking-widest block transform skew-x-6"
                                             >VS</span
                                         >
                                     </div>
                                     <div
-                                        class="h-16 w-1 rounded-full bg-gradient-to-b from-red-500 via-gray-200 to-black"
+                                        class="h-16 w-1 bg-black"
                                     ></div>
                                 </div>
 
@@ -663,7 +664,7 @@
                         <div
                             v-for="match in recentMatches.slice(1, 4)"
                             :key="match.id"
-                            class="interactive-card bg-white rounded-3xl p-5 shadow-sm border border-gray-100 hover:-translate-y-0.5 hover:shadow-md"
+                            class="bg-white border-2 border-black p-5 shadow-[3px_3px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-[-1px] rounded-none"
                         >
                             <div
                                 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between"
@@ -738,25 +739,25 @@
                 </div>
 
                 <div
-                    class="order-3 lg:col-span-3 bg-white rounded-3xl lg:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col max-h-[70vh] lg:max-h-[600px] mobile-fade-in"
+                    class="order-3 lg:col-span-3 bg-white border-4 border-black p-4 sm:p-6 shadow-[4px_4px_0px_rgba(0,0,0,1)] flex flex-col max-h-[70vh] lg:max-h-[600px] mobile-fade-in"
                 >
                     <h2
-                        class="text-lg font-black uppercase tracking-tight text-gray-800 mb-4 flex items-center gap-2"
+                        class="text-xl font-impact tracking-wider text-black mb-4 flex items-center gap-2"
                     >
-                        <Icon name="mdi:star" class="text-yellow-400 text-xl" />
+                        <Icon name="mdi:star" class="text-yellow-500 text-xl animate-pulse" />
                         MVP
                     </h2>
 
                     <div class="relative mb-4">
                         <Icon
                             name="mdi:magnify"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg z-10"
                         />
                         <input
                             v-model="searchQuery"
                             type="text"
-                            placeholder="Cerca giocatore"
-                            class="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-10 pr-4 text-xs font-bold uppercase tracking-wide focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-50 transition-all placeholder:text-gray-300"
+                            placeholder="Cerca giocatore..."
+                            class="w-full bg-white border-2 border-black rounded-none py-3 pl-10 pr-4 text-xs font-impact tracking-widest uppercase focus:outline-none focus:border-primary transition-all placeholder:text-gray-400 shadow-[1px_1px_0px_rgba(0,0,0,1)]"
                         />
                     </div>
 
@@ -766,7 +767,7 @@
                         <div
                             v-for="player in filteredPlayers"
                             :key="player.id"
-                            class="interactive-card flex items-center justify-between p-3 bg-gray-50/80 rounded-2xl border border-gray-100 hover:border-gray-200 hover:bg-white transition-all group"
+                            class="flex items-center justify-between p-3 bg-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-gray-50 transition-all group rounded-none"
                         >
                             <div
                                 class="flex items-center gap-3 overflow-hidden"
@@ -774,22 +775,22 @@
                                 <img
                                     v-if="player.photo_url"
                                     :src="player.photo_url"
-                                    class="w-10 h-10 rounded-full object-cover shadow-sm bg-white border border-gray-100"
+                                    class="w-10 h-10 border-2 border-black object-cover bg-white shadow-[1px_1px_0px_rgba(0,0,0,1)] rounded-none"
                                 />
                                 <div
                                     v-else
-                                    class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 shrink-0"
+                                    class="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-gray-400 shrink-0 shadow-[1px_1px_0px_rgba(0,0,0,1)] rounded-none"
                                 >
                                     <Icon name="mdi:account" class="text-lg" />
                                 </div>
                                 <div class="min-w-0">
                                     <div
-                                        class="font-black text-black uppercase text-xs truncate"
+                                        class="font-impact text-xs text-black tracking-wider truncate"
                                     >
                                         {{ player.name }}
                                     </div>
                                     <div
-                                        class="text-[10px] text-gray-400 font-bold uppercase truncate"
+                                        class="text-[9px] text-gray-500 font-bold uppercase truncate"
                                     >
                                         {{ getTeamName(player.team_id) }}
                                     </div>
@@ -802,11 +803,11 @@
                                 <button
                                     @click="voteForPlayer(player.id)"
                                     :disabled="hasVoted(player.id)"
-                                    class="w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shadow-sm border active:scale-90"
+                                    class="w-8 h-8 flex items-center justify-center transition-all border-2 border-black rounded-none active:scale-90"
                                     :class="
                                         hasVoted(player.id)
-                                            ? 'bg-green-50 border-green-200 text-green-500 cursor-not-allowed'
-                                            : 'bg-white border-gray-200 text-gray-300 hover:text-red-500 hover:border-red-200 hover:shadow-md'
+                                            ? 'bg-green-500 border-black text-white cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,1)]'
+                                            : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                     "
                                 >
                                     <Icon
@@ -819,11 +820,11 @@
                                     />
                                 </button>
                                 <span
-                                    class="text-[9px] font-black uppercase tracking-widest"
+                                    class="text-[9px] font-impact uppercase tracking-widest mt-1"
                                     :class="
                                         hasVoted(player.id)
                                             ? 'text-green-600'
-                                            : 'text-gray-400'
+                                            : 'text-secondary'
                                     "
                                 >
                                     {{ player.mvp_votes || 0 }}
@@ -1192,10 +1193,11 @@ onUnmounted(() => {
 .result-team-card {
     position: relative;
     min-width: 0;
-    border-radius: 1.5rem;
-    border: 1px solid #f3f4f6;
+    border-radius: 0px !important;
+    border: 2px solid var(--secondary);
     padding: 1rem;
-    background: #f9fafb;
+    background: var(--surface);
+    box-shadow: 2px 2px 0px var(--secondary);
     transition:
         transform 320ms var(--ease-organic),
         box-shadow 320ms var(--ease-organic),
@@ -1204,26 +1206,28 @@ onUnmounted(() => {
 
 .result-winner {
     color: #111827;
-    background:
-        linear-gradient(180deg, rgba(254, 242, 242, 0.9), rgba(255, 255, 255, 1)),
-        #fff;
-    border-color: #fecaca;
-    box-shadow: 0 18px 45px rgba(220, 38, 38, 0.12);
+    background: var(--surface);
+    border-color: var(--primary) !important;
+    box-shadow: 4px 4px 0px var(--primary) !important;
     animation: winner-rise 640ms var(--ease-spring) both;
 }
 
 .result-winner::after {
     content: "WIN";
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    border-radius: 999px;
-    background: #dc2626;
+    top: 0.5rem;
+    right: 0.5rem;
+    border-radius: 0px !important;
+    border: 1.5px solid var(--secondary);
+    background: var(--primary);
     color: #fff;
+    font-family: "Impact", sans-serif;
     font-size: 0.625rem;
     font-weight: 900;
     letter-spacing: 0.12em;
     padding: 0.25rem 0.5rem;
+    transform: rotate(4deg);
+    box-shadow: 2px 2px 0px var(--secondary);
 }
 
 .result-loser {
