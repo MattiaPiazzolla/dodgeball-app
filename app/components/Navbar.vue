@@ -117,9 +117,12 @@ onMounted(loadRegistrationSettings);
                     @pointerleave="cancelAdminReveal"
                     @pointercancel="cancelAdminReveal"
                     @click="handleBrandClick"
-                    class="font-impact text-2xl sm:text-3xl tracking-wider text-secondary transition-all hover:text-primary flex items-center gap-1.5 select-none"
+                    class="font-impact text-xl sm:text-2xl tracking-wider text-secondary transition-all hover:text-primary flex items-center gap-2 select-none"
                 >
-                    DODGEBALL <span class="bg-primary text-white px-2 py-0.5 border-2 border-black inline-block transform -skew-x-12 shadow-[2px_2px_0px_rgba(0,0,0,1)]">XL</span>
+                    <img src="/dodgeballxl-logo.PNG" alt="Dodgeball XL Logo" class="h-7 sm:h-9 w-auto object-contain flex-shrink-0" />
+                    <span class="hidden min-[380px]:inline-block">
+                        DODGEBALL <span class="bg-primary text-white px-2 py-0.5 border-2 border-black inline-block transform -skew-x-12 shadow-[2px_2px_0px_rgba(0,0,0,1)]">XL</span>
+                    </span>
                 </NuxtLink>
                 <button
                     v-if="hasMobileMenuItems"
@@ -162,7 +165,7 @@ onMounted(loadRegistrationSettings);
                             @click="closeMenu"
                             class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 bg-primary text-white font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-black hover:bg-accent sm:hover:-translate-y-0.5 transition-all text-center sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-accent"
                         >
-                            Capitano
+                            Iscrivi Squadra
                         </NuxtLink>
                         <NuxtLink
                             v-if="showAdminLogin"
@@ -175,6 +178,12 @@ onMounted(loadRegistrationSettings);
                     </template>
                     <template v-else>
                         <template v-if="role === 'admin'">
+                            <NuxtLink
+                                to="/captain"
+                                @click="closeMenu"
+                                class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 bg-primary text-white font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-black hover:bg-accent sm:hover:-translate-y-0.5 transition-all text-center sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-accent"
+                                >La mia squadra</NuxtLink
+                            >
                             <NuxtLink
                                 to="/admin"
                                 @click="closeMenu"

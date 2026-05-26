@@ -62,20 +62,37 @@
             <div
                 class="sticky top-0 bg-white border-b-4 border-black px-5 py-4 sm:px-8 sm:py-5 flex justify-between items-center z-10 shadow-[0_4px_0px_rgba(0,0,0,1)] flex-shrink-0"
             >
-                <h2
-                    class="font-impact text-2xl sm:text-4xl text-black tracking-widest uppercase truncate pr-4"
-                >
-                    {{ selectedTeam?.name }}
-                </h2>
-                <button
-                    @click="closeModal"
-                    class="text-secondary hover:text-white transition-all bg-white border-2 border-black hover:bg-primary p-2 shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none"
-                >
-                    <span class="relative w-5 h-5 flex items-center justify-center">
-                        <span class="absolute block w-5 h-0.5 bg-current rotate-45"></span>
-                        <span class="absolute block w-5 h-0.5 bg-current -rotate-45"></span>
-                    </span>
-                </button>
+                <div class="flex items-center gap-4 flex-1 min-w-0 pr-4">
+                    <h2
+                        class="font-impact text-2xl sm:text-4xl text-black tracking-widest uppercase truncate"
+                    >
+                        {{ selectedTeam?.name }}
+                    </h2>
+                    
+                    <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-black text-white transform -skew-x-6 border-2 border-primary shadow-[2px_2px_0px_var(--primary)] whitespace-nowrap">
+                        <span class="font-impact text-sm uppercase transform skew-x-6 tracking-widest">
+                            Voti: <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span> / 5
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="sm:hidden flex items-center gap-1 px-2 py-1 bg-black text-white transform -skew-x-6 border-2 border-primary shadow-[2px_2px_0px_var(--primary)]">
+                        <span class="font-impact text-xs uppercase transform skew-x-6 tracking-widest">
+                            <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span>/5
+                        </span>
+                    </div>
+                    
+                    <button
+                        @click="closeModal"
+                        class="text-secondary hover:text-white transition-all bg-white border-2 border-black hover:bg-primary p-2 shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none"
+                    >
+                        <span class="relative w-5 h-5 flex items-center justify-center">
+                            <span class="absolute block w-5 h-0.5 bg-current rotate-45"></span>
+                            <span class="absolute block w-5 h-0.5 bg-current -rotate-45"></span>
+                        </span>
+                    </button>
+                </div>
             </div>
 
             <!-- Scrollable Content -->
@@ -95,8 +112,13 @@
                         <div
                             v-for="player in roster"
                             :key="player.id"
-                            class="flex items-center justify-between bg-white border-2 border-black p-4 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all"
+                            class="flex items-center justify-between bg-white border-2 border-black p-4 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all relative overflow-hidden"
                         >
+                            <!-- Badge for votes given by user to this player -->
+                            <div v-if="getPlayerVotes(player.id) > 0" class="absolute top-0 right-0 bg-primary text-white text-[10px] font-black px-2 py-0.5 uppercase tracking-wider z-10 border-b-2 border-l-2 border-black shadow-[-1px_1px_0px_rgba(0,0,0,1)]">
+                                Hai dato {{ getPlayerVotes(player.id) }} voti
+                            </div>
+
                             <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                                 <div
                                     class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 border-2 border-black overflow-hidden flex-shrink-0 flex items-center justify-center text-gray-400 shadow-[1px_1px_0px_rgba(0,0,0,1)]"
@@ -121,7 +143,7 @@
                                     </div>
                                     <div
                                         v-if="player.nickname"
-                                        class="text-gray-500 text-xs font-bold uppercase mt-0.5"
+                                        class="text-gray-500 text-xs font-bold uppercase mt-0.5 truncate"
                                     >
                                         "{{ player.nickname }}"
                                     </div>
@@ -135,27 +157,39 @@
 
                             <!-- MVP Voting Block -->
                             <div
-                                class="flex flex-col items-center justify-center gap-1 pl-2"
+                                class="flex flex-col items-center justify-center gap-1 pl-2 z-10 relative mt-2"
                             >
-                                <button
-                                    @click="voteForPlayer(player.id)"
-                                    :disabled="hasVoted(player.id)"
+                                <div class="flex gap-2">
+                                    <button
+                                        v-if="getPlayerVotes(player.id) > 0"
+                                        @click="undoVote(player.id)"
+                                        class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black bg-red-500 text-white hover:bg-red-600 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:scale-90"
+                                        title="Rimuovi Voto"
+                                    >
+                                        <Icon name="mdi:minus" class="text-lg" />
+                                    </button>
+                                    <button
+                                        @click="doVote(player.id)"
+                                        :disabled="!canVote"
                                     class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black active:scale-90"
                                     :class="
-                                        hasVoted(player.id)
-                                            ? 'bg-green-500 border-black text-white cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,1)]'
-                                            : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                        !canVote
+                                            ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,0.1)]'
+                                            : getPlayerVotes(player.id) > 0
+                                                ? 'bg-green-500 border-black text-white hover:bg-green-600 shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                                : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                     "
                                 >
                                     <Icon
                                         :name="
-                                            hasVoted(player.id)
+                                            getPlayerVotes(player.id) > 0
                                                 ? 'mdi:thumb-up'
                                                 : 'mdi:thumb-up-outline'
                                         "
                                         class="text-lg"
                                     />
-                                </button>
+                                    </button>
+                                </div>
                                 <span
                                     class="text-[10px] font-impact uppercase text-secondary tracking-widest mt-1"
                                 >
@@ -178,8 +212,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { Icon } from "#components";
+import { useVotes } from "~/composables/useVotes";
+import { useScrollLock } from "~/composables/useScrollLock";
 
 const supabase = useSupabaseClient();
 const teams = ref<any[]>([]);
@@ -190,7 +226,16 @@ const selectedTeam = ref<any>(null);
 const roster = ref<any[]>([]);
 const loadingRoster = ref(false);
 
-const trackingVotes = ref<Record<string, boolean>>({});
+const { lock, unlock } = useScrollLock();
+watch(showModal, (isOpen) => {
+    if (isOpen) {
+        lock();
+    } else {
+        unlock();
+    }
+});
+
+const { loadVotes, canVote, remainingVotes, recordVote, removeVote, getPlayerVotes } = useVotes();
 
 const loadTeams = async () => {
     pending.value = true;
@@ -217,12 +262,6 @@ const openModal = async (team: any) => {
 
     if (data) {
         roster.value = data;
-        // Seed voting references from local storage layout
-        data.forEach((p: any) => {
-            trackingVotes.value[p.id] = !!localStorage.getItem(
-                `voted_mvp_player_${p.id}`,
-            );
-        });
     }
     loadingRoster.value = false;
 };
@@ -233,24 +272,33 @@ const closeModal = () => {
     roster.value = [];
 };
 
-const hasVoted = (playerId: string) => {
-    return !!trackingVotes.value[playerId];
-};
+const doVote = async (playerId: string) => {
+    if (!canVote.value) return;
 
-const voteForPlayer = async (playerId: string) => {
-    if (hasVoted(playerId)) return;
+    if (recordVote(playerId)) {
+        // Optimistic UI updates
+        const player = roster.value.find((p) => p.id === playerId);
+        if (player) {
+            player.mvp_votes = (player.mvp_votes || 0) + 1;
+        }
 
-    // Optimistic UI updates
-    const player = roster.value.find((p) => p.id === playerId);
-    if (player) {
-        player.mvp_votes = (player.mvp_votes || 0) + 1;
+        // Persist incrementally directly to back-end counter system
+        await supabase.rpc("increment_player_votes", { player_uuid: playerId });
     }
-    trackingVotes.value[playerId] = true;
-    localStorage.setItem(`voted_mvp_player_${playerId}`, "true");
-
-    // Persist incrementally directly to back-end counter system
-    await supabase.rpc("increment_player_votes", { player_uuid: playerId });
 };
 
-onMounted(loadTeams);
+const undoVote = async (playerId: string) => {
+    if (removeVote(playerId)) {
+        const player = roster.value.find((p) => p.id === playerId);
+        if (player) {
+            player.mvp_votes = Math.max(0, (player.mvp_votes || 0) - 1);
+        }
+        await supabase.rpc("decrement_player_votes", { player_uuid: playerId });
+    }
+};
+
+onMounted(() => {
+    loadTeams();
+    loadVotes();
+});
 </script>

@@ -349,9 +349,10 @@
                         >
                             <div>
                                 <h2
-                                    class="font-impact text-xl text-black tracking-wider"
+                                    class="font-impact text-xl text-black tracking-wider flex flex-wrap items-center gap-2"
                                 >
                                     MVP della partita
+                                    <span class="text-xs px-2 py-0.5 bg-black text-white transform -skew-x-6 tracking-widest whitespace-nowrap">Voti: <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span>/5</span>
                                 </h2>
                                 <p
                                     class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1"
@@ -466,37 +467,43 @@
                                                 class="w-9 text-center text-sm font-impact text-primary"
                                                 >{{ player.mvp_votes || 0 }}</span
                                             >
-                                            <button
-                                                @click="voteForLivePlayer(player.id)"
-                                                :disabled="
-                                                    hasVotedInLiveMatch ||
-                                                    hasVoted(player.id)
-                                                "
-                                                class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black rounded-none active:scale-90"
+                                            <div class="flex gap-2">
+                                                <button
+                                                    v-if="getPlayerVotes(player.id) > 0"
+                                                    @click="undoVote(player.id)"
+                                                    class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black bg-red-500 text-white hover:bg-red-600 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:scale-90"
+                                                    title="Rimuovi Voto"
+                                                >
+                                                    <Icon name="mdi:minus" class="text-lg" />
+                                                </button>
+                                                <button
+                                                    @click="doVote(player.id)"
+                                                    :disabled="!canVote"
+                                                class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black rounded-none active:scale-90 relative"
                                                 :class="
-                                                    hasVotedInLiveMatch ||
-                                                    hasVoted(player.id)
-                                                        ? 'bg-green-500 border-black text-white cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,1)]'
-                                                        : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                                    !canVote
+                                                        ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,0.1)]'
+                                                        : getPlayerVotes(player.id) > 0
+                                                          ? 'bg-green-500 border-black text-white hover:bg-green-600 shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                                          : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                                 "
                                                 :title="
-                                                    hasVotedInLiveMatch
-                                                        ? 'Hai già votato il migliore'
-                                                        : hasVoted(player.id)
-                                                          ? 'Voto registrato'
+                                                    !canVote
+                                                        ? 'Hai esaurito i voti'
                                                         : 'Vota MVP'
                                                 "
                                             >
+                                                <div v-if="getPlayerVotes(player.id) > 0" class="absolute -top-2 -right-2 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-black border border-black z-10">{{ getPlayerVotes(player.id) }}</div>
                                                 <Icon
                                                     :name="
-                                                        hasVotedInLiveMatch ||
-                                                        hasVoted(player.id)
+                                                        getPlayerVotes(player.id) > 0
                                                             ? 'mdi:thumb-up'
                                                             : 'mdi:thumb-up-outline'
                                                     "
                                                     class="text-lg"
                                                 />
-                                            </button>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -746,6 +753,7 @@
                     >
                         <Icon name="mdi:star" class="text-yellow-500 text-xl animate-pulse" />
                         MVP
+                        <span class="text-xs px-2 py-0.5 bg-black text-white transform -skew-x-6 tracking-widest ml-auto">Voti: <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span>/5</span>
                     </h2>
 
                     <div class="relative mb-4">
@@ -800,29 +808,42 @@
                             <div
                                 class="flex flex-col items-center justify-center gap-0.5 shrink-0 pl-2"
                             >
-                                <button
-                                    @click="voteForPlayer(player.id)"
-                                    :disabled="hasVoted(player.id)"
-                                    class="w-8 h-8 flex items-center justify-center transition-all border-2 border-black rounded-none active:scale-90"
+                                <div class="flex gap-1.5">
+                                    <button
+                                        v-if="getPlayerVotes(player.id) > 0"
+                                        @click="undoVote(player.id)"
+                                        class="w-8 h-8 flex items-center justify-center transition-all border-2 border-black bg-red-500 text-white hover:bg-red-600 shadow-[1px_1px_0px_rgba(0,0,0,1)] active:scale-90"
+                                        title="Rimuovi Voto"
+                                    >
+                                        <Icon name="mdi:minus" class="text-sm" />
+                                    </button>
+                                    <button
+                                        @click="doVote(player.id)"
+                                        :disabled="!canVote"
+                                    class="w-8 h-8 flex items-center justify-center transition-all border-2 border-black rounded-none active:scale-90 relative"
                                     :class="
-                                        hasVoted(player.id)
-                                            ? 'bg-green-500 border-black text-white cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,1)]'
-                                            : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                        !canVote
+                                            ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,0.1)]'
+                                            : getPlayerVotes(player.id) > 0
+                                              ? 'bg-green-500 border-black text-white hover:bg-green-600 shadow-[1px_1px_0px_rgba(0,0,0,1)]'
+                                              : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                     "
                                 >
+                                    <div v-if="getPlayerVotes(player.id) > 0" class="absolute -top-2 -right-2 bg-primary text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-black border border-black z-10">{{ getPlayerVotes(player.id) }}</div>
                                     <Icon
                                         :name="
-                                            hasVoted(player.id)
+                                            getPlayerVotes(player.id) > 0
                                                 ? 'mdi:thumb-up'
                                                 : 'mdi:thumb-up-outline'
                                         "
                                         class="text-sm"
                                     />
-                                </button>
+                                    </button>
+                                </div>
                                 <span
                                     class="text-[9px] font-impact uppercase tracking-widest mt-1"
                                     :class="
-                                        hasVoted(player.id)
+                                        getPlayerVotes(player.id) > 0
                                             ? 'text-green-600'
                                             : 'text-secondary'
                                     "
@@ -846,6 +867,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useVotes } from "~/composables/useVotes";
 
 const translateStage = (stage: string) => {
     if (!stage) return "";
@@ -865,8 +887,7 @@ const players = ref<any[]>([]);
 const pending = ref(true);
 
 const searchQuery = ref("");
-const trackingVotes = ref<Record<string, boolean>>({});
-const liveMatchVotes = ref<Record<string, string>>({});
+const { loadVotes, canVote, remainingVotes, recordVote, removeVote, getPlayerVotes } = useVotes();
 
 let realtimeChannel: any = null;
 let playerRealtimeChannel: any = null;
@@ -967,16 +988,6 @@ const rankedLivePlayers = computed(() =>
         ),
 );
 
-const liveMatchVotePlayerId = computed(() => {
-    if (!liveMatch.value) return null;
-    return (
-        liveMatchVotes.value[liveMatch.value.id] ||
-        localStorage.getItem(`voted_mvp_match_${liveMatch.value.id}`)
-    );
-});
-
-const hasVotedInLiveMatch = computed(() => !!liveMatchVotePlayerId.value);
-
 const getTeamName = (id: string | null) =>
     teams.value.find((t) => t.id === id)?.name;
 const getTeamLogo = (id: string | null) =>
@@ -1047,24 +1058,10 @@ const loadData = async () => {
 
     if (tData) teams.value = tData;
     if (mData) matches.value = mData;
-    if (mData) {
-        mData.forEach((match: any) => {
-            const votedPlayerId = localStorage.getItem(
-                `voted_mvp_match_${match.id}`,
-            );
-            if (votedPlayerId) liveMatchVotes.value[match.id] = votedPlayerId;
-        });
-    }
-    if (pData) {
-        players.value = pData;
-        pData.forEach((p: any) => {
-            trackingVotes.value[p.id] = !!localStorage.getItem(
-                `voted_mvp_player_${p.id}`,
-            );
-        });
-    }
+    if (pData) players.value = pData;
 
     await loadGroupsAndStandings();
+    loadVotes();
 
     realtimeChannel = subscribeToAllMatches((payload) => {
         const changedMatch = payload.new || payload.old;
@@ -1125,31 +1122,25 @@ const loadData = async () => {
     pending.value = false;
 };
 
-const hasVoted = (playerId: string) => !!trackingVotes.value[playerId];
+const doVote = async (playerId: string) => {
+    if (!canVote.value) return;
 
-const voteForPlayer = async (playerId: string) => {
-    if (hasVoted(playerId)) return;
-    const player = players.value.find((p) => p.id === playerId);
-    if (player) player.mvp_votes = (player.mvp_votes || 0) + 1;
+    if (recordVote(playerId)) {
+        const player = players.value.find((p) => p.id === playerId);
+        if (player) player.mvp_votes = (player.mvp_votes || 0) + 1;
 
-    trackingVotes.value[playerId] = true;
-    localStorage.setItem(`voted_mvp_player_${playerId}`, "true");
-    await supabase.rpc("increment_player_votes", { player_uuid: playerId });
+        await supabase.rpc("increment_player_votes", { player_uuid: playerId });
+    }
 };
 
-const voteForLivePlayer = async (playerId: string) => {
-    if (!liveMatch.value || hasVotedInLiveMatch.value || hasVoted(playerId)) {
-        return;
+const undoVote = async (playerId: string) => {
+    if (removeVote(playerId)) {
+        const player = players.value.find((p) => p.id === playerId);
+        if (player) {
+            player.mvp_votes = Math.max(0, (player.mvp_votes || 0) - 1);
+        }
+        await supabase.rpc("decrement_player_votes", { player_uuid: playerId });
     }
-
-    const player = players.value.find((p) => p.id === playerId);
-    if (player) player.mvp_votes = (player.mvp_votes || 0) + 1;
-
-    trackingVotes.value[playerId] = true;
-    liveMatchVotes.value[liveMatch.value.id] = playerId;
-    localStorage.setItem(`voted_mvp_player_${playerId}`, "true");
-    localStorage.setItem(`voted_mvp_match_${liveMatch.value.id}`, playerId);
-    await supabase.rpc("increment_player_votes", { player_uuid: playerId });
 };
 
 onMounted(loadData);

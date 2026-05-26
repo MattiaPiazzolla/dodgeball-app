@@ -75,6 +75,10 @@ const isGroupStageComplete = computed(() => {
     );
 });
 
+const hasKnockoutMatches = computed(() => {
+    return matches.value.some((m) => m.match_type === "knockout");
+});
+
 // Next match: first pending match with a start_time
 const nextMatch = computed(
     () =>
@@ -141,11 +145,11 @@ const translateStage = (stage: string) => {
 
         <template v-else>
             <section
-                v-if="isGroupStageComplete"
+                v-if="isGroupStageComplete && !hasKnockoutMatches"
                 class="animate-in fade-in slide-in-from-bottom-4 duration-500"
             >
                 <div
-                    class="card-grunge bg-black border-4 border-black p-8 sm:p-10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8"
+                    class="card-grunge !bg-primary border-4 border-black p-8 sm:p-10 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8"
                 >
                     <Icon
                         name="mdi:tournament"
@@ -156,7 +160,7 @@ const translateStage = (stage: string) => {
                         class="relative z-10 text-center md:text-left text-white space-y-3"
                     >
                         <div
-                            class="flex items-center justify-center md:justify-start gap-2 text-yellow-400 font-impact uppercase tracking-widest text-sm"
+                            class="flex items-center justify-center md:justify-start gap-2 text-yellow-300 font-impact uppercase tracking-widest text-sm"
                         >
                             <Icon name="mdi:check-decagram" class="text-lg" />
                             Fase a Gironi Completata
@@ -166,7 +170,7 @@ const translateStage = (stage: string) => {
                         >
                             Pronto per il Sorteggio
                         </h2>
-                        <p class="text-gray-300 font-bold uppercase tracking-wider max-w-md">
+                        <p class="text-gray-200 font-bold uppercase tracking-wider max-w-md text-sm leading-normal">
                             Tutti gli incontri della fase a gironi sono stati risolti. Ora puoi
                             generare il tabellone a eliminazione diretta.
                         </p>
@@ -175,7 +179,7 @@ const translateStage = (stage: string) => {
                     <div class="relative z-10 w-full md:w-auto">
                         <NuxtLink
                             to="/admin/matches"
-                            class="flex items-center justify-center gap-3 w-full md:w-auto px-8 py-5 bg-white text-black border-4 border-black font-impact uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-all shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transform -skew-x-6"
+                            class="flex items-center justify-center gap-3 w-full md:w-auto px-8 py-5 bg-white text-primary border-4 border-black font-impact uppercase tracking-widest hover:bg-black hover:text-white hover:border-white transition-all shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transform -skew-x-6 active:scale-95"
                         >
                             <Icon name="mdi:whistle" class="text-xl transform skew-x-6 block" />
                             <span class="transform skew-x-6 block">Genera Tabellone</span>

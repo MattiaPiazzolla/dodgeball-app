@@ -21,29 +21,30 @@
         <div v-else class="mobile-fade-in">
             <!-- Tabs — full width on mobile -->
             <div
+                v-if="hasKnockoutMatches"
                 class="flex border-2 border-black w-full max-w-md mx-auto mb-6 sm:mb-10 shadow-[2px_2px_0px_rgba(0,0,0,1)] bg-white"
             >
                 <button
-                    @click="activeTab = 'group'"
+                    @click="activeTab = 'knockout'"
                     :class="
-                        activeTab === 'group'
+                        activeTab === 'knockout'
                             ? 'bg-black text-white border-r-2 border-black'
                             : 'text-secondary hover:bg-gray-100 border-r-2 border-black'
                     "
                     class="flex-1 py-3 font-impact uppercase tracking-wider text-xs sm:text-sm transition-all text-center select-none"
                 >
-                    Gironi
+                    Eliminazione
                 </button>
                 <button
-                    @click="activeTab = 'knockout'"
+                    @click="activeTab = 'group'"
                     :class="
-                        activeTab === 'knockout'
+                        activeTab === 'group'
                             ? 'bg-black text-white'
                             : 'text-secondary hover:bg-gray-100'
                     "
                     class="flex-1 py-3 font-impact uppercase tracking-wider text-xs sm:text-sm transition-all text-center select-none"
                 >
-                    Eliminazione
+                    Gironi
                 </button>
             </div>
 
@@ -460,7 +461,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 
 const translateStatus = (s: string) => {
     if (s === "pending") return "In attesa";
@@ -479,6 +480,16 @@ const groups = ref<any[]>([]);
 const matches = ref<any[]>([]);
 const pending = ref(true);
 let realtimeChannel: any = null;
+
+const hasKnockoutMatches = computed(() => {
+    return matches.value.some((m) => m.match_type === "knockout");
+});
+
+watch(hasKnockoutMatches, (hasKnockout) => {
+    if (!hasKnockout && activeTab.value === "knockout") {
+        activeTab.value = "group";
+    }
+});
 
 const groupedKnockoutMatches = computed(() => {
     const sorted: Record<number, any[]> = {};
@@ -535,7 +546,11 @@ const loadData = async () => {
         .select("*")
         .order("round")
         .order("id");
-    if (mData) matches.value = mData;
+    if (mData) {
+        matches.value = mData;
+        const hasKnockout = mData.some((m) => m.match_type === "knockout");
+        activeTab.value = hasKnockout ? "knockout" : "group";
+    }
 
     realtimeChannel = subscribeToAllMatches((payload) => {
         const changedMatch = payload.new || payload.old;

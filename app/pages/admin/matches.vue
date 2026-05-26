@@ -1,7 +1,8 @@
 // pages/admin/matches.vue
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { useScrollLock } from "~/composables/useScrollLock";
 
 definePageMeta({ middleware: "admin" });
 
@@ -28,6 +29,24 @@ const showMobileActions = ref(false);
 
 // Add match modal
 const showAddModal = ref(false);
+
+// Scroll locks for modals
+const { lock, unlock } = useScrollLock();
+
+watch(showAddModal, (isOpen) => {
+    if (isOpen) lock();
+    else unlock();
+});
+
+watch(showMobileActions, (isOpen) => {
+    if (isOpen) lock();
+    else unlock();
+});
+
+watch(() => !!selectedMatchActions.value, (isOpen) => {
+    if (isOpen) lock();
+    else unlock();
+});
 const addForm = ref({
     match_type: "knockout" as "knockout" | "group",
     group_id: "",
@@ -78,6 +97,16 @@ const allGroupMatchesCompleted = computed(() => {
     const gm = matches.value.filter((m) => m.match_type === "group");
     if (gm.length === 0) return true; // Allowed if no group stage exists
     return gm.every((m) => ["completed", "retired"].includes(m.status));
+});
+
+const hasKnockoutMatches = computed(() => {
+    return matches.value.some((m) => m.match_type === "knockout");
+});
+
+watch(hasKnockoutMatches, (hasKnockout) => {
+    if (!hasKnockout && activeTab.value === "knockout") {
+        activeTab.value = "group";
+    }
 });
 
 const roundLabel = (r: number) => {
@@ -176,10 +205,7 @@ const loadData = async () => {
     if (gData) groups.value = gData;
     if (mData) matches.value = mData;
 
-    if (
-        allGroupMatchesCompleted.value &&
-        Object.keys(knockoutMatches.value).length > 0
-    ) {
+    if (hasKnockoutMatches.value) {
         activeTab.value = "knockout";
     } else {
         activeTab.value = "group";
@@ -487,18 +513,7 @@ onUnmounted(() => {
                         class="flex-1 flex bg-white border-4 border-black p-1 gap-1 shadow-[2px_2px_0px_rgba(0,0,0,1)] sm:flex-none min-w-0"
                     >
                         <button
-                            @click="activeTab = 'group'"
-                            class="flex-1 sm:flex-none px-2 sm:px-6 py-2.5 text-sm font-impact uppercase tracking-widest transition-all border-2 border-transparent truncate"
-                            :class="
-                                activeTab === 'group'
-                                    ? 'bg-primary text-white border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]'
-                                    : 'text-secondary hover:text-black'
-                            "
-                        >
-                            Gironi
-                        </button>
-                        <button
-                            v-if="allGroupMatchesCompleted"
+                            v-if="hasKnockoutMatches"
                             @click="activeTab = 'knockout'"
                             class="flex-1 sm:flex-none px-2 sm:px-6 py-2.5 text-sm font-impact uppercase tracking-widest transition-all border-2 border-transparent truncate"
                             :class="
@@ -508,6 +523,17 @@ onUnmounted(() => {
                             "
                         >
                             Eliminazione
+                        </button>
+                        <button
+                            @click="activeTab = 'group'"
+                            class="flex-1 sm:flex-none px-2 sm:px-6 py-2.5 text-sm font-impact uppercase tracking-widest transition-all border-2 border-transparent truncate"
+                            :class="
+                                activeTab === 'group'
+                                    ? 'bg-primary text-white border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                    : 'text-secondary hover:text-black'
+                            "
+                        >
+                            Gironi
                         </button>
                     </div>
 
@@ -575,7 +601,7 @@ onUnmounted(() => {
                     class="animate-in fade-in slide-in-from-bottom-4 duration-500 py-8"
                 >
                     <div
-                        class="card-grunge bg-primary border-4 border-black p-8 sm:p-12 relative overflow-hidden flex flex-col items-center justify-center gap-6 text-center"
+                        class="card-grunge !bg-primary border-4 border-black p-8 sm:p-12 relative overflow-hidden flex flex-col items-center justify-center gap-6 text-center"
                     >
                         <Icon
                             name="mdi:tournament"
@@ -901,7 +927,7 @@ onUnmounted(() => {
             <div v-else>
                 <div
                     v-if="Object.keys(groupMatches).length === 0"
-                    class="card-grunge bg-cement p-12 flex flex-col items-center justify-center text-secondary border-dashed"
+                    class="card-grunge !bg-cement p-12 flex flex-col items-center justify-center text-secondary border-dashed"
                 >
                     <Icon
                         name="mdi:table-large"
@@ -915,6 +941,53 @@ onUnmounted(() => {
                     </p>
                 </div>
                 <div v-else class="space-y-6">
+                    <!-- Call to Action: Generate Knockout Bracket if Group Stage is Complete and no Knockout Matches exist yet -->
+                    <div
+                        v-if="allGroupMatchesCompleted && !hasKnockoutMatches"
+                        class="animate-in fade-in slide-in-from-top-4 duration-500 pb-2"
+                    >
+                        <div
+                            class="card-grunge !bg-primary border-4 border-black p-6 sm:p-8 relative overflow-hidden flex flex-col items-center justify-center gap-4 text-center"
+                        >
+                            <Icon
+                                name="mdi:tournament"
+                                class="absolute -right-8 -bottom-12 text-[200px] text-white opacity-10 pointer-events-none"
+                            />
+                            <div
+                                class="relative z-10 text-white space-y-2 max-w-lg"
+                            >
+                                <div
+                                    class="flex items-center justify-center gap-2 text-yellow-300 font-impact uppercase tracking-widest text-xs sm:text-sm"
+                                >
+                                    <Icon
+                                        name="mdi:check-decagram"
+                                        class="text-base"
+                                    />
+                                    Fase a Gironi Completata
+                                </div>
+                                <h2
+                                    class="text-3xl sm:text-4xl font-impact uppercase tracking-widest leading-none text-white"
+                                >
+                                    Pronto per il Sorteggio
+                                </h2>
+                                <p class="text-gray-200 font-bold uppercase tracking-wider text-xs sm:text-sm leading-normal">
+                                    Tutti gli incontri della fase a gironi sono stati
+                                    risolti. Ora puoi generare il tabellone ufficiale
+                                    a eliminazione diretta.
+                                </p>
+                            </div>
+                            <div class="relative z-10">
+                                <button
+                                    @click="autoGenerateKnockout"
+                                    class="flex items-center justify-center gap-3 px-8 py-3.5 bg-white text-primary border-4 border-black font-impact uppercase tracking-widest hover:bg-black hover:text-white hover:border-white transition-all shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:scale-95 transform -skew-x-6"
+                                >
+                                    <Icon name="mdi:whistle" class="text-xl transform skew-x-6 block" />
+                                    <span class="transform skew-x-6 block">Genera tabellone</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div
                         v-for="(groupMatchList, groupId) in groupMatches"
                         :key="groupId"

@@ -71,44 +71,41 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-cement pb-20 sm:pb-16 selection:bg-primary selection:text-white">
-        <!-- SECTION 1: HERO (Theme: Dark, Background: #111111) -->
+    <div class="min-h-screen bg-cement selection:bg-primary selection:text-white">
+
+        <!-- SECTION 1: HERO -->
         <section
             v-if="registrationsOpen"
             id="hero"
-            class="relative bg-[#111111] text-white py-20 sm:py-32 px-4 overflow-hidden border-b-8 border-black flex flex-col items-center justify-center min-h-[85vh] sm:min-h-[90vh]"
+            class="relative bg-[#111111] text-white overflow-hidden min-h-[90vh] flex flex-col items-center justify-end pb-16 sm:pb-24"
         >
-            <!-- Visual Accent: Centered Red Sphere Glow -->
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
-                <div class="w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-radial from-primary/30 via-primary/5 to-transparent blur-3xl animate-pulse rounded-full"></div>
-                <div class="absolute w-[220px] h-[220px] sm:w-[360px] sm:h-[360px] border-[3px] border-dashed border-primary/20 rounded-full animate-[spin_50s_linear_infinite]"></div>
-                <div class="absolute w-[120px] h-[120px] sm:w-[200px] sm:h-[200px] bg-primary/10 rounded-full filter blur-2xl"></div>
+            <!-- Portrait: large, centered, fills upper portion -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+                <img
+                    src="/dodgeballxl-logo.PNG"
+                    alt=""
+                    class="hero-portrait-img"
+                />
             </div>
 
-            <!-- Accent Background grid texture -->
-            <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+            <!-- Single gradient: transparent top → solid bottom, so text is always readable -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#111111] via-[#111111]/80 to-transparent pointer-events-none z-[1]"></div>
 
-            <div class="max-w-4xl mx-auto text-center relative z-10 space-y-6 sm:space-y-8 mobile-fade-in">
-                <!-- Mini Badge -->
-                <div class="inline-block bg-primary text-white font-impact tracking-widest text-xs sm:text-sm py-1.5 px-4 border-2 border-white transform -skew-x-6 uppercase shadow-[3px_3px_0px_rgba(0,0,0,1)]">
+            <!-- Text content: anchored to bottom -->
+            <div class="relative z-10 w-full max-w-2xl mx-auto px-6 text-center space-y-4 mobile-fade-in">
+                <p class="font-impact text-xs sm:text-sm tracking-[0.3em] text-primary uppercase">
                     Torneo Ufficiale 2026
-                </div>
-
-                <div class="space-y-2 sm:space-y-4">
-                    <h1 class="font-impact text-5xl sm:text-9xl tracking-tight leading-none text-white select-none">
-                        DODGEBALL <span class="text-primary italic inline-block drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">XL</span>
-                    </h1>
-                    <p class="font-impact text-2xl sm:text-4xl text-gray-300 tracking-wider">
-                        MEMORIAL LORIS PASSERI
-                    </p>
-                </div>
-
-                <p class="text-gray-400 font-medium max-w-xl mx-auto text-sm sm:text-lg">
-                    Il torneo di dodgeball più energetico dell'anno. Partite in diretta, classifiche in tempo reale e street food da urlo.
                 </p>
 
-                <!-- CTA Group -->
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <h1 class="font-impact leading-none select-none text-white hero-title">
+                    DODGEBALL <span class="text-primary italic">XL</span>
+                </h1>
+
+                <p class="font-impact text-sm sm:text-xl text-gray-400 tracking-[0.22em]">
+                    MEMORIAL LORIS PASSERI
+                </p>
+
+                <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <NuxtLink to="/login" class="btn-skewed w-full sm:w-auto">
                         <span class="btn-skewed-content">Iscrivi la Squadra</span>
                     </NuxtLink>
@@ -117,10 +114,6 @@ onMounted(() => {
                     </a>
                 </div>
             </div>
-
-            <!-- Visual Accent: Brush Stroke Bottom Paint Slash -->
-            <div class="absolute bottom-0 left-0 right-0 h-6 bg-black transform skew-y-1 origin-bottom-left z-10"></div>
-            <div class="absolute bottom-0 left-0 right-0 h-4 bg-primary transform -skew-y-1 origin-bottom-right opacity-80 z-10"></div>
         </section>
 
         <!-- SECTION 2: INFO TORNEO (Theme: Light, Background: #F4F4F2) -->
@@ -250,39 +243,47 @@ onMounted(() => {
             </div>
         </section>
 
-        <!-- SECTION 4: DETAILS FOOTER / EVENT BADGE (Theme: Dark, Background: #1A1A1A) -->
+        <!-- SECTION 4: DETAILS FOOTER / EVENT BADGE -->
         <section
             v-if="registrationsOpen"
             id="details_footer"
-            class="bg-[#1A1A1A] text-white py-16 px-4 border-t-8 border-black text-center relative overflow-hidden"
+            class="relative text-white text-center overflow-hidden"
         >
-            <!-- Background accent lines -->
-            <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.15)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.15)_50%,rgba(0,0,0,0.15)_75%,transparent_75%,transparent)] bg-[size:40px_40px] pointer-events-none"></div>
+            <!-- Smooth gradient fade from cement page into dark footer -->
+            <div class="h-24 sm:h-32 bg-gradient-to-b from-[#F4F4F2] to-secondary"></div>
 
-            <div class="max-w-4xl mx-auto space-y-8 relative z-10 mobile-fade-in">
-                <!-- Large Event Badge -->
-                <div class="bg-black border-4 border-primary p-6 sm:p-10 max-w-xl mx-auto inline-block text-center transform -skew-x-3 shadow-[8px_8px_0px_rgba(211,47,47,0.3)]">
-                    <div class="font-impact text-primary text-5xl sm:text-7xl leading-none tracking-widest mb-2 select-none">
-                        6 GIUGNO
+            <!-- Main dark content area — same bg as layout footer -->
+            <div class="bg-secondary px-4 pt-8 pb-8">
+                <div class="max-w-4xl mx-auto space-y-8 relative z-10 mobile-fade-in">
+                    <!-- Large Event Badge -->
+                    <div class="bg-black border-4 border-primary p-6 sm:p-10 max-w-xl mx-auto inline-block text-center transform -skew-x-3 shadow-[8px_8px_0px_rgba(211,47,47,0.3)]">
+                        <div class="font-impact text-primary text-5xl sm:text-7xl leading-none tracking-widest mb-2 select-none">
+                            6 GIUGNO
+                        </div>
+                        <div class="font-impact text-white text-lg sm:text-2xl tracking-widest">
+                            ZONA PRATI - DODGEBALL ARENA
+                        </div>
                     </div>
-                    <div class="font-impact text-white text-lg sm:text-2xl tracking-widest">
-                        ZONA PRATI - DODGEBALL ARENA
-                    </div>
-                </div>
 
-                <!-- Contact / Registration Info -->
-                <div class="space-y-4 max-w-md mx-auto">
-                    <div class="bg-primary/20 border-2 border-primary/50 py-3 px-6 transform skew-x-3 inline-block">
-                        <span class="font-impact text-primary text-base sm:text-xl tracking-widest block">
-                            INFO E ISCRIZIONI ISMA
-                        </span>
+                    <!-- Contact Info -->
+                    <div class="space-y-4 max-w-md mx-auto">
+                        <div class="bg-primary/20 border-2 border-primary/50 py-3 px-6 transform skew-x-3 inline-block">
+                            <span class="font-impact text-primary text-base sm:text-xl tracking-widest block">
+                                INFO - ISMA
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-center space-x-6">
+                            <a href="tel:3466424053" class="flex items-center text-white hover:text-primary">
+                                <Icon name="mdi:phone" class="mr-2" /> Call
+                            </a>
+                            <a href="https://wa.me/3466424053" target="_blank" rel="noopener" class="flex items-center text-white hover:text-primary">
+                                <Icon name="mdi:whatsapp" class="mr-2" /> WhatsApp
+                            </a>
+                        </div>
+                        <p class="text-xs uppercase text-gray-400 font-bold tracking-wider pt-2">
+                            Contattaci su WhatsApp o telefonicamente per iscrivere singoli giocatori o squadre complete!
+                        </p>
                     </div>
-                    <p class="font-impact text-2xl sm:text-4xl text-white tracking-widest animate-pulse mt-2">
-                        📞 346 6424053
-                    </p>
-                    <p class="text-xs uppercase text-gray-400 font-bold tracking-wider pt-2">
-                        Contattaci su WhatsApp o telefonicamente per iscrivere singoli giocatori o squadre complete!
-                    </p>
                 </div>
             </div>
         </section>
@@ -290,6 +291,27 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Portrait — large, inverted to white, bottom edge fades into gradient */
+.hero-portrait-img {
+    height: 80vh;
+    max-height: 640px;
+    width: auto;
+    object-fit: contain;
+    filter: invert(1);
+    opacity: 0.6;
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, black 55%, transparent 88%);
+    mask-image: linear-gradient(to bottom, black 30%, black 55%, transparent 88%);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Hero title responsive size */
+.hero-title {
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    line-height: 0.95;
+}
+
+/* Panel transitions */
 .public-panel-enter-active,
 .public-panel-leave-active {
     transition:
