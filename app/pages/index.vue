@@ -1,7 +1,10 @@
 // app/pages/index.vue
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, defineAsyncComponent } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from "vue";
 import { useRoute } from "vue-router";
+import { useNavbarState } from "~/composables/useNavbarState";
+
+const { activeSection, registrationsOpen, showNavbarTabs } = useNavbarState();
 
 const sections = [
     { id: "live", label: "LIVE IN CORSO", icon: "mdi:access-point" },
@@ -9,7 +12,6 @@ const sections = [
     { id: "teams", label: "SQUADRE ISCRITTE", icon: "mdi:shield-account" },
 ];
 
-const activeSection = ref("live");
 const route = useRoute();
 
 const sectionComponents = {
@@ -55,7 +57,8 @@ watch(
 );
 
 const client = useSupabaseClient();
-const registrationsOpen = ref(true);
+const tabsContainer = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
 
 const fetchSettings = async () => {
     const { data } = await client.from("app_settings").select("registrations_open").eq("id", 1).single();
@@ -64,9 +67,39 @@ const fetchSettings = async () => {
     }
 };
 
+watch(tabsContainer, (newContainer) => {
+    if (newContainer && typeof window !== "undefined" && "IntersectionObserver" in window) {
+        if (observer) {
+            observer.disconnect();
+        }
+        observer = new IntersectionObserver(
+            ([entry]) => {
+                if (window.innerWidth < 640 && !registrationsOpen.value) {
+                    const isPast = !entry.isIntersecting && entry.boundingClientRect.top < 80;
+                    showNavbarTabs.value = isPast;
+                } else {
+                    showNavbarTabs.value = false;
+                }
+            },
+            {
+                threshold: 0,
+                rootMargin: "-72px 0px 0px 0px",
+            }
+        );
+        observer.observe(newContainer);
+    }
+}, { immediate: true });
+
 onMounted(() => {
     fetchSettings();
     applyHash(window.location.hash);
+});
+
+onBeforeUnmount(() => {
+    if (observer) {
+        observer.disconnect();
+    }
+    showNavbarTabs.value = false;
 });
 </script>
 
@@ -173,7 +206,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Redesigned Grunge Dashboard Tab Controls -->
-                <div class="flex flex-col sm:flex-row justify-center items-stretch gap-2 w-full max-w-2xl mx-auto">
+                <div ref="tabsContainer" class="flex flex-col sm:flex-row justify-center items-stretch gap-2 w-full max-w-2xl mx-auto">
                     <button
                         v-for="section in sections"
                         :key="section.id"

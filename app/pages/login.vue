@@ -44,27 +44,37 @@ const loadRegistrationSettings = async () => {
 const handleAuth = async () => {
     errorMsg.value = "";
     try {
-        if (isSignUp.value) {
-            if (!registrationsOpen.value) {
-                errorMsg.value = "Le iscrizioni sono chiuse.";
-                isSignUp.value = false;
-                return;
-            }
+            if (isSignUp.value) {
+                if (!registrationsOpen.value) {
+                    errorMsg.value = "Le iscrizioni sono chiuse.";
+                    isSignUp.value = false;
+                    return;
+                }
 
-            const { error } = await client.auth.signUp({
-                email: email.value,
-                password: password.value,
-            });
-            if (error) throw error;
-            alert("Controlla la tua email per confermare la registrazione!");
-        } else {
-            const { error } = await client.auth.signInWithPassword({
-                email: email.value,
-                password: password.value,
-            });
-            if (error) throw error;
-            navigateTo("/captain");
-        }
+                // Create account without requiring email verification
+                const { error } = await client.auth.signUp({
+                    email: email.value,
+                    password: password.value,
+                });
+                if (error) throw error;
+
+                // Immediately sign in the new user
+                const { error: signInError } = await client.auth.signInWithPassword({
+                    email: email.value,
+                    password: password.value,
+                });
+                if (signInError) throw signInError;
+
+                // Navigate to the captain dashboard – fields are already set in the refs
+                navigateTo("/captain");
+            } else {
+                const { error } = await client.auth.signInWithPassword({
+                    email: email.value,
+                    password: password.value,
+                });
+                if (error) throw error;
+                navigateTo("/captain");
+            }
     } catch (error: any) {
         errorMsg.value = error.message;
     }

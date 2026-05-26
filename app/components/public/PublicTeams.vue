@@ -53,157 +53,163 @@
             Nessuna squadra è stata ancora approvata.
         </div>
 
-        <!-- Team Details Modal — full screen -->
+        <!-- Team Details Modal Wrapper/Backdrop (Full screen on mobile, blur backdrop on desktop) -->
         <div
             v-if="showModal"
-            class="fixed inset-0 bg-white z-50 flex flex-col mobile-fade-in"
+            class="fixed inset-0 z-50 flex flex-col sm:items-center sm:justify-center bg-white sm:bg-black/60 sm:backdrop-blur-md p-0 sm:p-6 mobile-fade-in"
+            @click.self="closeModal"
         >
-            <!-- Sticky Header -->
+            <!-- Modal Card (Full screen on mobile, bounded card with bold borders and hard shadow on desktop) -->
             <div
-                class="sticky top-0 bg-white border-b-4 border-black px-5 py-4 sm:px-8 sm:py-5 flex justify-between items-center z-10 shadow-[0_4px_0px_rgba(0,0,0,1)] flex-shrink-0"
+                class="flex flex-col w-full h-full sm:h-[85vh] sm:max-w-4xl bg-white border-0 sm:border-4 sm:border-black sm:shadow-[8px_8px_0px_rgba(0,0,0,1)] relative overflow-hidden"
             >
-                <div class="flex items-center gap-4 flex-1 min-w-0 pr-4">
-                    <h2
-                        class="font-impact text-2xl sm:text-4xl text-black tracking-widest uppercase truncate"
-                    >
-                        {{ selectedTeam?.name }}
-                    </h2>
-                    
-                    <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-black text-white transform -skew-x-6 border-2 border-primary shadow-[2px_2px_0px_var(--primary)] whitespace-nowrap">
-                        <span class="font-impact text-sm uppercase transform skew-x-6 tracking-widest">
-                            Voti: <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span> / 5
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-3 shrink-0">
-                    <div class="sm:hidden flex items-center gap-1 px-2 py-1 bg-black text-white transform -skew-x-6 border-2 border-primary shadow-[2px_2px_0px_var(--primary)]">
-                        <span class="font-impact text-xs uppercase transform skew-x-6 tracking-widest">
-                            <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span>/5
-                        </span>
-                    </div>
-                    
-                    <button
-                        @click="closeModal"
-                        class="text-secondary hover:text-white transition-all bg-white border-2 border-black hover:bg-primary p-2 shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none"
-                    >
-                        <span class="relative w-5 h-5 flex items-center justify-center">
-                            <span class="absolute block w-5 h-0.5 bg-current rotate-45"></span>
-                            <span class="absolute block w-5 h-0.5 bg-current -rotate-45"></span>
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar bg-cement">
-                <div class="max-w-4xl mx-auto px-4 sm:px-8 py-8">
-                    <div
-                        v-if="loadingRoster"
-                        class="text-center text-primary py-20 font-impact text-xl animate-pulse uppercase tracking-widest"
-                    >
-                        Caricamento giocatori...
-                    </div>
-
-                    <div
-                        v-else-if="roster.length"
-                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-                    >
-                        <div
-                            v-for="player in roster"
-                            :key="player.id"
-                            class="flex items-center justify-between bg-white border-2 border-black p-4 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all relative overflow-hidden"
+                <!-- Sticky Header -->
+                <div
+                    class="sticky top-0 bg-white border-b-4 border-black px-5 py-4 sm:px-8 sm:py-5 flex justify-between items-center z-10 shadow-[0_4px_0px_rgba(0,0,0,1)] flex-shrink-0"
+                >
+                    <div class="flex items-center gap-4 flex-1 min-w-0 pr-4">
+                        <h2
+                            class="font-impact text-2xl sm:text-4xl text-black tracking-widest uppercase truncate"
                         >
-                            <!-- Badge for votes given by user to this player -->
-                            <div v-if="getPlayerVotes(player.id) > 0" class="absolute top-0 right-0 bg-primary text-white text-[10px] font-black px-2 py-0.5 uppercase tracking-wider z-10 border-b-2 border-l-2 border-black shadow-[-1px_1px_0px_rgba(0,0,0,1)]">
-                                Hai dato {{ getPlayerVotes(player.id) }} voti
-                            </div>
-
-                            <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-                                <div
-                                    class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 border-2 border-black overflow-hidden flex-shrink-0 flex items-center justify-center text-gray-400 shadow-[1px_1px_0px_rgba(0,0,0,1)]"
-                                >
-                                    <img
-                                        v-if="player.photo_url"
-                                        :src="player.photo_url"
-                                        :alt="player.name"
-                                        class="w-full h-full object-cover"
-                                    />
-                                    <Icon
-                                        v-else
-                                        name="mdi:account"
-                                        class="text-3xl"
-                                    />
-                                </div>
-                                <div class="min-w-0">
-                                    <div
-                                        class="font-impact text-base text-black tracking-wide truncate"
-                                    >
-                                        {{ player.name }}
-                                    </div>
-                                    <div
-                                        v-if="player.nickname"
-                                        class="text-gray-500 text-xs font-bold uppercase mt-0.5 truncate"
-                                    >
-                                        "{{ player.nickname }}"
-                                    </div>
-                                    <div
-                                        class="text-primary font-impact text-lg mt-0.5"
-                                    >
-                                        #{{ player.jersey_number || "00" }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- MVP Voting Block -->
-                            <div
-                                class="flex flex-col items-center justify-center gap-1 pl-2 z-10 relative mt-2"
-                            >
-                                <div class="flex gap-2">
-                                    <button
-                                        v-if="getPlayerVotes(player.id) > 0"
-                                        @click="undoVote(player.id)"
-                                        class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black bg-red-500 text-white hover:bg-red-600 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:scale-90"
-                                        title="Rimuovi Voto"
-                                    >
-                                        <Icon name="mdi:minus" class="text-lg" />
-                                    </button>
-                                    <button
-                                        @click="doVote(player.id)"
-                                        :disabled="!canVote"
-                                    class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black active:scale-90"
-                                    :class="
-                                        !canVote
-                                            ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,0.1)]'
-                                            : getPlayerVotes(player.id) > 0
-                                                ? 'bg-green-500 border-black text-white hover:bg-green-600 shadow-[2px_2px_0px_rgba(0,0,0,1)]'
-                                                : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
-                                    "
-                                >
-                                    <Icon
-                                        :name="
-                                            getPlayerVotes(player.id) > 0
-                                                ? 'mdi:thumb-up'
-                                                : 'mdi:thumb-up-outline'
-                                        "
-                                        class="text-lg"
-                                    />
-                                    </button>
-                                </div>
-                                <span
-                                    class="text-[10px] font-impact uppercase text-secondary tracking-widest mt-1"
-                                >
-                                    {{ player.mvp_votes || 0 }} Voti
-                                </span>
-                            </div>
+                            {{ selectedTeam?.name }}
+                        </h2>
+                        
+                        <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-black text-white transform -skew-x-6 border-2 border-primary shadow-[2px_2px_0px_var(--primary)] whitespace-nowrap">
+                            <span class="font-impact text-sm uppercase transform skew-x-6 tracking-widest">
+                                Voti: <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span> / 5
+                            </span>
                         </div>
                     </div>
+                    
+                    <div class="flex items-center gap-3 shrink-0">
+                        <div class="sm:hidden flex items-center gap-1 px-2 py-1 bg-black text-white transform -skew-x-6 border-2 border-primary shadow-[2px_2px_0px_var(--primary)]">
+                            <span class="font-impact text-xs uppercase transform skew-x-6 tracking-widest">
+                                <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span>/5
+                            </span>
+                        </div>
+                        
+                        <button
+                            @click="closeModal"
+                            class="text-secondary hover:text-white transition-all bg-white border-2 border-black hover:bg-primary p-2 shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none cursor-pointer"
+                        >
+                            <span class="relative w-5 h-5 flex items-center justify-center">
+                                <span class="absolute block w-5 h-0.5 bg-current rotate-45"></span>
+                                <span class="absolute block w-5 h-0.5 bg-current -rotate-45"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
 
-                    <div
-                        v-else
-                        class="text-center text-secondary py-20 font-impact tracking-wider border-4 border-dashed border-black bg-white shadow-[3px_3px_0px_rgba(0,0,0,1)]"
-                    >
-                        Nessun giocatore trovato per questa squadra.
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar bg-cement">
+                    <div class="max-w-4xl mx-auto px-4 sm:px-8 py-8">
+                        <div
+                            v-if="loadingRoster"
+                            class="text-center text-primary py-20 font-impact text-xl animate-pulse uppercase tracking-widest"
+                        >
+                            Caricamento giocatori...
+                        </div>
+
+                        <div
+                            v-else-if="roster.length"
+                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                        >
+                            <div
+                                v-for="player in roster"
+                                :key="player.id"
+                                class="flex items-center justify-between bg-white border-2 border-black p-4 shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all relative overflow-hidden"
+                            >
+                                <!-- Badge for votes given by user to this player -->
+                                <div v-if="getPlayerVotes(player.id) > 0" class="absolute top-0 right-0 bg-primary text-white text-[10px] font-black px-2 py-0.5 uppercase tracking-wider z-10 border-b-2 border-l-2 border-black shadow-[-1px_1px_0px_rgba(0,0,0,1)]">
+                                    Hai dato {{ getPlayerVotes(player.id) }} voti
+                                </div>
+
+                                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                                    <div
+                                        class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 border-2 border-black overflow-hidden flex-shrink-0 flex items-center justify-center text-gray-400 shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                    >
+                                        <img
+                                            v-if="player.photo_url"
+                                            :src="player.photo_url"
+                                            :alt="player.name"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <Icon
+                                            v-else
+                                            name="mdi:account"
+                                            class="text-3xl"
+                                        />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div
+                                            class="font-impact text-base text-black tracking-wide truncate"
+                                        >
+                                            {{ player.name }}
+                                        </div>
+                                        <div
+                                            v-if="player.nickname"
+                                            class="text-gray-500 text-xs font-bold uppercase mt-0.5 truncate"
+                                        >
+                                            "{{ player.nickname }}"
+                                        </div>
+                                        <div
+                                            class="text-primary font-impact text-lg mt-0.5"
+                                        >
+                                            #{{ player.jersey_number || "00" }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- MVP Voting Block -->
+                                <div
+                                    class="flex flex-col items-center justify-center gap-1 pl-2 z-10 relative mt-2"
+                                >
+                                    <div class="flex gap-2">
+                                        <button
+                                            v-if="getPlayerVotes(player.id) > 0"
+                                            @click="undoVote(player.id)"
+                                            class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black bg-red-500 text-white hover:bg-red-600 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:scale-90 cursor-pointer"
+                                            title="Rimuovi Voto"
+                                        >
+                                            <Icon name="mdi:minus" class="text-lg" />
+                                        </button>
+                                        <button
+                                            @click="doVote(player.id)"
+                                            :disabled="!canVote"
+                                            class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black active:scale-90 cursor-pointer"
+                                            :class="
+                                                !canVote
+                                                    ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,0.1)]'
+                                                    : getPlayerVotes(player.id) > 0
+                                                        ? 'bg-green-500 border-black text-white hover:bg-green-600 shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                                        : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                                            "
+                                        >
+                                            <Icon
+                                                :name="
+                                                    getPlayerVotes(player.id) > 0
+                                                        ? 'mdi:thumb-up'
+                                                        : 'mdi:thumb-up-outline'
+                                                "
+                                                class="text-lg"
+                                            />
+                                        </button>
+                                    </div>
+                                    <span
+                                        class="text-[10px] font-impact uppercase text-secondary tracking-widest mt-1"
+                                    >
+                                        {{ player.mvp_votes || 0 }} Voti
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            v-else
+                            class="text-center text-secondary py-20 font-impact tracking-wider border-4 border-dashed border-black bg-white shadow-[3px_3px_0px_rgba(0,0,0,1)]"
+                        >
+                            Nessun giocatore trovato per questa squadra.
+                        </div>
                     </div>
                 </div>
             </div>
