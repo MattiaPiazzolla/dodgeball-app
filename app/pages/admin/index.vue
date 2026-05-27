@@ -9,6 +9,10 @@ const topMvpPlayers = ref<any[]>([]);
 const registrationsOpen = ref(true);
 const isLoading = ref(true);
 
+const mvpSearchQuery = ref("");
+const mvpTeamFilter = ref("");
+let playerSubscription: any = null;
+
 const fetchAll = async () => {
     const [
         { data: teamsData },
@@ -27,11 +31,10 @@ const fetchAll = async () => {
             client
                 .from("players")
                 .select(
-                    "id, name, nickname, jersey_number, photo_url, mvp_votes, team_id",
+                    "id, name, jersey_number, photo_url, mvp_votes, team_id",
                 )
-                .gt("mvp_votes", 0)
                 .order("mvp_votes", { ascending: false })
-                .limit(5),
+                .order("name", { ascending: true }),
             client
                 .from("app_settings")
                 .select("registrations_open")
@@ -44,6 +47,25 @@ const fetchAll = async () => {
     registrationsOpen.value = settingsData?.registrations_open ?? true;
     isLoading.value = false;
 };
+
+const refetchMvp = async () => {
+    const { data } = await client
+        .from("players")
+        .select("id, name, jersey_number, photo_url, mvp_votes, team_id")
+        .order("mvp_votes", { ascending: false })
+        .order("name", { ascending: true });
+    topMvpPlayers.value = data || [];
+};
+
+const filteredMvpPlayers = computed(() => {
+    return topMvpPlayers.value.filter((player) => {
+        const matchesSearch = !mvpSearchQuery.value ||
+            player.name.toLowerCase().includes(mvpSearchQuery.value.toLowerCase()) ||
+            (player.nickname && player.nickname.toLowerCase().includes(mvpSearchQuery.value.toLowerCase()));
+        const matchesTeam = !mvpTeamFilter.value || player.team_id === mvpTeamFilter.value;
+        return matchesSearch && matchesTeam;
+    });
+});
 
 const approvedTeams = computed(() =>
     teams.value.filter((t) => t.status === "approved"),
@@ -109,7 +131,29 @@ const setStatus = async (
 
 const confirmingDeleteId = ref<string | null>(null);
 
-onMounted(fetchAll);
+const subscribeToMvpChanges = () => {
+    playerSubscription = client
+        .channel("admin_live_mvp")
+        .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "players" },
+            () => {
+                refetchMvp();
+            }
+        )
+        .subscribe();
+};
+
+onMounted(async () => {
+    await fetchAll();
+    subscribeToMvpChanges();
+});
+
+onBeforeUnmount(() => {
+    if (playerSubscription) {
+        client.removeChannel(playerSubscription);
+    }
+});
 
 const toggleRegistrations = async () => {
     const nextValue = !registrationsOpen.value;
@@ -370,85 +414,136 @@ const translateStage = (stage: string) => {
                 </div>
             </section>
 
-            <section>
+            <section v-if="!registrationsOpen">
+                <!-- Title Flex Header (Read-Only) -->
                 <h2
                     class="text-lg font-impact uppercase tracking-widest text-secondary mb-4 border-b-4 border-black inline-block pr-4"
                 >
-                    Classifica MVP in Diretta (Migliori Candidati)
+                    Classifica MVP in Diretta (Voti Tempo Reale)
                 </h2>
+
+                <!-- Grunge Filters Panel -->
+                <div class="card-grunge bg-zinc-100 p-4 mb-6 flex flex-col md:flex-row gap-4 border-4 border-black">
+                    <div class="flex-1 relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Icon name="mdi:magnify" class="text-zinc-500 text-xl" />
+                        </span>
+                        <input
+                            v-model="mvpSearchQuery"
+                            type="text"
+                            placeholder="CERCA GIOCATORE..."
+                            class="w-full pl-10 pr-4 py-2 border-2 border-black bg-white font-impact uppercase tracking-widest text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-black transition-all"
+                        />
+                    </div>
+                    <div class="w-full md:w-64 relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Icon name="mdi:filter-outline" class="text-zinc-500 text-xl" />
+                        </span>
+                        <select
+                            v-model="mvpTeamFilter"
+                            class="w-full pl-10 pr-10 py-2 border-2 border-black bg-white font-impact uppercase tracking-widest text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-black appearance-none transition-all cursor-pointer"
+                        >
+                            <option value="">TUTTE LE SQUADRE</option>
+                            <option v-for="team in approvedTeams" :key="team.id" :value="team.id">
+                                {{ team.name.toUpperCase() }}
+                            </option>
+                        </select>
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <Icon name="mdi:chevron-down" class="text-zinc-500 text-xl" />
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Ranking Roster Card -->
                 <div
                     class="card-grunge bg-white p-6 min-[520px]:p-8 overflow-hidden"
                 >
                     <div
-                        v-if="topMvpPlayers.length === 0"
+                        v-if="filteredMvpPlayers.length === 0"
                         class="py-12 text-center text-gray-400 font-impact uppercase tracking-widest text-lg"
                     >
-                        Nessun voto MVP ancora inviato.
+                        Nessun candidato trovato con i filtri attuali.
                     </div>
                     <div v-else>
-                        <div
-                            v-for="(player, idx) in topMvpPlayers"
-                            :key="player.id"
-                            class="card-grunge bg-white flex flex-col min-[520px]:flex-row min-[520px]:items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:-translate-y-0.5 transition-transform mb-4"
-                        >
-                            <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-                                <span
-                                    class="font-impact text-xl w-8 text-center"
-                                    :class="
-                                        idx === 0
-                                            ? 'text-yellow-500'
-                                            : idx === 1
-                                              ? 'text-gray-400'
-                                              : idx === 2
-                                                ? 'text-amber-600'
-                                                : 'text-gray-300'
-                                    "
-                                >
-                                    #{{ idx + 1 }}
-                                </span>
-                                <img
-                                    v-if="player.photo_url"
-                                    :src="player.photo_url"
-                                    class="w-12 h-12 rounded-none object-cover border-2 border-black bg-white flex-shrink-0"
-                                />
+                        <!-- Scrollable Container Wrapper with Custom Scrollbar -->
+                        <div class="max-h-[500px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                            <div
+                                v-for="(player, idx) in filteredMvpPlayers"
+                                :key="player.id"
+                                class="card-grunge bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 hover:-translate-y-0.5 transition-transform mb-4 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+                            >
+                                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                                    <!-- Position Badge -->
+                                    <span
+                                        class="font-impact text-2xl w-10 h-10 flex items-center justify-center border-2 border-black shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                        :class="{
+                                            'bg-yellow-400 text-black': idx === 0,
+                                            'bg-slate-300 text-black': idx === 1,
+                                            'bg-amber-600 text-white': idx === 2,
+                                            'bg-zinc-100 text-zinc-500': idx > 2
+                                        }"
+                                    >
+                                        {{ idx + 1 }}
+                                    </span>
+                                    
+                                    <!-- Player Photo / Grunge Shield Fallback -->
+                                    <div class="relative flex-shrink-0">
+                                        <img
+                                            v-if="player.photo_url"
+                                            :src="player.photo_url"
+                                            class="w-14 h-14 rounded-none object-cover border-2 border-black bg-white flex-shrink-0"
+                                        />
+                                        <div
+                                            v-else
+                                            class="w-14 h-14 rounded-none bg-zinc-200 border-2 border-black flex items-center justify-center flex-shrink-0 relative overflow-hidden"
+                                        >
+                                            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:8px_8px]"></div>
+                                            <span class="font-impact text-zinc-600 text-lg uppercase tracking-wider">
+                                                {{ player.name.slice(0, 2) }}
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Dynamic Miniature Team Logo Indicator -->
+                                        <div 
+                                            v-if="getTeamLogo(player.team_id)"
+                                            class="absolute -bottom-1 -right-1 w-6 h-6 border-2 border-black bg-white flex items-center justify-center overflow-hidden shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                            :title="getTeamName(player.team_id)"
+                                        >
+                                            <img :src="getTeamLogo(player.team_id)" class="w-full h-full object-cover" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-baseline gap-2 min-w-0">
+                                            <span
+                                                class="font-impact uppercase tracking-widest text-black text-xl truncate"
+                                                >{{ player.name }}</span
+                                            >
+                                            <span
+                                                v-if="player.nickname"
+                                                class="text-xs text-primary font-bold italic"
+                                                >"{{ player.nickname }}"</span
+                                            >
+                                        </div>
+                                        <span
+                                            class="text-xs text-zinc-600 font-impact uppercase tracking-wider block mt-0.5"
+                                        >
+                                            N°{{ player.jersey_number || "00" }} —
+                                            {{ getTeamName(player.team_id) }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Read-only Vote Display Badge -->
                                 <div
-                                    v-else
-                                    class="w-12 h-12 rounded-none bg-cement border-2 border-black flex items-center justify-center flex-shrink-0"
+                                    class="bg-black px-4 py-2 border-2 border-black font-impact text-white text-base flex items-center gap-2 shadow-[3px_3px_0px_rgba(0,0,0,1)] min-w-[110px] justify-center shrink-0 self-end sm:self-auto"
                                 >
                                     <Icon
-                                        name="mdi:account-outline"
-                                        class="text-gray-400 text-xl"
+                                        name="mdi:thumb-up"
+                                        class="text-primary text-sm animate-pulse"
                                     />
+                                    <span>{{ player.mvp_votes }} {{ player.mvp_votes === 1 ? 'VOTO' : 'VOTI' }}</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <span
-                                            class="font-impact uppercase tracking-widest text-black truncate text-lg"
-                                            >{{ player.name }}</span
-                                        >
-                                        <span
-                                            v-if="player.nickname"
-                                            class="text-xs text-gray-500 font-bold"
-                                            >"{{ player.nickname }}"</span
-                                        >
-                                    </div>
-                                    <span
-                                        class="text-xs text-primary font-impact uppercase tracking-wider block"
-                                    >
-                                        #{{ player.jersey_number || "00" }} —
-                                        {{ getTeamName(player.team_id) }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div
-                                class="bg-black px-4 py-2 border-2 border-black font-impact text-white text-sm flex items-center gap-2 self-end min-[520px]:self-auto shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-                            >
-                                <Icon
-                                    name="mdi:thumb-up"
-                                    class="text-primary text-sm"
-                                />
-                                <span>{{ player.mvp_votes }} Voti</span>
                             </div>
                         </div>
                     </div>

@@ -36,7 +36,8 @@ const team1Color = ref('#D32F2F'); // Dodgeball Red
 const team2Color = ref('#E65100'); // Neon Orange
 const highBitrate = ref(true);
 
-const duration = 10; // 10 seconds duration
+const duration = 11.5;
+const outroDuration = 1.8;
 const EXPORT_FPS = 60;
 const W = 1080;
 const H = 1920;
@@ -61,7 +62,7 @@ const ease = {
     outCubic: (t: number) => 1 - Math.pow(1 - t, 3),
     spring: (t: number) => {
         if (t === 0 || t === 1) return t;
-        return Math.pow(2, -8 * t) * Math.sin((t * 12 - 0.75) * (2 * Math.PI / 3)) + 1;
+        return Math.pow(2, -7 * t) * Math.sin((t * 8 - 0.75) * (2 * Math.PI / 3)) + 1;
     },
     outElastic: (t: number) => {
         if (t === 0 || t === 1) return t;
@@ -219,6 +220,104 @@ const drawSkewedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: 
     ctx.closePath();
 };
 
+const drawImageCover = (
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    x: number,
+    y: number,
+    w: number,
+    h: number
+) => {
+    const scale = Math.max(w / img.width, h / img.height);
+    const sw = w / scale;
+    const sh = h / scale;
+    const sx = (img.width - sw) / 2;
+    const sy = (img.height - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+};
+
+const drawImageContain = (
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    x: number,
+    y: number,
+    w: number,
+    h: number
+) => {
+    const scale = Math.min(w / img.width, h / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+};
+
+const drawBrandLockup = (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1, alpha = 1) => {
+    const logo = preloadedImages.value['brand_logo'];
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.globalAlpha = alpha;
+
+    const logoSize = 170;
+    const textX = -35;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,1)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 10;
+    ctx.shadowOffsetY = 10;
+    ctx.fillStyle = '#F4F4F2';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 6;
+    drawSkewedRect(ctx, -245, -118, 865, 236, -18);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    if (logo) {
+        drawImageContain(ctx, logo, -logoSize - 40, -logoSize / 2, logoSize, logoSize);
+    }
+
+    ctx.font = `900 88px 'Impact', 'Barlow Condensed', 'Arial Black', sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#1A1A1A';
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 5;
+    ctx.shadowOffsetY = 5;
+    ctx.fillText('DODGEBALL', textX, 0);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    const dodgeballW = ctx.measureText('DODGEBALL').width;
+    const badgeX = textX + dodgeballW + 28;
+    const badgeY = -49;
+    const badgeW = 118;
+    const badgeH = 88;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,1)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 7;
+    ctx.shadowOffsetY = 7;
+    ctx.fillStyle = '#D32F2F';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 6;
+    drawSkewedRect(ctx, badgeX, badgeY, badgeW, badgeH, -16);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.font = `900 48px 'Impact', 'Barlow Condensed', 'Arial Black', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('XL', badgeX + badgeW / 2, badgeY + badgeH / 2 + 3);
+
+    ctx.restore();
+};
+
 // Image preloading with CORS fallback
 const loadImage = (url: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
@@ -233,7 +332,11 @@ const loadImage = (url: string): Promise<HTMLImageElement> => {
 const preloadAssets = async () => {
     status.value = 'loading';
     preloadedImages.value = {};
-    const promises: Promise<void>[] = [];
+    const promises: Promise<void>[] = [
+        loadImage('/dodgeballxl-logo.PNG')
+            .then((img) => { preloadedImages.value['brand_logo'] = img; })
+            .catch(() => console.warn('Error loading Dodgeball XL brand logo.'))
+    ];
 
     // Preload Team 1 Logo
     if (props.team1?.logo_url) {
@@ -543,16 +646,19 @@ const animateTimeline = () => {
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
         }
 
-        // Camera Shake effect during transitions
+        // Smooth camera drift with restrained impact hits during transitions.
         ctx.save();
+        const driftX = Math.sin(elapsed * 0.55) * 10;
+        const driftY = Math.cos(elapsed * 0.42) * 8;
+        ctx.translate(driftX, driftY);
         if (elapsed > 1.2 && elapsed < 1.6) {
-            const shake = Math.sin(elapsed * 100) * 12 * (1 - inv(elapsed, 1.2, 1.6));
+            const shake = Math.sin(elapsed * 70) * 7 * (1 - inv(elapsed, 1.2, 1.6));
             ctx.translate(shake, shake);
         } else if (elapsed > 4.4 && elapsed < 4.8) {
-            const shake = Math.sin(elapsed * 100) * 12 * (1 - inv(elapsed, 4.4, 4.8));
+            const shake = Math.sin(elapsed * 70) * 7 * (1 - inv(elapsed, 4.4, 4.8));
             ctx.translate(shake, shake);
         } else if (elapsed > 7.4 && elapsed < 7.8) {
-            const shake = Math.sin(elapsed * 100) * 18 * (1 - inv(elapsed, 7.4, 7.8));
+            const shake = Math.sin(elapsed * 76) * 9 * (1 - inv(elapsed, 7.4, 7.8));
             ctx.translate(shake, shake);
         }
 
@@ -653,6 +759,23 @@ const animateTimeline = () => {
             ctx.restore();
         });
 
+        const sweepX = ((elapsed * 180) % (W + 520)) - 260;
+        const sweepGradient = ctx.createLinearGradient(sweepX - 120, 0, sweepX + 120, H);
+        sweepGradient.addColorStop(0, 'rgba(255,255,255,0)');
+        sweepGradient.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+        sweepGradient.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = sweepGradient;
+        ctx.beginPath();
+        ctx.moveTo(sweepX - 110, 0);
+        ctx.lineTo(sweepX + 40, 0);
+        ctx.lineTo(sweepX + 300, H);
+        ctx.lineTo(sweepX + 150, H);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
         // ╔══ PHASE 1: INTRO IMPACT (0s - 1.5s) ══╗
         if (elapsed < 1.6) {
             const shockT = inv(elapsed, 0.9, 1.5);
@@ -713,7 +836,7 @@ const animateTimeline = () => {
                     ctx.beginPath();
                     ctx.arc(0, 0, logoSize / 2, 0, Math.PI * 2);
                     ctx.clip();
-                    ctx.drawImage(logoImg, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
+                    drawImageCover(ctx, logoImg, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
                     ctx.strokeStyle = team1Color.value;
                     ctx.lineWidth = 6;
                     ctx.stroke();
@@ -770,7 +893,7 @@ const animateTimeline = () => {
                     ctx.beginPath();
                     ctx.arc(0, 0, logoSize / 2, 0, Math.PI * 2);
                     ctx.clip();
-                    ctx.drawImage(logoImg, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
+                    drawImageCover(ctx, logoImg, -logoSize / 2, -logoSize / 2, logoSize, logoSize);
                     ctx.strokeStyle = team2Color.value;
                     ctx.lineWidth = 6;
                     ctx.stroke();
@@ -805,7 +928,7 @@ const animateTimeline = () => {
                 ctx.beginPath();
                 ctx.arc(0, 0, 140, 0, Math.PI * 2);
                 ctx.clip();
-                ctx.drawImage(t1LogoImg, -140, -140, 280, 280);
+                drawImageCover(ctx, t1LogoImg, -140, -140, 280, 280);
                 ctx.strokeStyle = team1Color.value;
                 ctx.lineWidth = 8;
                 ctx.stroke();
@@ -825,7 +948,7 @@ const animateTimeline = () => {
                 ctx.beginPath();
                 ctx.arc(0, 0, 140, 0, Math.PI * 2);
                 ctx.clip();
-                ctx.drawImage(t2LogoImg, -140, -140, 280, 280);
+                drawImageCover(ctx, t2LogoImg, -140, -140, 280, 280);
                 ctx.strokeStyle = team2Color.value;
                 ctx.lineWidth = 8;
                 ctx.stroke();
@@ -952,11 +1075,16 @@ const animateTimeline = () => {
         ctx.fillStyle = pbGrd;
         ctx.fillRect(0, H - 12, W * prg, 12);
 
-        // ╔══ OUTRO BLACK FADE (9s - 10s) ══╗
-        if (elapsed > duration - 1.0) {
-            const fade = ease.inOutSine(inv(elapsed, duration - 1.0, duration));
+        // ╔══ OUTRO BLACK FADE ══╗
+        if (elapsed > duration - outroDuration) {
+            const fade = ease.inOutSine(inv(elapsed, duration - outroDuration, duration));
             ctx.fillStyle = `rgba(15,15,18,${fade})`;
             ctx.fillRect(0, 0, W, H);
+
+            const outroT = inv(elapsed, duration - outroDuration, duration);
+            const brandScale = lerp(0.82, 1, ease.outCubic(outroT));
+            const brandAlpha = ease.outCubic(outroT);
+            drawBrandLockup(ctx, W / 2 - 170, H / 2, brandScale, brandAlpha);
         }
 
         ctx.restore();
@@ -1047,7 +1175,7 @@ const drawStaticFrame = () => {
         ctx.save();
         ctx.translate(t1Lx, t1Ly);
         ctx.beginPath(); ctx.arc(0, 0, 140, 0, Math.PI * 2); ctx.clip();
-        ctx.drawImage(t1LogoImg, -140, -140, 280, 280);
+        drawImageCover(ctx, t1LogoImg, -140, -140, 280, 280);
         ctx.strokeStyle = team1Color.value; ctx.lineWidth = 8; ctx.stroke();
         ctx.restore();
     } else {
@@ -1061,7 +1189,7 @@ const drawStaticFrame = () => {
         ctx.save();
         ctx.translate(t2Lx, t2Ly);
         ctx.beginPath(); ctx.arc(0, 0, 140, 0, Math.PI * 2); ctx.clip();
-        ctx.drawImage(t2LogoImg, -140, -140, 280, 280);
+        drawImageCover(ctx, t2LogoImg, -140, -140, 280, 280);
         ctx.strokeStyle = team2Color.value; ctx.lineWidth = 8; ctx.stroke();
         ctx.restore();
     } else {
@@ -1287,7 +1415,7 @@ onUnmounted(() => {
 
                     <!-- Watermark Info Tip -->
                     <div v-if="status === 'playing'" class="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
-                        <span class="bg-black/80 px-4 py-1 text-white text-xs font-semibold uppercase tracking-widest">Anteprima Video (10s)</span>
+                        <span class="bg-black/80 px-4 py-1 text-white text-xs font-semibold uppercase tracking-widest">Anteprima Video (11.5s)</span>
                     </div>
                 </div>
 

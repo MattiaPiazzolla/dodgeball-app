@@ -105,10 +105,48 @@ const handleLogout = async () => {
     await logout();
 };
 
+const liveMatchId = ref<string | null>(null);
+let liveCheckInterval: any = null;
+
+const checkLiveMatch = async () => {
+    if (role.value !== "admin") return;
+    const client = useSupabaseClient();
+    const { data } = await client
+        .from("matches")
+        .select("id")
+        .eq("status", "in_progress")
+        .limit(1)
+        .maybeSingle();
+
+    if (data) {
+        liveMatchId.value = data.id;
+    } else {
+        liveMatchId.value = null;
+    }
+};
+
+const startLiveCheck = () => {
+    checkLiveMatch();
+    if (liveCheckInterval) clearInterval(liveCheckInterval);
+    liveCheckInterval = setInterval(checkLiveMatch, 10000);
+};
+
 // Re-fetch if user logs in during the session (e.g. navigates to login page)
 watch(user, (newUser) => {
     if (newUser) fetchRole();
     else role.value = null;
+});
+
+watch(role, (newRole) => {
+    if (newRole === "admin") {
+        startLiveCheck();
+    } else {
+        liveMatchId.value = null;
+        if (liveCheckInterval) {
+            clearInterval(liveCheckInterval);
+            liveCheckInterval = null;
+        }
+    }
 });
 
 watch(hasMobileMenuItems, (hasItems) => {
@@ -118,9 +156,15 @@ watch(hasMobileMenuItems, (hasItems) => {
 onBeforeUnmount(() => {
     cancelAdminReveal();
     if (brandClickResetTimer) clearTimeout(brandClickResetTimer);
+    if (liveCheckInterval) clearInterval(liveCheckInterval);
 });
 
-onMounted(loadRegistrationSettings);
+onMounted(() => {
+    loadRegistrationSettings();
+    if (role.value === "admin") {
+        startLiveCheck();
+    }
+});
 </script>
 
 <template>
@@ -250,6 +294,15 @@ onMounted(loadRegistrationSettings);
                             </template>
                             <template v-else>
                                 <template v-if="role === 'admin'">
+                                    <NuxtLink
+                                        v-if="liveMatchId"
+                                        :to="`/admin/match/${liveMatchId}`"
+                                        @click="closeMenu"
+                                        class="flex items-center justify-center min-h-[48px] sm:min-h-[auto] sm:px-4 sm:py-2 px-4 py-3 bg-red-600 text-white font-impact tracking-wider uppercase border-x-0 border-b-2 sm:border-2 border-black hover:bg-red-700 sm:hover:-translate-y-0.5 transition-all text-center sm:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-red-700 animate-pulse"
+                                    >
+                                        <span class="w-2.5 h-2.5 rounded-full bg-white animate-ping mr-2"></span>
+                                        Arbitra Live
+                                    </NuxtLink>
                                     <NuxtLink
                                         to="/captain"
                                         @click="closeMenu"

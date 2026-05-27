@@ -203,6 +203,44 @@
                 </div>
             </div>
 
+            <!-- Winner Celebration Accordion -->
+            <div v-if="(match.status === 'completed' || match.status === 'finished') && winnerTeam" class="mb-6">
+                <div class="border-4 border-black bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)] overflow-hidden">
+                    <button
+                        type="button"
+                        @click="isWinnerOpen = !isWinnerOpen"
+                        class="w-full px-5 py-4 flex items-center justify-between gap-4 bg-yellow-400 hover:bg-yellow-300 transition-all text-left"
+                    >
+                        <span class="font-impact text-xl uppercase tracking-widest text-black flex items-center gap-3 min-w-0">
+                            <Icon name="mdi:trophy" class="text-2xl flex-shrink-0" />
+                            <span class="truncate">Winner: {{ winnerTeam.name }}</span>
+                        </span>
+                        <Icon
+                            name="mdi:chevron-down"
+                            class="text-3xl text-black transition-transform duration-300"
+                            :class="{ 'rotate-180': isWinnerOpen }"
+                        />
+                    </button>
+
+                    <div 
+                        class="grid transition-all duration-500 ease-in-out bg-cement border-black"
+                        :class="isWinnerOpen ? 'grid-rows-[1fr] border-t-4' : 'grid-rows-[0fr]'"
+                    >
+                        <div class="overflow-hidden">
+                            <div class="p-4 md:p-6 bg-cement">
+                                <AdminWinnerTeaser
+                                    v-if="winnerTeam && loserTeam"
+                                    :match="match"
+                                    :winner-team="winnerTeam"
+                                    :loser-team="loserTeam"
+                                    :winner-players="winnerPlayers"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Content Format Accordions -->
             <div class="space-y-4">
                 <div class="border-4 border-black bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)]">
@@ -255,7 +293,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 
 definePageMeta({ middleware: ["admin"] });
 
@@ -274,6 +312,7 @@ const teams = ref<any[]>([]);
 const players = ref<any[]>([]);
 const pending = ref(true);
 const isTeaserOpen = ref(false);
+const isWinnerOpen = ref(false);
 
 // Timer logic
 const now = ref(Date.now());
@@ -310,6 +349,39 @@ const team1 = computed(() => teams.value.find((t) => t.id === match.value?.team1
 const team2 = computed(() => teams.value.find((t) => t.id === match.value?.team2_id) || null);
 const team1Players = computed(() => players.value.filter((p) => p.team_id === match.value?.team1_id));
 const team2Players = computed(() => players.value.filter((p) => p.team_id === match.value?.team2_id));
+
+const winnerTeam = computed(() => {
+    if (!match.value || !match.value.winner_id) return null;
+    return teams.value.find((t) => t.id === match.value.winner_id) || null;
+});
+
+const loserTeam = computed(() => {
+    if (!match.value || !match.value.winner_id) return null;
+    return match.value.winner_id === match.value.team1_id
+        ? team2.value
+        : team1.value;
+});
+
+const winnerPlayers = computed(() => {
+    if (!match.value || !match.value.winner_id) return [];
+    return match.value.winner_id === match.value.team1_id
+        ? team1Players.value
+        : team2Players.value;
+});
+
+const finalScoreString = computed(() => {
+    if (!match.value) return "0 - 0";
+    return `${match.value.team1_score} - ${match.value.team2_score}`;
+});
+
+// Smoothly auto-open winner showcase upon completed match status
+watch(() => match.value?.winner_id, (newWinnerId) => {
+    if (newWinnerId && (match.value?.status === 'completed' || match.value?.status === 'finished')) {
+        isWinnerOpen.value = true;
+    } else {
+        isWinnerOpen.value = false;
+    }
+}, { immediate: true });
 
 const loadMatch = async () => {
     const { data: tData } = await supabase.from("teams").select("id, name, logo_url");
