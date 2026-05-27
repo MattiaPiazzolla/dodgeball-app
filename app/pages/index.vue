@@ -103,28 +103,36 @@ watch(tournamentWinner, async (winner) => {
 }, { immediate: true });
 
 let navbarTimeout: ReturnType<typeof setTimeout> | null = null;
+const showWinnerLogo = ref(false);
 
 watch(isTournamentOver, (isOver) => {
     if (isOver) {
         triggerFireworks();
-        hideNavbar.value = true;
-        if (navbarTimeout) clearTimeout(navbarTimeout);
-        navbarTimeout = setTimeout(() => {
-            hideNavbar.value = false;
-        }, 15000);
     } else {
         hideNavbar.value = false;
+        showWinnerLogo.value = false;
         if (navbarTimeout) clearTimeout(navbarTimeout);
     }
 }, { immediate: true });
 
 onBeforeUnmount(() => {
     hideNavbar.value = false;
+    showWinnerLogo.value = false;
     if (navbarTimeout) clearTimeout(navbarTimeout);
 });
 
 const triggerFireworks = async () => {
     if (typeof window === 'undefined') return;
+
+    // Trigger UI effects (hide navbar and show winner logo)
+    hideNavbar.value = true;
+    showWinnerLogo.value = true;
+    if (navbarTimeout) clearTimeout(navbarTimeout);
+    navbarTimeout = setTimeout(() => {
+        hideNavbar.value = false;
+        showWinnerLogo.value = false;
+    }, 15000);
+
     const confettiModule = await import('canvas-confetti');
     const confetti = confettiModule.default || confettiModule;
 
@@ -324,7 +332,10 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Custom Brand Header for Winner Section -->
-            <div class="absolute top-0 left-0 w-full p-6 sm:p-8 flex justify-center items-center z-50 animate-fade-in-down pointer-events-none">
+            <div 
+                class="absolute top-0 left-0 w-full p-6 sm:p-8 flex justify-center items-center z-50 pointer-events-none transition-opacity duration-1000"
+                :class="showWinnerLogo ? 'opacity-100 animate-fade-in-down' : 'opacity-0'"
+            >
                 <div class="font-impact tracking-wider text-white flex items-center gap-3 select-none">
                     <img src="/dodgeballxl-logo.PNG" alt="Dodgeball XL Logo" class="h-8 sm:h-12 w-auto object-contain flex-shrink-0 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)] filter brightness-0 invert" />
                     <span class="inline-block text-xl sm:text-3xl">
