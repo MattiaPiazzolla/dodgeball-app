@@ -102,44 +102,25 @@ watch(tournamentWinner, async (winner) => {
     }
 }, { immediate: true });
 
+let navbarTimeout: ReturnType<typeof setTimeout> | null = null;
+
 watch(isTournamentOver, (isOver) => {
     if (isOver) {
         triggerFireworks();
-    }
-}, { immediate: true });
-
-const winnerSectionRef = ref<HTMLElement | null>(null);
-let winnerObserver: IntersectionObserver | null = null;
-
-watch([registrationsOpen, isTournamentOver, tournamentWinner], ([regOpen, isOver, winner]) => {
-    if (!(!regOpen && isOver && winner)) {
+        hideNavbar.value = true;
+        if (navbarTimeout) clearTimeout(navbarTimeout);
+        navbarTimeout = setTimeout(() => {
+            hideNavbar.value = false;
+        }, 15000);
+    } else {
         hideNavbar.value = false;
-    }
-}, { immediate: true });
-
-watch(winnerSectionRef, (el) => {
-    if (typeof window === 'undefined' || !("IntersectionObserver" in window)) return;
-    
-    if (winnerObserver) {
-        winnerObserver.disconnect();
-    }
-    
-    if (el) {
-        winnerObserver = new IntersectionObserver(
-            ([entry]) => {
-                hideNavbar.value = entry.isIntersecting;
-            },
-            { threshold: 0.1 }
-        );
-        winnerObserver.observe(el);
+        if (navbarTimeout) clearTimeout(navbarTimeout);
     }
 }, { immediate: true });
 
 onBeforeUnmount(() => {
     hideNavbar.value = false;
-    if (winnerObserver) {
-        winnerObserver.disconnect();
-    }
+    if (navbarTimeout) clearTimeout(navbarTimeout);
 });
 
 const triggerFireworks = async () => {
@@ -336,7 +317,6 @@ onBeforeUnmount(() => {
         <section
             v-if="!registrationsOpen && isTournamentOver && tournamentWinner"
             id="winner-showcase"
-            ref="winnerSectionRef"
             class="relative bg-black text-white overflow-hidden min-h-[70vh] flex flex-col items-center justify-center py-16 sm:py-24 border-b-4 border-yellow-400"
         >
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20" aria-hidden="true">
