@@ -3,8 +3,9 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from "vue";
 import { useRoute } from "vue-router";
 import { useNavbarState } from "~/composables/useNavbarState";
+import { useMatchRealtime } from "~/composables/useMatchRealtime";
 
-const { activeSection, registrationsOpen, showNavbarTabs } = useNavbarState();
+const { activeSection, registrationsOpen, showNavbarTabs, hideNavbar } = useNavbarState();
 
 const sections = [
     { id: "live", label: "LIVE IN CORSO", icon: "mdi:access-point" },
@@ -57,6 +58,127 @@ watch(
 );
 
 const client = useSupabaseClient();
+const { subscribeToAllMatches, unsubscribe } = useMatchRealtime();
+const matches = ref<any[]>([]);
+const teams = ref<any[]>([]);
+let realtimeChannel: any = null;
+
+const tournamentFinaleMatch = computed(() => {
+    const knockoutMatches = matches.value.filter((m) => m.match_type === "knockout");
+    if (knockoutMatches.length === 0) return null;
+    const maxRound = Math.max(...knockoutMatches.map((m) => m.round || 0));
+    const finales = knockoutMatches.filter(m => m.round === maxRound);
+    return finales.length > 0 ? finales[0] : null;
+});
+
+const isFinaleLive = computed(() => {
+    const finale = tournamentFinaleMatch.value;
+    return finale && finale.status === "in_progress";
+});
+
+const isTournamentOver = computed(() => {
+    const finale = tournamentFinaleMatch.value;
+    return finale && (finale.status === 'completed' || finale.status === 'finished');
+});
+
+const tournamentWinner = computed(() => {
+    const finale = tournamentFinaleMatch.value;
+    if (!finale || !finale.winner_id) return null;
+    return teams.value.find(t => t.id === finale.winner_id);
+});
+
+const winningPlayers = ref<any[]>([]);
+
+watch(tournamentWinner, async (winner) => {
+    if (winner) {
+        const { data: pData } = await client
+            .from("players")
+            .select("*")
+            .eq("team_id", winner.id)
+            .order("jersey_number", { ascending: true });
+        if (pData) {
+            winningPlayers.value = pData;
+        }
+    }
+}, { immediate: true });
+
+watch(isTournamentOver, (isOver) => {
+    if (isOver) {
+        triggerFireworks();
+    }
+}, { immediate: true });
+
+const winnerSectionRef = ref<HTMLElement | null>(null);
+let winnerObserver: IntersectionObserver | null = null;
+
+watch([registrationsOpen, isTournamentOver, tournamentWinner], ([regOpen, isOver, winner]) => {
+    if (!(!regOpen && isOver && winner)) {
+        hideNavbar.value = false;
+    }
+}, { immediate: true });
+
+watch(winnerSectionRef, (el) => {
+    if (typeof window === 'undefined' || !("IntersectionObserver" in window)) return;
+    
+    if (winnerObserver) {
+        winnerObserver.disconnect();
+    }
+    
+    if (el) {
+        winnerObserver = new IntersectionObserver(
+            ([entry]) => {
+                hideNavbar.value = entry.isIntersecting;
+            },
+            { threshold: 0.1 }
+        );
+        winnerObserver.observe(el);
+    }
+}, { immediate: true });
+
+onBeforeUnmount(() => {
+    hideNavbar.value = false;
+    if (winnerObserver) {
+        winnerObserver.disconnect();
+    }
+});
+
+const triggerFireworks = async () => {
+    if (typeof window === 'undefined') return;
+    const confettiModule = await import('canvas-confetti');
+    const confetti = confettiModule.default || confettiModule;
+
+    const duration = 15 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+    const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+        const particleCount = 50 * (timeLeft / duration);
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
+    }, 250);
+};
+
+const scatterX = [
+    "clamp(-350px, -30vw, -80px)",
+    "clamp(80px, 30vw, 350px)",
+    "clamp(-280px, -25vw, -90px)",
+    "clamp(90px, 25vw, 280px)",
+    "clamp(-180px, -15vw, -50px)",
+    "clamp(50px, 15vw, 180px)"
+];
+const scatterY = [
+    "clamp(-200px, -20vw, -120px)",
+    "clamp(-180px, -18vw, -100px)",
+    "clamp(-20px, 0vw, 20px)",
+    "clamp(-10px, 0vw, 30px)",
+    "clamp(120px, 25vw, 250px)",
+    "clamp(100px, 22vw, 220px)"
+];
+const scatterRot = [
+    "-15deg", "12deg", "-8deg", "18deg", "-22deg", "10deg"
+];
+
 const tabsContainer = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 
@@ -90,9 +212,27 @@ watch(tabsContainer, (newContainer) => {
     }
 }, { immediate: true });
 
-onMounted(() => {
+onMounted(async () => {
     fetchSettings();
     applyHash(window.location.hash);
+
+    const { data: mData } = await client.from("matches").select("id, match_type, round, status, winner_id");
+    if (mData) matches.value = mData;
+
+    const { data: tData } = await client.from("teams").select("id, name, logo_url");
+    if (tData) teams.value = tData;
+
+    realtimeChannel = subscribeToAllMatches((payload) => {
+        const changedMatch = payload.new || payload.old;
+        if (!changedMatch?.id) return;
+        if (payload.eventType === "DELETE") {
+            matches.value = matches.value.filter((m) => m.id !== changedMatch.id);
+        } else {
+            const index = matches.value.findIndex((m) => m.id === changedMatch.id);
+            if (index !== -1) matches.value[index] = { ...matches.value[index], ...changedMatch };
+            else matches.value.push(changedMatch);
+        }
+    });
 });
 
 onBeforeUnmount(() => {
@@ -100,11 +240,13 @@ onBeforeUnmount(() => {
         observer.disconnect();
     }
     showNavbarTabs.value = false;
+    if (realtimeChannel) unsubscribe(realtimeChannel);
 });
 </script>
 
 <template>
-    <div class="min-h-screen bg-cement selection:bg-primary selection:text-white">
+    <div class="min-h-screen selection:bg-primary selection:text-white transition-colors duration-1000"
+         :class="isFinaleLive ? 'bg-[#111111] text-gray-200' : 'bg-cement'">
 
         <!-- SECTION 1: HERO -->
         <section
@@ -153,7 +295,8 @@ onBeforeUnmount(() => {
         <section
             v-if="registrationsOpen"
             id="info_torneo"
-            class="py-16 sm:py-24 px-4 bg-cement"
+            class="py-16 sm:py-24 px-4 transition-colors duration-1000"
+            :class="isFinaleLive ? 'bg-zinc-900' : 'bg-cement'"
         >
             <div class="max-w-4xl mx-auto space-y-10">
                 <div class="text-center space-y-3">
@@ -189,6 +332,87 @@ onBeforeUnmount(() => {
             </div>
         </section>
 
+        <!-- TOURNAMENT WINNER SHOWCASE -->
+        <section
+            v-if="!registrationsOpen && isTournamentOver && tournamentWinner"
+            id="winner-showcase"
+            ref="winnerSectionRef"
+            class="relative bg-black text-white overflow-hidden min-h-[70vh] flex flex-col items-center justify-center py-16 sm:py-24 border-b-4 border-yellow-400"
+        >
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20" aria-hidden="true">
+                <div class="w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/40 via-black to-black"></div>
+            </div>
+
+            <!-- Custom Brand Header for Winner Section -->
+            <div class="absolute top-0 left-0 w-full p-6 sm:p-8 flex justify-center items-center z-50 animate-fade-in-down pointer-events-none">
+                <div class="font-impact tracking-wider text-white flex items-center gap-3 select-none">
+                    <img src="/dodgeballxl-logo.PNG" alt="Dodgeball XL Logo" class="h-8 sm:h-12 w-auto object-contain flex-shrink-0 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)] filter brightness-0 invert" />
+                    <span class="inline-block text-xl sm:text-3xl">
+                        DODGEBALL <span class="bg-primary text-white px-2 py-0.5 border-2 border-yellow-400 inline-block transform -skew-x-12 shadow-[3px_3px_0px_rgba(250,204,21,1)] text-xs sm:text-lg relative -top-0.5">XL</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="relative z-10 w-full max-w-3xl mx-auto px-6 text-center space-y-8 animate-fade-in-up mt-12 sm:mt-0">
+                <p class="font-impact text-xl sm:text-3xl tracking-[0.3em] text-yellow-400 uppercase drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">
+                    I Campioni
+                </p>
+
+                <div class="flex flex-col items-center w-full">
+                    <!-- Scattered Polaroid Layout -->
+                    <div class="relative w-full min-h-[350px] sm:min-h-[700px] flex items-center justify-center mx-auto my-8">
+                        <!-- Winner Logo in Center -->
+                        <div class="absolute w-28 h-28 sm:w-64 sm:h-64 rounded-full bg-white border-4 border-yellow-400 flex items-center justify-center shadow-[0_0_40px_rgba(250,204,21,0.8)] sm:shadow-[0_0_60px_rgba(250,204,21,0.8)] overflow-hidden z-20 animate-pulse">
+                            <img 
+                                v-if="tournamentWinner.logo_url" 
+                                :src="tournamentWinner.logo_url" 
+                                class="w-full h-full object-cover" 
+                            />
+                            <div v-else class="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                <Icon name="mdi:trophy" class="text-5xl sm:text-8xl text-yellow-400 drop-shadow-md" />
+                            </div>
+                        </div>
+
+                        <!-- Scattered Polaroids -->
+                        <div v-if="winningPlayers.length" class="absolute inset-0 flex items-center justify-center">
+                            <div 
+                                v-for="(player, idx) in winningPlayers" 
+                                :key="player.id"
+                                class="absolute z-10 flex flex-col items-center bg-white p-1.5 sm:p-3 pb-3 sm:pb-6 shadow-[0_10px_20px_rgba(0,0,0,0.6)] sm:shadow-[0_15px_35px_rgba(0,0,0,0.6)] border border-zinc-200 cursor-pointer transition-transform duration-500 hover:scale-[1.4] sm:hover:scale-125 hover:z-50"
+                                :style="{
+                                    transform: `translate(${scatterX[idx % scatterX.length]}, ${scatterY[idx % scatterY.length]}) rotate(${scatterRot[idx % scatterRot.length]})`
+                                }"
+                            >
+                                <div class="w-16 h-16 sm:w-40 sm:h-40 bg-zinc-200 overflow-hidden border border-zinc-300 flex items-center justify-center mb-1.5 sm:mb-4 shadow-inner">
+                                    <img v-if="player.photo_url" :src="player.photo_url" class="w-full h-full object-cover grayscale-[20%] contrast-125" />
+                                    <Icon v-else name="mdi:account" class="text-3xl sm:text-7xl text-zinc-400" />
+                                </div>
+
+                                <div class="flex flex-col items-center w-full px-1">
+                                    <div class="text-black font-impact text-[11px] sm:text-xl tracking-widest uppercase text-center leading-none">
+                                        {{ player.name }}
+                                    </div>
+                                    <div class="text-zinc-500 font-bold text-[9px] sm:text-base mt-0.5 sm:mt-1 font-mono">
+                                        N° {{ player.jersey_number || '-' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="font-impact leading-none text-5xl sm:text-8xl text-white uppercase break-words text-center w-full px-4 drop-shadow-[4px_4px_0_rgba(250,204,21,1)] mt-8 z-30 relative">
+                        {{ tournamentWinner.name }}
+                    </h2>
+                </div>
+
+                <div class="pt-8">
+                    <button @click="triggerFireworks" class="bg-yellow-400 text-black font-impact text-lg px-8 py-3 transform -skew-x-6 hover:scale-105 transition-transform border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                        CELEBRA LA VITTORIA
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- DYNAMIC TOURNAMENT DASHBOARD SECTION -->
         <section
             v-if="!registrationsOpen"
@@ -197,12 +421,13 @@ onBeforeUnmount(() => {
         >
             <div class="space-y-8 max-w-[1400px] mx-auto">
                 <!-- Separator line with athletic badge style -->
-                <div class="flex items-center justify-center gap-4">
-                    <div class="h-1 bg-black flex-grow"></div>
-                    <div class="font-impact text-2xl sm:text-4xl text-black bg-cement px-4 tracking-widest whitespace-nowrap">
-                        LIVE &amp; RISULTATI
+                <div class="flex items-center justify-center gap-4 transition-colors duration-1000">
+                    <div class="h-1 flex-grow" :class="isFinaleLive ? 'bg-yellow-400' : 'bg-black'"></div>
+                    <div class="font-impact text-2xl sm:text-4xl px-4 tracking-widest whitespace-nowrap transition-all duration-1000"
+                         :class="isFinaleLive ? 'bg-[#111111] text-yellow-400 text-3xl sm:text-5xl drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] scale-110' : 'bg-cement text-black'">
+                        {{ isFinaleLive ? 'LA GRANDE FINALE!' : 'LIVE & RISULTATI' }}
                     </div>
-                    <div class="h-1 bg-black flex-grow"></div>
+                    <div class="h-1 flex-grow" :class="isFinaleLive ? 'bg-yellow-400' : 'bg-black'"></div>
                 </div>
 
                 <!-- Redesigned Grunge Dashboard Tab Controls -->
@@ -212,12 +437,13 @@ onBeforeUnmount(() => {
                         :key="section.id"
                         type="button"
                         @click="scrollToSection(section.id)"
-                        class="flex-1 flex items-center justify-center gap-2 py-3 px-4 text-xs font-impact tracking-widest transition-all cursor-pointer border-2 border-black"
-                        :class="
+                        class="flex-1 flex items-center justify-center gap-2 py-3 px-4 text-xs font-impact tracking-widest transition-all cursor-pointer border-2"
+                        :class="[
+                            isFinaleLive ? 'border-yellow-400' : 'border-black',
                             activeSection === section.id
-                                ? 'bg-black text-white shadow-[3px_3px_0px_rgba(0,0,0,1)] -translate-y-0.5'
-                                : 'bg-white text-secondary hover:bg-gray-100 shadow-[1px_1px_0px_rgba(0,0,0,1)]'
-                        "
+                                ? (isFinaleLive ? 'bg-yellow-400 text-black shadow-[3px_3px_0px_rgba(250,204,21,0.5)] -translate-y-0.5' : 'bg-black text-white shadow-[3px_3px_0px_rgba(0,0,0,1)] -translate-y-0.5')
+                                : (isFinaleLive ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 shadow-none' : 'bg-white text-secondary hover:bg-gray-100 shadow-[1px_1px_0px_rgba(0,0,0,1)]')
+                        ]"
                     >
                         <Icon :name="section.icon" class="text-lg" />
                         {{ section.label }}
@@ -348,13 +574,13 @@ onBeforeUnmount(() => {
 .public-panel-enter-active,
 .public-panel-leave-active {
     transition:
-        opacity 220ms var(--ease-organic),
-        transform 220ms var(--ease-organic);
+        opacity 0.3s ease,
+        transform 0.3s ease;
 }
-
 .public-panel-enter-from,
 .public-panel-leave-to {
     opacity: 0;
-    transform: translateY(8px) scale(0.99);
+    transform: translateY(10px);
 }
+
 </style>

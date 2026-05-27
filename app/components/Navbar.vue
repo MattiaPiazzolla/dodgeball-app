@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useNavbarState } from "~/composables/useNavbarState";
 
 const { user, logout, role, fetchRole } = useAuth();
-const { showNavbarTabs, activeSection, registrationsOpen } = useNavbarState();
+const { showNavbarTabs, activeSection, registrationsOpen, hideNavbar } = useNavbarState();
 
 const isMenuOpen = ref(false);
 const showAdminLogin = ref(false);
@@ -169,6 +169,7 @@ onMounted(() => {
 
 <template>
     <header
+        v-if="!hideNavbar"
         class="bg-white text-black border-b-4 border-black sticky top-0 z-40 shadow-sm"
     >
         <div

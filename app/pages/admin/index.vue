@@ -11,6 +11,9 @@ const isLoading = ref(true);
 
 const mvpSearchQuery = ref("");
 const mvpTeamFilter = ref("");
+const isConfirmingReset = ref(false);
+const isMvpPodiumOpen = ref(false);
+const isTeamsAccordionOpen = ref(false);
 let playerSubscription: any = null;
 
 const fetchAll = async () => {
@@ -66,6 +69,19 @@ const filteredMvpPlayers = computed(() => {
         return matchesSearch && matchesTeam;
     });
 });
+
+const resetMvpVotes = async () => {
+    const { error } = await client
+        .from("players")
+        .update({ mvp_votes: 0 })
+        .gt("mvp_votes", 0);
+    if (error) {
+        alert("Impossibile azzerare i voti MVP: " + error.message);
+    } else {
+        isConfirmingReset.value = false;
+        await refetchMvp();
+    }
+};
 
 const approvedTeams = computed(() =>
     teams.value.filter((t) => t.status === "approved"),
@@ -415,12 +431,43 @@ const translateStage = (stage: string) => {
             </section>
 
             <section v-if="!registrationsOpen">
-                <!-- Title Flex Header (Read-Only) -->
-                <h2
-                    class="text-lg font-impact uppercase tracking-widest text-secondary mb-4 border-b-4 border-black inline-block pr-4"
-                >
-                    Classifica MVP in Diretta (Voti Tempo Reale)
-                </h2>
+                <!-- Title & Conditional Reset Flex Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <h2
+                        class="text-lg font-impact uppercase tracking-widest text-secondary border-b-4 border-black inline-block pr-4 self-start"
+                    >
+                        Classifica MVP in Diretta (Voti Tempo Reale)
+                    </h2>
+                    
+                    <!-- Reset Button - Only appears when group stage is completed -->
+                    <div v-if="isGroupStageComplete" class="flex items-center gap-2 shrink-0">
+                        <template v-if="isConfirmingReset">
+                            <span class="text-xs font-impact text-red-600 uppercase tracking-widest animate-pulse">Sei sicuro?</span>
+                            <button
+                                @click="resetMvpVotes"
+                                class="btn-skewed px-3 py-1.5 !text-xs !bg-red-600"
+                            >
+                                <span class="btn-skewed-content">Sì, Azzera Voti</span>
+                            </button>
+                            <button
+                                @click="isConfirmingReset = false"
+                                class="btn-skewed-secondary px-3 py-1.5 !text-xs"
+                            >
+                                <span class="btn-skewed-content">Annulla</span>
+                            </button>
+                        </template>
+                        <template v-else>
+                            <button
+                                @click="isConfirmingReset = true"
+                                class="btn-skewed-secondary !border-red-600 !text-red-600 hover:!bg-red-600 hover:!text-white px-3 py-1.5 !text-xs flex items-center gap-1.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                title="Azzera tutti i voti MVP dei giocatori"
+                            >
+                                <Icon name="mdi:refresh" class="text-sm" />
+                                <span class="btn-skewed-content">Azzera Voti per Eliminatorie</span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
 
                 <!-- Grunge Filters Panel -->
                 <div class="card-grunge bg-zinc-100 p-4 mb-6 flex flex-col md:flex-row gap-4 border-4 border-black">
@@ -548,13 +595,82 @@ const translateStage = (stage: string) => {
                         </div>
                     </div>
                 </div>
+
+                <!-- MVP Podium Video Generator Accordion (Only when group stage is complete) -->
+                <div v-if="isGroupStageComplete && filteredMvpPlayers.length >= 3" class="mt-6">
+                    <div class="border-4 border-black bg-cement shadow-[6px_6px_0px_rgba(211,47,47,1)] overflow-hidden">
+                        <button
+                            type="button"
+                            @click="isMvpPodiumOpen = !isMvpPodiumOpen"
+                            class="w-full px-5 py-4 flex items-center justify-between gap-4 bg-primary hover:bg-[#8E1515] transition-all duration-300 ease-out text-left border-b-0"
+                            :class="{ 'border-b-4 border-black': isMvpPodiumOpen }"
+                        >
+                            <span class="font-impact text-xl uppercase tracking-widest text-white flex items-center gap-3 min-w-0">
+                                <Icon name="mdi:movie-open-star" class="text-2xl flex-shrink-0 text-white" />
+                                <span class="truncate">Generatore Video Podio MVP</span>
+                                <span class="hidden md:inline-flex text-[10px] bg-black text-white border-2 border-black px-2 py-1 tracking-widest">
+                                    DODGEBALL XL STYLE
+                                </span>
+                            </span>
+                            <Icon
+                                name="mdi:chevron-down"
+                                class="text-3xl text-white transition-transform duration-500 ease-out"
+                                :class="{ 'rotate-180': isMvpPodiumOpen }"
+                            />
+                        </button>
+
+                        <div 
+                            class="grid transition-all duration-700 ease-in-out bg-cement border-black"
+                            :class="isMvpPodiumOpen ? 'grid-rows-[1fr] border-t-4' : 'grid-rows-[0fr]'"
+                        >
+                            <div class="overflow-hidden">
+                                <div class="p-4 md:p-6 bg-cement">
+                                    <AdminMvpPodiumTeaser
+                                        :top-players="filteredMvpPlayers"
+                                        :teams="teams"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <section>
-                <h2
-                    class="text-lg font-impact uppercase tracking-widest text-secondary mb-4 border-b-4 border-black inline-block pr-4"
+            <!-- Teams Management Accordion Wrapper -->
+            <div :class="{
+                'mt-12 card-grunge bg-white border-4 border-black p-0 overflow-hidden mb-12': !registrationsOpen,
+                'space-y-12': registrationsOpen
+            }">
+                <button 
+                    v-if="!registrationsOpen"
+                    @click="isTeamsAccordionOpen = !isTeamsAccordionOpen"
+                    class="w-full p-4 md:p-6 flex items-center justify-between bg-black hover:bg-gray-900 transition-colors group"
                 >
-                    Richieste di Registrazione
+                    <h2 class="text-xl md:text-2xl font-impact uppercase tracking-widest text-white flex items-center gap-3">
+                        <Icon name="mdi:shield-account" class="text-2xl md:text-3xl text-primary" />
+                        Gestione Squadre (Chiuse)
+                    </h2>
+                    <Icon 
+                        :name="isTeamsAccordionOpen ? 'mdi:chevron-up' : 'mdi:chevron-down'" 
+                        class="text-3xl text-white group-hover:text-primary transition-colors"
+                    />
+                </button>
+
+                <div 
+                    :class="{
+                        'grid transition-all duration-700 ease-in-out bg-cement border-black': !registrationsOpen,
+                        'grid-rows-[1fr] border-t-4': !registrationsOpen && isTeamsAccordionOpen,
+                        'grid-rows-[0fr]': !registrationsOpen && !isTeamsAccordionOpen,
+                        'block': registrationsOpen
+                    }"
+                >
+                    <div :class="{'overflow-hidden': !registrationsOpen}">
+                        <div :class="{'p-4 md:p-6 bg-cement space-y-8': !registrationsOpen, 'space-y-8': registrationsOpen}">
+                            <section>
+                                <h2
+                                    class="text-lg font-impact uppercase tracking-widest text-secondary mb-4 border-b-4 border-black inline-block pr-4"
+                                >
+                                    Richieste di Registrazione
                     <span
                         class="ml-2"
                         :class="
@@ -759,6 +875,10 @@ const translateStage = (stage: string) => {
                     </div>
                 </div>
             </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </template>
     </div>
 </template>

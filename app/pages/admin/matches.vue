@@ -109,6 +109,40 @@ watch(hasKnockoutMatches, (hasKnockout) => {
     }
 });
 
+// Knockout matches where both teams are assigned and match is still pending
+const pendingReadyMatches = computed(() =>
+    matches.value
+        .filter(
+            (m) =>
+                m.match_type === "knockout" &&
+                m.status === "pending" &&
+                m.team1_id &&
+                m.team2_id,
+        )
+        .sort(
+            (a, b) =>
+                (a.round || 0) - (b.round || 0) ||
+                (a.bracket_position || 0) - (b.bracket_position || 0),
+        ),
+);
+
+// First match recommended to play next
+const nextRecommendedMatch = computed(
+    () => pendingReadyMatches.value[0] ?? null,
+);
+
+// Stats for the bracket preview shown in the generate CTA
+const knockoutPreview = computed(() => {
+    let teamCount =
+        groups.value.length > 0
+            ? groups.value.length * 2
+            : teams.value.length;
+    teamCount = Math.max(2, teamCount);
+    const rounds = Math.ceil(Math.log2(teamCount));
+    const matchesInFirstRound = Math.pow(2, rounds - 1);
+    return { teamCount, rounds, matchesInFirstRound };
+});
+
 const roundLabel = (r: number) => {
     const total = Object.keys(knockoutMatches.value).length;
     if (r === total) return "Finale";
@@ -212,6 +246,10 @@ const loadData = async () => {
     }
 
     isLoading.value = false;
+
+    // Retroactively advance any matches that were completed before this
+    // page was loaded (handles historical data and cross-device scenarios)
+    await backfillKnockoutAdvancement();
 };
 
 const applyMatchRealtimeChange = (payload: any) => {
@@ -251,6 +289,13 @@ const applyMatchRealtimeChange = (payload: any) => {
             (a.created_at || "").localeCompare(b.created_at || "") ||
             a.id.localeCompare(b.id),
     );
+
+    // Auto-advance winner when a match completion arrives via realtime
+    // (e.g. completed from the referee console on a separate device)
+    if (payload.eventType === "UPDATE" && changedMatch.status === "completed") {
+        advanceWinner(changedMatch);
+        fillRepechageSlots();
+    }
 };
 
 // ── Match CRUD ────────────────────────────────────────────
@@ -260,6 +305,176 @@ const startEdit = (match: any) => {
 
 const cancelEdit = () => {
     editingMatch.value = null;
+};
+
+// ── Auto-progression ──────────────────────────────────────
+const advanceWinner = async (completedMatch: any) => {
+    if (completedMatch?.match_type !== "knockout") return;
+    if (completedMatch?.status !== "completed") return;
+
+    const winnerId =
+        completedMatch.winner_id || getScoreWinnerId(completedMatch);
+    if (!winnerId) return;
+
+    const currentPos: number = Number(completedMatch.bracket_position);
+    const currentRound: number = Number(completedMatch.round);
+    if (!currentPos) return;
+
+    const nextRound = currentRound + 1;
+    const nextPos = Math.ceil(currentPos / 2);
+    // Odd bracket_position → fills team1 slot, even → fills team2 slot
+    const slot = currentPos % 2 === 1 ? 1 : 2;
+
+    const nextMatch = matches.value.find(
+        (m) =>
+            m.match_type === "knockout" &&
+            Number(m.round) === nextRound &&
+            Number(m.bracket_position) === nextPos,
+    );
+
+    if (!nextMatch) return; // Final — no further match to advance to
+
+    // Idempotent: skip if the correct team is already placed
+    if (slot === 1 && nextMatch.team1_id === winnerId) return;
+    if (slot === 2 && nextMatch.team2_id === winnerId) return;
+
+    const updatePayload: Record<string, string | null> =
+        slot === 1
+            ? { team1_id: winnerId, team1_placeholder: null }
+            : { team2_id: winnerId, team2_placeholder: null };
+
+    const { error } = await supabase
+        .from("matches")
+        .update(updatePayload)
+        .eq("id", nextMatch.id);
+
+    if (error) console.error("Errore avanzamento vincitore:", error);
+
+    // After advancing the winner, also check if loser slots in round-1
+    // repechage matches need to be filled
+    if (Number(completedMatch.round) === 1) {
+        await fillRepechageSlots();
+    }
+};
+
+// ── Repechage (best loser second-chance) ────────────────────────
+// When round-1 knockout matches have empty team slots (both null), fill
+// them with the best-performing losers from completed round-1 matches.
+const fillRepechageSlots = async () => {
+    const round1 = matches.value.filter(
+        (m) => m.match_type === "knockout" && Number(m.round) === 1,
+    );
+
+    // Repechage match: both teams are still null (no real teams, no placeholders)
+    const repechageMatches = round1.filter(
+        (m) => !m.team1_id && !m.team2_id,
+    );
+    if (repechageMatches.length === 0) return;
+
+    // Only fill once ALL other round-1 matches (the real ones) are finished —
+    // we need the complete picture to pick the true best losers.
+    const regularMatches = round1.filter(
+        (m) => !repechageMatches.some((r) => r.id === m.id),
+    );
+    const allRegularDone = regularMatches.every((m) =>
+        ["completed", "retired"].includes(m.status),
+    );
+    if (!allRegularDone) return;
+
+    // Find completed round-1 matches and extract loser stats
+    const completedRound1 = round1.filter(
+        (m) => m.status === "completed" && m.winner_id,
+    );
+    if (completedRound1.length === 0) return;
+
+    const loserStats = completedRound1
+        .map((m) => {
+            const isTeam1Winner = m.winner_id === m.team1_id;
+            const loserId = isTeam1Winner ? m.team2_id : m.team1_id;
+            if (!loserId) return null; // loser was a placeholder / null
+            const loserScore = isTeam1Winner
+                ? (m.team2_score ?? 0)
+                : (m.team1_score ?? 0);
+            const winnerScore = isTeam1Winner
+                ? (m.team1_score ?? 0)
+                : (m.team2_score ?? 0);
+            return {
+                teamId: loserId,
+                loserScore,
+                scoreDiff: loserScore - winnerScore, // negative = how badly they lost
+                bracketPos: Number(m.bracket_position),
+            };
+        })
+        .filter(Boolean) as {
+        teamId: string;
+        loserScore: number;
+        scoreDiff: number;
+        bracketPos: number;
+    }[];
+
+    // Sort: smallest loss margin = best loser (e.g. 6-5 loss beats 6-1 loss)
+    // Tie-break: more goals scored; final tie-break: earlier bracket position
+    loserStats.sort(
+        (a, b) =>
+            b.scoreDiff - a.scoreDiff || // scoreDiff is negative; closest to 0 = smallest margin
+            b.loserScore - a.loserScore || // more goals scored = better tie-breaker
+            a.bracketPos - b.bracketPos,
+    );
+
+    // Only exclude teams already assigned inside the repechage match itself.
+    // Losers from completed round-1 matches are the ones we WANT to place here —
+    // filtering by all round-1 participants would exclude every loser (the bug).
+    const repechageTeamIds = new Set<string>(
+        repechageMatches
+            .flatMap((m) => [m.team1_id, m.team2_id])
+            .filter(Boolean),
+    );
+
+    // Best losers not already placed in a repechage slot
+    const unplaced = loserStats.filter((l) => !repechageTeamIds.has(l.teamId));
+    if (unplaced.length === 0) return;
+
+    let idx = 0;
+    for (const rep of repechageMatches) {
+        const updates: Record<string, string | null> = {};
+
+        if (!rep.team1_id && unplaced[idx]) {
+            updates.team1_id = unplaced[idx].teamId;
+            updates.team1_placeholder = null;
+            idx++;
+        }
+        if (!rep.team2_id && unplaced[idx]) {
+            updates.team2_id = unplaced[idx].teamId;
+            updates.team2_placeholder = null;
+            idx++;
+        }
+
+        if (Object.keys(updates).length > 0) {
+            const { error } = await supabase
+                .from("matches")
+                .update(updates)
+                .eq("id", rep.id);
+            if (error) console.error("Errore ripescaggio:", error);
+        }
+    }
+};
+
+// ── Backfill already-completed matches ──────────────────────────────
+// Runs on every loadData so that matches completed before this code was
+// deployed (or on other devices) still trigger auto-progression.
+const backfillKnockoutAdvancement = async () => {
+    const completed = matches.value
+        .filter((m) => m.match_type === "knockout" && m.status === "completed")
+        .sort(
+            (a, b) =>
+                (a.round || 0) - (b.round || 0) ||
+                (a.bracket_position || 0) - (b.bracket_position || 0),
+        );
+    for (const match of completed) {
+        await advanceWinner(match);
+    }
+    // Also fill any repechage slots
+    await fillRepechageSlots();
 };
 
 const saveEdit = async () => {
@@ -290,6 +505,8 @@ const saveEdit = async () => {
 
     const { id, team1_id, team2_id, round, start_time, status } =
         editingMatch.value;
+    // Snapshot before clearing so advanceWinner has all the data it needs
+    const matchSnapshot = { ...editingMatch.value, winner_id: winnerId };
     await supabase
         .from("matches")
         .update({
@@ -302,6 +519,8 @@ const saveEdit = async () => {
         })
         .eq("id", id);
     editingMatch.value = null;
+    // Automatically slot the winner into the correct next-round match
+    await advanceWinner(matchSnapshot);
     await loadData();
 };
 
@@ -596,6 +815,76 @@ onUnmounted(() => {
             </div>
 
             <div v-if="activeTab === 'knockout'">
+                <!-- ── Smart Suggestions Banner ────────────────────────────── -->
+                <div
+                    v-if="hasKnockoutMatches && nextRecommendedMatch"
+                    class="mb-4 animate-in fade-in slide-in-from-top-4 duration-500"
+                >
+                    <div
+                        class="border-4 border-black bg-yellow-300 p-3 sm:p-4 flex items-center gap-3 sm:gap-4 shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+                    >
+                        <Icon
+                            name="mdi:lightbulb-on"
+                            class="text-2xl sm:text-3xl text-black flex-shrink-0 animate-pulse"
+                        />
+                        <div class="flex-1 min-w-0">
+                            <p
+                                class="font-impact uppercase tracking-widest text-xs text-black"
+                            >
+                                Prossimo incontro consigliato
+                            </p>
+                            <p
+                                class="font-black text-black text-sm sm:text-base leading-tight truncate"
+                            >
+                                {{
+                                    getTeamName(
+                                        nextRecommendedMatch.team1_id,
+                                    )
+                                }}
+                                <span class="font-impact text-xs mx-1 text-gray-700">vs</span>
+                                {{
+                                    getTeamName(
+                                        nextRecommendedMatch.team2_id,
+                                    )
+                                }}
+                                <span
+                                    class="font-impact text-xs text-gray-600 ml-1"
+                                    >—
+                                    {{
+                                        roundLabel(
+                                            nextRecommendedMatch.round,
+                                        )
+                                    }}</span
+                                >
+                            </p>
+                            <p
+                                v-if="pendingReadyMatches.length > 1"
+                                class="text-[10px] font-bold text-gray-700 mt-0.5"
+                            >
+                                +{{ pendingReadyMatches.length - 1 }}
+                                {{
+                                    pendingReadyMatches.length - 1 === 1
+                                        ? "altro pronto"
+                                        : "altri pronti"
+                                }}
+                            </p>
+                        </div>
+                        <NuxtLink
+                            :to="`/admin/match/${nextRecommendedMatch.id}`"
+                            class="flex-shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-black text-yellow-300 border-2 border-black font-impact uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all shadow-[2px_2px_0px_rgba(0,0,0,1)] -skew-x-3"
+                        >
+                            <Icon
+                                name="mdi:whistle"
+                                class="text-sm sm:text-base skew-x-3"
+                            />
+                            <span class="skew-x-3 hidden sm:inline"
+                                >Inizia arbitrio</span
+                            >
+                            <span class="skew-x-3 sm:hidden">Inizia</span>
+                        </NuxtLink>
+                    </div>
+                </div>
+
                 <div
                     v-if="Object.keys(knockoutMatches).length === 0"
                     class="animate-in fade-in slide-in-from-bottom-4 duration-500 py-8"
@@ -629,6 +918,22 @@ onUnmounted(() => {
                                 risolti. Ora puoi generare il tabellone ufficiale
                                 a eliminazione diretta.
                             </p>
+                            <div class="flex items-center justify-center gap-2 sm:gap-4 pt-3 flex-wrap">
+                                <div class="flex flex-col items-center bg-white/10 border border-white/20 px-3 sm:px-5 py-2">
+                                    <span class="font-impact text-xl sm:text-2xl text-white">{{ knockoutPreview.teamCount }}</span>
+                                    <span class="text-[9px] font-impact uppercase tracking-widest text-gray-300">Squadre</span>
+                                </div>
+                                <Icon name="mdi:chevron-right" class="text-white text-lg opacity-60" />
+                                <div class="flex flex-col items-center bg-white/10 border border-white/20 px-3 sm:px-5 py-2">
+                                    <span class="font-impact text-xl sm:text-2xl text-white">{{ knockoutPreview.rounds }}</span>
+                                    <span class="text-[9px] font-impact uppercase tracking-widest text-gray-300">Turni</span>
+                                </div>
+                                <Icon name="mdi:chevron-right" class="text-white text-lg opacity-60" />
+                                <div class="flex flex-col items-center bg-white/10 border border-white/20 px-3 sm:px-5 py-2">
+                                    <span class="font-impact text-xl sm:text-2xl text-white">{{ knockoutPreview.matchesInFirstRound }}</span>
+                                    <span class="text-[9px] font-impact uppercase tracking-widest text-gray-300">1° Turno</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="relative z-10 mt-4">
                             <button
@@ -659,11 +964,14 @@ onUnmounted(() => {
                                 v-for="(match, mIdx) in roundMatches"
                                 :key="match.id"
                                 class="card-grunge overflow-hidden transition-all"
-                                :class="
+                                :class="[
                                     match.status === 'in_progress'
                                         ? 'bg-red-50 !border-primary shadow-[0_0_15px_rgba(211,47,47,0.5)] ring-1 ring-primary'
-                                        : 'bg-white'
-                                "
+                                        : 'bg-white',
+                                    nextRecommendedMatch?.id === match.id
+                                        ? '!border-yellow-400 shadow-[0_0_14px_rgba(250,204,21,0.45)] ring-1 ring-yellow-400'
+                                        : '',
+                                ]"
                             >
                                 <div
                                     v-if="editingMatch?.id === match.id"
@@ -867,6 +1175,12 @@ onUnmounted(() => {
                                                 >
                                                     {{ displayKnockoutName(match, 1, roundNum, mIdx) }}
                                                 </span>
+                                                <span
+                                                    v-if="match.winner_id && match.winner_id === match.team1_id"
+                                                    class="text-[9px] font-impact uppercase tracking-widest text-emerald-700 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 mt-0.5"
+                                                >
+                                                    ✓ Avanza
+                                                </span>
                                             </div>
 
                                             <!-- Center (VS / Scores / Time) -->
@@ -913,6 +1227,12 @@ onUnmounted(() => {
                                                     "
                                                 >
                                                     {{ displayKnockoutName(match, 2, roundNum, mIdx) }}
+                                                </span>
+                                                <span
+                                                    v-if="match.winner_id && match.winner_id === match.team2_id"
+                                                    class="text-[9px] font-impact uppercase tracking-widest text-emerald-700 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 mt-0.5"
+                                                >
+                                                    ✓ Avanza
                                                 </span>
                                             </div>
                                         </div>
@@ -975,6 +1295,22 @@ onUnmounted(() => {
                                     risolti. Ora puoi generare il tabellone ufficiale
                                     a eliminazione diretta.
                                 </p>
+                                <div class="flex items-center justify-center gap-2 sm:gap-3 pt-2 flex-wrap">
+                                    <div class="flex flex-col items-center bg-white/10 border border-white/20 px-2 sm:px-4 py-1.5">
+                                        <span class="font-impact text-lg sm:text-xl text-white">{{ knockoutPreview.teamCount }}</span>
+                                        <span class="text-[9px] font-impact uppercase tracking-widest text-gray-300">Squadre</span>
+                                    </div>
+                                    <Icon name="mdi:chevron-right" class="text-white text-base opacity-60" />
+                                    <div class="flex flex-col items-center bg-white/10 border border-white/20 px-2 sm:px-4 py-1.5">
+                                        <span class="font-impact text-lg sm:text-xl text-white">{{ knockoutPreview.rounds }}</span>
+                                        <span class="text-[9px] font-impact uppercase tracking-widest text-gray-300">Turni</span>
+                                    </div>
+                                    <Icon name="mdi:chevron-right" class="text-white text-base opacity-60" />
+                                    <div class="flex flex-col items-center bg-white/10 border border-white/20 px-2 sm:px-4 py-1.5">
+                                        <span class="font-impact text-lg sm:text-xl text-white">{{ knockoutPreview.matchesInFirstRound }}</span>
+                                        <span class="text-[9px] font-impact uppercase tracking-widest text-gray-300">1° Turno</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="relative z-10">
                                 <button

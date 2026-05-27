@@ -268,7 +268,12 @@
             </div>
 
             <!-- KNOCKOUT BRACKET -->
-            <div v-if="activeTab === 'knockout'" class="overflow-x-auto pb-8 custom-scrollbar">
+            <div v-if="activeTab === 'knockout'" 
+                 class="overflow-x-auto pb-8 custom-scrollbar transition-colors duration-1000"
+                 :class="{
+                     'bg-[#111111] py-8 rounded-none border-y-4 border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.2)]': isFinaleLive
+                 }"
+            >
                 <div
                     v-if="Object.keys(groupedKnockoutMatches).length"
                     class="flex gap-6 sm:gap-8 min-w-max mx-auto justify-start xl:justify-center p-2"
@@ -281,33 +286,41 @@
                         class="flex flex-col gap-4 sm:gap-6 w-[82vw] max-w-72 sm:w-72"
                     >
                         <h3
-                            class="text-sm font-impact text-white text-center uppercase tracking-widest bg-secondary py-3 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                            class="text-sm sm:text-base font-impact text-center uppercase tracking-widest py-3 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-colors"
+                            :class="[
+                                roundLabel(roundNum) === 'Finale' 
+                                    ? 'bg-yellow-400 text-black text-lg sm:text-xl' 
+                                    : (isFinaleLive ? 'bg-zinc-800 text-zinc-400 border-zinc-600 shadow-none' : 'bg-secondary text-white')
+                            ]"
                         >
-                            Turno {{ roundNum }}
+                            {{ roundLabel(roundNum) }}
                         </h3>
 
                         <div
                             v-for="(match, mIndex) in roundMatches"
                             :key="match.id"
-                            class="border-2 border-black p-4 relative group overflow-hidden transition-all hover:translate-y-[-1px]"
-                            :class="
+                            class="border-2 p-4 relative group overflow-hidden transition-all hover:translate-y-[-1px]"
+                            :class="[
                                 match.status === 'in_progress'
-                                    ? 'bg-red-50 !border-primary shadow-[0_0_15px_rgba(211,47,47,0.5)] ring-1 ring-primary'
-                                    : 'bg-white shadow-[3px_3px_0px_rgba(0,0,0,1)]'
-                            "
+                                    ? (roundLabel(roundNum) === 'Finale' ? 'bg-black border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)] ring-2 ring-yellow-400' : 'bg-red-50 !border-primary shadow-[0_0_15px_rgba(211,47,47,0.5)] ring-1 ring-primary')
+                                    : (isFinaleLive ? 'bg-zinc-900 border-zinc-700 opacity-60 shadow-none' : 'bg-white border-black shadow-[3px_3px_0px_rgba(0,0,0,1)]')
+                            ]"
                         >
                             <div
                                 v-if="match.status === 'in_progress'"
-                                class="absolute top-0 left-0 right-0 bg-primary text-white text-[10px] font-impact tracking-widest text-center py-1 z-10 animate-pulse"
+                                class="absolute top-0 left-0 right-0 text-white text-[10px] font-impact tracking-widest text-center py-1 z-10 animate-pulse transition-colors"
+                                :class="roundLabel(roundNum) === 'Finale' ? 'bg-yellow-500 text-black' : 'bg-primary'"
                             >
                                 ORA IN DIRETTA
                             </div>
 
                             <div
-                                class="absolute -top-0.5 -left-0.5 bg-black text-white text-[10px] font-impact px-2 py-0.5 z-20 border-r-2 border-b-2 border-black"
-                                :class="{
-                                    'mt-5': match.status === 'in_progress',
-                                }"
+                                class="absolute -top-0.5 -left-0.5 bg-black text-white text-[10px] font-impact px-2 py-0.5 z-20 border-r-2 border-b-2"
+                                :class="[
+                                    {'mt-5': match.status === 'in_progress'},
+                                    isFinaleLive && roundLabel(roundNum) !== 'Finale' ? 'border-zinc-700' : 'border-black',
+                                    isFinaleLive && roundLabel(roundNum) === 'Finale' ? 'text-yellow-400 border-yellow-400' : ''
+                                ]"
                             >
                                 M{{ mIndex + 1 }}
                             </div>
@@ -320,22 +333,29 @@
                             >
                                 <!-- Team 1 -->
                                 <div
-                                    class="flex justify-between items-center px-3 py-2 bg-white border-2 border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                    class="flex justify-between items-center px-3 py-2 border-2 transition-colors"
+                                    :class="[
+                                        (match.status === 'in_progress' && roundLabel(roundNum) === 'Finale') 
+                                            ? 'bg-black border-yellow-400 shadow-[1px_1px_0px_rgba(250,204,21,1)]' 
+                                            : (isFinaleLive ? 'bg-zinc-800 border-zinc-700 shadow-none' : 'bg-white border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]')
+                                    ]"
                                 >
                                     <div class="flex items-center gap-2 min-w-0">
                                         <PublicTeamLogo
                                             :src="getTeamLogo(match.team1_id)"
                                             :alt="getTeamName(match.team1_id)"
-                                            size-class="w-7 h-7 border border-black rounded-none shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                            size-class="w-7 h-7 border rounded-none"
                                             icon-class="text-xs"
+                                            :class="isFinaleLive && roundLabel(roundNum) !== 'Finale' ? 'border-zinc-600 opacity-50' : 'border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]'"
                                         />
                                         <span
                                             class="truncate font-impact text-sm"
-                                            :class="
-                                                match.team1_id
-                                                    ? 'text-black'
-                                                    : 'text-gray-400 font-medium text-xs uppercase'
-                                            "
+                                            :class="[
+                                                match.team1_id 
+                                                    ? (isFinaleLive && roundLabel(roundNum) !== 'Finale' ? 'text-zinc-300' : 'text-black') 
+                                                    : (isFinaleLive ? 'text-zinc-500 font-medium text-xs uppercase' : 'text-gray-400 font-medium text-xs uppercase'),
+                                                (match.status === 'in_progress' && roundLabel(roundNum) === 'Finale' && match.team1_id) ? '!text-yellow-400' : ''
+                                            ]"
                                         >
                                             {{
                                                 match.team1_id
@@ -361,7 +381,7 @@
                                         :class="
                                             match.winner_id === match.team1_id
                                                 ? 'text-primary'
-                                                : 'text-gray-400'
+                                                : (isFinaleLive ? 'text-zinc-500' : 'text-gray-400')
                                         "
                                     >
                                         {{ match.team1_score || 0 }}
@@ -372,29 +392,41 @@
                                     class="flex justify-center -my-3.5 z-10 relative"
                                 >
                                     <span
-                                        class="bg-secondary text-white text-[9px] font-impact px-2 py-0.5 rounded-none border border-black transform -skew-x-6 uppercase tracking-wider"
+                                        class="text-[9px] font-impact px-2 py-0.5 rounded-none border transform -skew-x-6 uppercase tracking-wider transition-colors"
+                                        :class="[
+                                            (match.status === 'in_progress' && roundLabel(roundNum) === 'Finale') 
+                                                ? 'bg-yellow-500 text-black border-yellow-400' 
+                                                : (isFinaleLive ? 'bg-zinc-700 text-zinc-400 border-zinc-600' : 'bg-secondary text-white border-black')
+                                        ]"
                                         >VS</span
                                     >
                                 </div>
 
                                 <!-- Team 2 -->
                                 <div
-                                    class="flex justify-between items-center px-3 py-2 bg-white border-2 border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                    class="flex justify-between items-center px-3 py-2 border-2 transition-colors"
+                                    :class="[
+                                        (match.status === 'in_progress' && roundLabel(roundNum) === 'Finale') 
+                                            ? 'bg-black border-yellow-400 shadow-[1px_1px_0px_rgba(250,204,21,1)]' 
+                                            : (isFinaleLive ? 'bg-zinc-800 border-zinc-700 shadow-none' : 'bg-white border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]')
+                                    ]"
                                 >
                                     <div class="flex items-center gap-2 min-w-0">
                                         <PublicTeamLogo
                                             :src="getTeamLogo(match.team2_id)"
                                             :alt="getTeamName(match.team2_id)"
-                                            size-class="w-7 h-7 border border-black rounded-none shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                            size-class="w-7 h-7 border rounded-none"
                                             icon-class="text-xs"
+                                            :class="isFinaleLive && roundLabel(roundNum) !== 'Finale' ? 'border-zinc-600 opacity-50' : 'border-black shadow-[1px_1px_0px_rgba(0,0,0,1)]'"
                                         />
                                         <span
                                             class="truncate font-impact text-sm"
-                                            :class="
-                                                match.team2_id
-                                                    ? 'text-black'
-                                                    : 'text-gray-400 font-medium text-xs uppercase'
-                                            "
+                                            :class="[
+                                                match.team2_id 
+                                                    ? (isFinaleLive && roundLabel(roundNum) !== 'Finale' ? 'text-zinc-300' : 'text-black') 
+                                                    : (isFinaleLive ? 'text-zinc-500 font-medium text-xs uppercase' : 'text-gray-400 font-medium text-xs uppercase'),
+                                                (match.status === 'in_progress' && roundLabel(roundNum) === 'Finale' && match.team2_id) ? '!text-yellow-400' : ''
+                                            ]"
                                         >
                                             {{
                                                 match.team2_id
@@ -420,7 +452,7 @@
                                         :class="
                                             match.winner_id === match.team2_id
                                                 ? 'text-primary'
-                                                : 'text-gray-400'
+                                                : (isFinaleLive ? 'text-zinc-500' : 'text-gray-400')
                                         "
                                     >
                                         {{ match.team2_score || 0 }}
@@ -432,7 +464,8 @@
                                 class="mt-4 flex justify-between items-center px-1"
                             >
                                 <span
-                                    class="text-xs font-impact tracking-wider text-primary min-w-[30px]"
+                                    class="text-xs font-impact tracking-wider min-w-[30px]"
+                                    :class="(match.status === 'in_progress' && roundLabel(roundNum) === 'Finale') ? 'text-yellow-400' : (isFinaleLive ? 'text-zinc-500' : 'text-primary')"
                                 >
                                     {{ match.start_time || "" }}
                                 </span>
@@ -441,7 +474,8 @@
                                         match.status !== 'pending' &&
                                         match.status !== 'in_progress'
                                     "
-                                    class="text-[9px] font-impact uppercase tracking-widest text-white bg-secondary px-2 py-0.5 border border-black transform -skew-x-6"
+                                    class="text-[9px] font-impact uppercase tracking-widest px-2 py-0.5 border transform -skew-x-6"
+                                    :class="isFinaleLive ? 'bg-zinc-700 text-zinc-300 border-zinc-600' : 'bg-secondary text-white border-black'"
                                 >
                                     {{ translateStatus(match.status) }}
                                 </span>
@@ -502,6 +536,14 @@ const groupedKnockoutMatches = computed(() => {
     return sorted;
 });
 
+const isFinaleLive = computed(() => {
+    const total = Object.keys(groupedKnockoutMatches.value).length;
+    if (total === 0) return false;
+    const finalMatches = groupedKnockoutMatches.value[total] || [];
+    return finalMatches.some((m: any) => m.status === 'in_progress');
+});
+
+
 const groupedGroupMatches = computed(() => {
     const sorted: Record<string, any[]> = {};
     matches.value
@@ -513,6 +555,17 @@ const groupedGroupMatches = computed(() => {
         });
     return sorted;
 });
+
+const roundLabel = (r: string | number) => {
+    const roundNum = typeof r === "string" ? parseInt(r) : r;
+    const total = Object.keys(groupedKnockoutMatches.value).length;
+    if (total === 0) return `Turno ${roundNum}`;
+    
+    if (roundNum === total) return "Finale";
+    if (roundNum === total - 1) return "Semifinali";
+    if (roundNum === total - 2) return "Quarti di Finale";
+    return `Turno ${roundNum}`;
+};
 
 const loadGroupsAndStandings = async () => {
     const { data: gData } = await supabase
