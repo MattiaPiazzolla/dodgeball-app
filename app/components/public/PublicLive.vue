@@ -104,13 +104,15 @@
 
                 <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col gap-4 sm:gap-6">
                     <div
-                        class="bg-white border-4 border-black px-4 py-8 sm:p-12 relative overflow-hidden transition-all flex flex-col justify-center min-h-[360px] sm:min-h-[420px] mobile-fade-in"
+                        class="bg-white px-4 py-8 sm:p-12 relative overflow-hidden transition-all flex flex-col justify-center min-h-[360px] sm:min-h-[420px] mobile-fade-in"
                         :class="
                             liveMatch
                                 ? liveMatch.is_timer_running
-                                    ? '!border-primary shadow-[6px_6px_0px_var(--primary)]'
-                                    : '!border-yellow-500 shadow-[6px_6px_0px_rgba(251,192,45,1)]'
-                                : 'shadow-[4px_4px_0px_rgba(0,0,0,1)]'
+                                    ? 'border-4 border-primary shadow-[6px_6px_0px_var(--primary)]'
+                                    : 'border-4 border-yellow-500 shadow-[6px_6px_0px_rgba(251,192,45,1)]'
+                                : upcomingMatches.length && upcomingMatches[0].match_type === 'final'
+                                    ? 'border-4 border-yellow-400 shadow-[6px_6px_0px_rgba(250,204,21,1)] bg-gradient-to-b from-white to-yellow-50/50'
+                                    : 'border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]'
                         "
                     >
                         <template v-if="liveMatch">
@@ -206,14 +208,22 @@
                         <template v-else-if="upcomingMatches.length">
                             <div class="text-center mb-8">
                                 <div
-                                    class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                                    class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_rgba(0,0,0,1)] border-2 border-black"
+                                    :class="upcomingMatches[0].match_type === 'final' ? 'bg-yellow-400 text-black' : 'bg-gray-100 text-black'"
                                 >
                                     <Icon
-                                        name="mdi:calendar-clock"
-                                        class="text-2xl text-gray-400"
+                                        :name="upcomingMatches[0].match_type === 'final' ? 'mdi:trophy' : 'mdi:calendar-clock'"
+                                        class="text-2xl"
                                     />
                                 </div>
                                 <h2
+                                    v-if="upcomingMatches[0].match_type === 'final'"
+                                    class="text-4xl sm:text-5xl font-impact uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-red-500 to-yellow-500 animate-pulse drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-2"
+                                >
+                                    GRAN FINALE!
+                                </h2>
+                                <h2
+                                    v-else
                                     class="text-3xl font-black uppercase tracking-tight text-black"
                                 >
                                     Prossimo Incontro
