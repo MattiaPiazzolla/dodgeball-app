@@ -14,6 +14,7 @@ const mvpTeamFilter = ref("");
 const isConfirmingReset = ref(false);
 const isMvpPodiumOpen = ref(false);
 const isTeamsAccordionOpen = ref(false);
+const isMatchMvpTeaserOpen = ref(false);
 let playerSubscription: any = null;
 
 const fetchAll = async () => {
@@ -34,7 +35,7 @@ const fetchAll = async () => {
             client
                 .from("players")
                 .select(
-                    "id, name, jersey_number, photo_url, mvp_votes, team_id",
+                    "id, name, jersey_number, photo_url, mvp_votes, team_id, match_mvp_votes",
                 )
                 .order("mvp_votes", { ascending: false })
                 .order("name", { ascending: true }),
@@ -54,7 +55,7 @@ const fetchAll = async () => {
 const refetchMvp = async () => {
     const { data } = await client
         .from("players")
-        .select("id, name, jersey_number, photo_url, mvp_votes, team_id")
+        .select("id, name, jersey_number, photo_url, mvp_votes, team_id, match_mvp_votes")
         .order("mvp_votes", { ascending: false })
         .order("name", { ascending: true });
     topMvpPlayers.value = data || [];
@@ -73,7 +74,7 @@ const filteredMvpPlayers = computed(() => {
 const resetMvpVotes = async () => {
     const { error } = await client
         .from("players")
-        .update({ mvp_votes: 0 })
+        .update({ mvp_votes: 0, match_mvp_votes: 0 })
         .gt("mvp_votes", 0);
     if (error) {
         alert("Impossibile azzerare i voti MVP: " + error.message);
@@ -124,6 +125,40 @@ const nextMatch = computed(
         null,
 );
 
+const lastMatch = computed(() => {
+    // 1. Find live match (in_progress or paused)
+    const liveMatch = matches.value.find(
+        (m) => m.status === "in_progress" || m.status === "paused",
+    );
+    if (liveMatch) return liveMatch;
+
+    // 2. Otherwise, find the most recently completed/retired match.
+    // matches is sorted by start_time ascending, so the last completed/retired match in the array is the most recent one.
+    const completed = matches.value.filter(
+        (m) => m.status === "completed" || m.status === "retired",
+    );
+    if (completed.length > 0) {
+        return completed[completed.length - 1];
+    }
+    return null;
+});
+
+const lastMatchMvpPlayers = computed(() => {
+    if (!lastMatch.value) return [];
+    const t1 = lastMatch.value.team1_id;
+    const t2 = lastMatch.value.team2_id;
+    if (!t1 && !t2) return [];
+
+    // Filter topMvpPlayers for players belonging to t1 or t2, sorted by match_mvp_votes
+    return topMvpPlayers.value
+        .filter((p) => p.team_id === t1 || p.team_id === t2)
+        .sort(
+            (a, b) =>
+                (b.match_mvp_votes || 0) - (a.match_mvp_votes || 0) ||
+                a.name.localeCompare(b.name),
+        );
+});
+
 const getTeamName = (id: string | null) =>
     teams.value.find((t) => t.id === id)?.name || (id ? "Unknown" : "TBD");
 const getTeamLogo = (id: string | null) =>
@@ -155,6 +190,17 @@ const subscribeToMvpChanges = () => {
             { event: "*", schema: "public", table: "players" },
             () => {
                 refetchMvp();
+            }
+        )
+        .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "matches" },
+            async () => {
+                const { data } = await client
+                    .from("matches")
+                    .select("*")
+                    .order("start_time", { ascending: true });
+                matches.value = data || [];
             }
         )
         .subscribe();
@@ -629,6 +675,212 @@ const translateStage = (stage: string) => {
                                         :top-players="filteredMvpPlayers"
                                         :teams="teams"
                                     />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Match MVP Votes Section -->
+                <div class="mt-8 border-t-4 border-black pt-8">
+                    <!-- Title Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <h2
+                            class="text-lg font-impact uppercase tracking-widest text-secondary border-b-4 border-black inline-block pr-4 self-start"
+                        >
+                            Classifica MVP dell'Ultimo Incontro (Voti Partita)
+                        </h2>
+                    </div>
+
+                    <!-- No Match Found State -->
+                    <div
+                        v-if="!lastMatch"
+                        class="py-12 text-center text-gray-400 font-impact uppercase tracking-widest text-lg card-grunge bg-white border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+                    >
+                        Nessun incontro disputato di recente.
+                    </div>
+
+                    <div v-else class="space-y-4">
+                        <!-- Match Details Header Card -->
+                        <div
+                            class="card-grunge bg-black text-white p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]"
+                        >
+                            <!-- Team 1 -->
+                            <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+                                <div class="w-12 h-12 bg-white border-2 border-black flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                    <img
+                                        v-if="getTeamLogo(lastMatch.team1_id)"
+                                        :src="getTeamLogo(lastMatch.team1_id)"
+                                        class="w-full h-full object-cover"
+                                    />
+                                    <Icon
+                                        v-else
+                                        name="mdi:shield"
+                                        class="text-2xl text-secondary"
+                                    />
+                                </div>
+                                <span class="text-lg sm:text-2xl font-impact uppercase tracking-widest truncate">
+                                    {{ getTeamName(lastMatch.team1_id) }}
+                                </span>
+                            </div>
+
+                            <!-- Match Status Badge & VS -->
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <span class="text-2xl font-impact text-primary">VS</span>
+                                <div 
+                                    class="flex items-center gap-1.5 px-3 py-1 font-impact text-xs uppercase tracking-widest border-2 border-white shadow-[2px_2px_0px_rgba(255,255,255,1)]"
+                                    :class="
+                                        ['in_progress', 'paused'].includes(lastMatch.status)
+                                            ? 'bg-primary text-white animate-pulse'
+                                            : 'bg-zinc-700 text-zinc-300'
+                                    "
+                                >
+                                    <span 
+                                        v-if="['in_progress', 'paused'].includes(lastMatch.status)" 
+                                        class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-ping inline-block"
+                                    ></span>
+                                    <span>
+                                        {{ ['in_progress', 'paused'].includes(lastMatch.status) ? 'LIVE' : 'COMPLETATO' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Team 2 -->
+                            <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto sm:justify-end">
+                                <span class="text-lg sm:text-2xl font-impact uppercase tracking-widest text-right truncate">
+                                    {{ getTeamName(lastMatch.team2_id) }}
+                                </span>
+                                <div class="w-12 h-12 bg-white border-2 border-black flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                    <img
+                                        v-if="getTeamLogo(lastMatch.team2_id)"
+                                        :src="getTeamLogo(lastMatch.team2_id)"
+                                        class="w-full h-full object-cover"
+                                    />
+                                    <Icon
+                                        v-else
+                                        name="mdi:shield"
+                                        class="text-2xl text-secondary"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Match MVP Roster List -->
+                        <div class="card-grunge bg-white p-6 min-[520px]:p-8 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                            <div v-if="lastMatchMvpPlayers.length === 0" class="py-6 text-center text-gray-400 font-impact uppercase tracking-widest text-md">
+                                Nessun giocatore trovato per questo incontro.
+                            </div>
+                            <div v-else class="max-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                                <div
+                                    v-for="(player, idx) in lastMatchMvpPlayers"
+                                    :key="player.id"
+                                    class="card-grunge bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 hover:-translate-y-0.5 transition-transform border-4 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)]"
+                                >
+                                    <!-- Player Information -->
+                                    <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                                        <!-- Place Badge -->
+                                        <span
+                                            class="font-impact text-xl w-8 h-8 flex items-center justify-center border-2 border-black shrink-0 shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                            :class="{
+                                                'bg-yellow-400 text-black': idx === 0 && (player.match_mvp_votes || 0) > 0,
+                                                'bg-slate-300 text-black': idx === 1 && (player.match_mvp_votes || 0) > 0,
+                                                'bg-amber-600 text-white': idx === 2 && (player.match_mvp_votes || 0) > 0,
+                                                'bg-zinc-100 text-zinc-500': idx > 2 || !(player.match_mvp_votes || 0)
+                                            }"
+                                        >
+                                            {{ idx + 1 }}
+                                        </span>
+
+                                        <!-- Avatar with Mini Logo -->
+                                        <div class="relative flex-shrink-0">
+                                            <img
+                                                v-if="player.photo_url"
+                                                :src="player.photo_url"
+                                                class="w-12 h-12 object-cover border-2 border-black bg-white flex-shrink-0 animate-in fade-in"
+                                            />
+                                            <div
+                                                v-else
+                                                class="w-12 h-12 bg-zinc-200 border-2 border-black flex items-center justify-center flex-shrink-0 relative overflow-hidden"
+                                            >
+                                                <span class="font-impact text-zinc-600 text-sm uppercase">
+                                                    {{ player.name.slice(0, 2) }}
+                                                </span>
+                                            </div>
+                                            <!-- Mini Team Logo -->
+                                            <div 
+                                                v-if="getTeamLogo(player.team_id)"
+                                                class="absolute -bottom-1 -right-1 w-5 h-5 border-2 border-black bg-white flex items-center justify-center overflow-hidden shadow-[1px_1px_0px_rgba(0,0,0,1)]"
+                                            >
+                                                <img :src="getTeamLogo(player.team_id)" class="w-full h-full object-cover" />
+                                            </div>
+                                        </div>
+
+                                        <!-- Player Name, Nickname & Details -->
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-baseline gap-2 min-w-0">
+                                                <span class="font-impact uppercase tracking-widest text-black text-lg truncate">
+                                                    {{ player.name }}
+                                                </span>
+                                                <span v-if="player.nickname" class="text-xs text-primary font-bold italic">
+                                                    "{{ player.nickname }}"
+                                                </span>
+                                            </div>
+                                            <span class="text-xs text-zinc-600 font-impact uppercase tracking-wider block mt-0.5">
+                                                N°{{ player.jersey_number || "00" }} — {{ getTeamName(player.team_id) }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Match Votes Badge -->
+                                    <div
+                                        class="bg-black px-3 py-1.5 border-2 border-black font-impact text-white text-sm flex items-center gap-1.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] min-w-[120px] justify-center shrink-0 self-end sm:self-auto"
+                                    >
+                                        <Icon
+                                            name="mdi:thumb-up"
+                                            class="text-primary text-xs animate-pulse"
+                                        />
+                                        <span>{{ player.match_mvp_votes || 0 }} {{ (player.match_mvp_votes || 0) === 1 ? 'VOTO' : 'VOTI' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Match MVP Video Generator Accordion (Only when match is active or played and has at least one player) -->
+                        <div v-if="lastMatch && lastMatchMvpPlayers.length > 0" class="mt-6">
+                            <div class="border-4 border-black bg-cement shadow-[6px_6px_0px_rgba(211,47,47,1)] overflow-hidden">
+                                <button
+                                    type="button"
+                                    @click="isMatchMvpTeaserOpen = !isMatchMvpTeaserOpen"
+                                    class="w-full px-5 py-4 flex items-center justify-between gap-4 bg-primary hover:bg-[#8E1515] transition-all duration-300 ease-out text-left border-b-0"
+                                    :class="{ 'border-b-4 border-black': isMatchMvpTeaserOpen }"
+                                >
+                                    <span class="font-impact text-xl uppercase tracking-widest text-white flex items-center gap-3 min-w-0">
+                                        <Icon name="mdi:movie-open-star" class="text-2xl flex-shrink-0 text-white" />
+                                        <span class="truncate">Generatore Video Match MVP</span>
+                                        <span class="hidden md:inline-flex text-[10px] bg-black text-white border-2 border-black px-2 py-1 tracking-widest">
+                                            STORY 9:16 STYLE
+                                        </span>
+                                    </span>
+                                    <Icon
+                                        name="mdi:chevron-down"
+                                        class="text-3xl text-white transition-transform duration-500 ease-out"
+                                        :class="{ 'rotate-180': isMatchMvpTeaserOpen }"
+                                    />
+                                </button>
+
+                                <div 
+                                    class="grid transition-all duration-700 ease-in-out bg-cement border-black"
+                                    :class="isMatchMvpTeaserOpen ? 'grid-rows-[1fr] border-t-4' : 'grid-rows-[0fr]'"
+                                >
+                                    <div class="overflow-hidden">
+                                        <div class="p-4 md:p-6 bg-cement">
+                                            <AdminMatchMvpTeaser
+                                                :match="lastMatch"
+                                                :top-players="lastMatchMvpPlayers"
+                                                :teams="teams"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

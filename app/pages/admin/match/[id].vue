@@ -427,6 +427,11 @@ const startMatch = async () => {
     match.value.timer_started_at = startTime;
     match.value.elapsed_seconds = 0;
 
+    await supabase.rpc("reset_match_player_votes", {
+        t1_id: match.value.team1_id,
+        t2_id: match.value.team2_id,
+    });
+
     await supabase
         .from("matches")
         .update({

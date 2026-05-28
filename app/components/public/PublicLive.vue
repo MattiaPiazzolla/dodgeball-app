@@ -1,6 +1,22 @@
 // components/public/PublicLive.vue
 <template>
     <div class="space-y-4">
+        <!-- Match MVP Rules Popup -->
+        <div v-if="showFirstMatchVotePopup" class="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 mobile-fade-in">
+            <div class="bg-white border-4 border-black p-6 sm:p-8 max-w-md w-full shadow-[8px_8px_0px_var(--primary)] text-center animate-fade-in">
+                <Icon name="mdi:whistle" class="text-5xl text-primary mb-4" />
+                <h2 class="font-impact text-2xl sm:text-3xl mb-4 uppercase tracking-wider text-black">Vota l'MVP della Partita!</h2>
+                <p class="font-bold text-gray-600 mb-6 text-sm sm:text-base leading-relaxed">
+                    Hai a disposizione <span class="text-black text-lg">3 voti</span> per ogni singolo incontro!
+                    <br/><br/>
+                    Attenzione: Questi voti sono specifici per questa partita in diretta e non si sommano ai 5 voti globali che hai a disposizione per il torneo.
+                </p>
+                <button @click="showFirstMatchVotePopup = false" class="btn-skewed w-full">
+                    <span class="btn-skewed-content">Ho Capito!</span>
+                </button>
+            </div>
+        </div>
+
         <div
             v-if="pending"
             class="flex justify-center items-center py-32 text-red-500 animate-pulse"
@@ -104,34 +120,43 @@
 
                 <div class="order-1 lg:order-2 lg:col-span-6 flex flex-col gap-4 sm:gap-6">
                     <div
-                        class="bg-white px-4 py-8 sm:p-12 relative overflow-hidden transition-all flex flex-col justify-center min-h-[360px] sm:min-h-[420px] mobile-fade-in"
+                        class="px-4 py-8 sm:p-12 relative overflow-hidden transition-all flex flex-col justify-center min-h-[360px] sm:min-h-[420px] mobile-fade-in"
                         :class="
                             liveMatch
                                 ? liveMatch.is_timer_running
-                                    ? 'border-4 border-primary shadow-[6px_6px_0px_var(--primary)]'
-                                    : 'border-4 border-yellow-500 shadow-[6px_6px_0px_rgba(251,192,45,1)]'
+                                    ? 'bg-white border-4 border-primary shadow-[6px_6px_0px_var(--primary)]'
+                                    : 'bg-white border-4 border-yellow-500 shadow-[6px_6px_0px_rgba(251,192,45,1)]'
                                 : upcomingMatches.length && upcomingMatches[0].match_type === 'final'
-                                    ? 'border-4 border-yellow-400 shadow-[6px_6px_0px_rgba(250,204,21,1)] bg-gradient-to-b from-white to-yellow-50/50'
-                                    : 'border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]'
+                                    ? 'bg-black text-white border-4 border-yellow-400 shadow-[8px_8px_0px_rgba(250,204,21,1)]'
+                                    : 'bg-white text-black border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]'
                         "
                     >
-                        <template v-if="liveMatch">
-                            <div
-                                class="absolute top-0 left-0 right-0 text-xs font-black uppercase tracking-widest text-center py-2 transition-colors"
-                                :class="
-                                    liveMatch.is_timer_running
-                                        ? 'bg-red-600 text-white animate-pulse'
-                                        : 'bg-yellow-400 text-black'
-                                "
-                            >
-                                {{
-                                    liveMatch.is_timer_running
-                                        ? "Partita in Diretta"
-                                        : "Partita in Pausa"
-                                }}
+                        <div v-if="!liveMatch && upcomingMatches.length && upcomingMatches[0].match_type === 'final'" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+                            <div class="w-[150%] h-[150%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/40 via-transparent to-transparent"></div>
+                        </div>
+
+                        <div class="relative z-10 w-full">
+                            <template v-if="liveMatch">
+                            <div class="flex justify-center mb-6 sm:mb-8">
+                                <div
+                                    class="px-6 py-2 text-xs sm:text-sm font-black uppercase tracking-widest text-center transition-colors border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] transform -skew-x-6"
+                                    :class="
+                                        liveMatch.is_timer_running
+                                            ? 'bg-red-600 text-white animate-pulse'
+                                            : 'bg-yellow-400 text-black'
+                                    "
+                                >
+                                    <span class="block transform skew-x-6">
+                                        {{
+                                            liveMatch.is_timer_running
+                                                ? "Partita in Diretta"
+                                                : "Partita in Pausa"
+                                        }}
+                                    </span>
+                                </div>
                             </div>
 
-                            <div class="text-center mt-4 mb-10">
+                            <div class="text-center mb-10">
                                 <span
                                     class="font-mono text-5xl min-[380px]:text-6xl sm:text-7xl font-black tracking-tight transition-colors"
                                     :class="
@@ -205,26 +230,67 @@
                             </div>
                         </template>
 
+                        <template v-else-if="upcomingMatches.length && upcomingMatches[0].match_type === 'final'">
+                            <div class="flex flex-col items-center justify-center w-full h-full py-4 sm:py-8 text-center animate-fade-in relative z-20">
+                                <div class="relative w-20 h-20 sm:w-28 sm:h-28 mb-6">
+                                    <div class="absolute inset-0 bg-yellow-500 rounded-full animate-ping opacity-30"></div>
+                                    <div class="relative w-full h-full rounded-full border-4 border-yellow-400 bg-black flex items-center justify-center shadow-[0_0_40px_rgba(250,204,21,0.5)]">
+                                        <Icon name="mdi:trophy" class="text-5xl sm:text-7xl text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,1)]" />
+                                    </div>
+                                </div>
+                                
+                                <h2 class="text-5xl sm:text-7xl lg:text-8xl font-impact uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-yellow-500 to-red-600 animate-pulse drop-shadow-[0_5px_5px_rgba(0,0,0,1)] mb-4 transform -skew-x-6">
+                                    GRAN FINALE
+                                </h2>
+                                
+                                <p v-if="upcomingMatches[0].start_time" class="text-red-500 font-black uppercase tracking-widest text-lg sm:text-2xl mb-12 bg-black/50 px-6 py-2 border-y-2 border-red-500 transform skew-x-12 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+                                    ALLE ORE {{ upcomingMatches[0].start_time }}
+                                </p>
+
+                                <div class="w-full flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12 max-w-4xl mx-auto">
+                                    <div class="flex flex-col items-center flex-1 min-w-[200px]">
+                                        <PublicTeamLogo
+                                            :src="getTeamLogo(upcomingMatches[0].team1_id)"
+                                            :alt="getTeamName(upcomingMatches[0].team1_id)"
+                                            size-class="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 mb-6 transform hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]"
+                                            icon-class="text-7xl sm:text-9xl"
+                                        />
+                                        <div class="text-3xl sm:text-4xl lg:text-5xl font-black uppercase text-white drop-shadow-md text-center px-2 break-words w-full">
+                                            {{ getTeamName(upcomingMatches[0].team1_id) || "DA DEFINIRE" }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="relative px-6 py-4 bg-red-600 border-4 border-yellow-400 transform -skew-x-12 shadow-[5px_5px_0px_rgba(0,0,0,1)] z-10 shrink-0">
+                                        <span class="text-white text-3xl sm:text-5xl font-impact uppercase tracking-widest block transform skew-x-12 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">VS</span>
+                                    </div>
+                                    
+                                    <div class="flex flex-col items-center flex-1 min-w-[200px]">
+                                        <PublicTeamLogo
+                                            :src="getTeamLogo(upcomingMatches[0].team2_id)"
+                                            :alt="getTeamName(upcomingMatches[0].team2_id)"
+                                            size-class="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 mb-6 transform hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_25px_rgba(255,255,255,0.2)]"
+                                            icon-class="text-7xl sm:text-9xl"
+                                        />
+                                        <div class="text-3xl sm:text-4xl lg:text-5xl font-black uppercase text-white drop-shadow-md text-center px-2 break-words w-full">
+                                            {{ getTeamName(upcomingMatches[0].team2_id) || "DA DEFINIRE" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
                         <template v-else-if="upcomingMatches.length">
                             <div class="text-center mb-8">
                                 <div
-                                    class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_rgba(0,0,0,1)] border-2 border-black"
-                                    :class="upcomingMatches[0].match_type === 'final' ? 'bg-yellow-400 text-black' : 'bg-gray-100 text-black'"
+                                    class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] text-black"
                                 >
                                     <Icon
-                                        :name="upcomingMatches[0].match_type === 'final' ? 'mdi:trophy' : 'mdi:calendar-clock'"
+                                        name="mdi:calendar-clock"
                                         class="text-2xl"
                                     />
                                 </div>
                                 <h2
-                                    v-if="upcomingMatches[0].match_type === 'final'"
-                                    class="text-4xl sm:text-5xl font-impact uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-red-500 to-yellow-500 animate-pulse drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-2"
-                                >
-                                    GRAN FINALE!
-                                </h2>
-                                <h2
-                                    v-else
-                                    class="text-3xl font-black uppercase tracking-tight text-black"
+                                    class="text-3xl font-black uppercase tracking-tight"
                                 >
                                     Prossimo Incontro
                                 </h2>
@@ -247,7 +313,7 @@
                                         icon-class="text-3xl sm:text-4xl"
                                     />
                                     <div
-                                        class="text-base sm:text-xl font-black uppercase truncate text-black"
+                                        class="text-base sm:text-xl font-black uppercase truncate"
                                     >
                                         {{
                                             getTeamName(
@@ -257,7 +323,7 @@
                                     </div>
                                 </div>
                                 <span
-                                    class="text-gray-300 text-lg font-black uppercase tracking-widest"
+                                    class="text-lg font-black uppercase tracking-widest text-gray-300"
                                     >VS</span
                                 >
                                 <div class="flex-1 text-center">
@@ -268,7 +334,7 @@
                                         icon-class="text-3xl sm:text-4xl"
                                     />
                                     <div
-                                        class="text-base sm:text-xl font-black uppercase truncate text-black"
+                                        class="text-base sm:text-xl font-black uppercase truncate"
                                     >
                                         {{
                                             getTeamName(
@@ -348,6 +414,7 @@
                                 </p>
                             </div>
                         </template>
+                        </div>
                     </div>
 
                     <div
@@ -362,7 +429,8 @@
                                     class="font-impact text-xl text-black tracking-wider flex flex-wrap items-center gap-2"
                                 >
                                     MVP della partita
-                                    <span class="text-xs px-2 py-0.5 bg-black text-white transform -skew-x-6 tracking-widest whitespace-nowrap">Voti: <span :class="remainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ remainingVotes }}</span>/5</span>
+                                    <span class="text-xs px-2 py-0.5 bg-black text-white transform -skew-x-6 tracking-widest whitespace-nowrap">Voti: <span :class="matchRemainingVotes > 0 ? 'text-primary' : 'text-gray-400'">{{ matchRemainingVotes }}</span>/3</span>
+                                    <button @click="showFirstMatchVotePopup = true" class="ml-auto text-gray-400 hover:text-primary transition-colors cursor-pointer text-xs flex items-center gap-1 font-bold font-sans uppercase tracking-widest"><Icon name="mdi:information-outline" class="text-sm" /> Regole</button>
                                 </h2>
                                 <p
                                     class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1"
@@ -396,7 +464,7 @@
                                     >
                                     <span
                                         class="text-xs font-impact text-primary"
-                                        >{{ player.mvp_votes || 0 }}</span
+                                        >{{ player.match_mvp_votes || 0 }}</span
                                     >
                                 </div>
                             </div>
@@ -475,38 +543,38 @@
                                         >
                                             <span
                                                 class="w-9 text-center text-sm font-impact text-primary"
-                                                >{{ player.mvp_votes || 0 }}</span
+                                                >{{ player.match_mvp_votes || 0 }}</span
                                             >
                                             <div class="flex gap-2">
                                                 <button
-                                                    v-if="getPlayerVotes(player.id) > 0"
-                                                    @click="undoVote(player.id)"
+                                                    v-if="getMatchPlayerVotes(player.id) > 0"
+                                                    @click="undoMatchVote(player.id)"
                                                     class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black bg-red-500 text-white hover:bg-red-600 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:scale-90"
                                                     title="Rimuovi Voto"
                                                 >
                                                     <Icon name="mdi:minus" class="text-lg" />
                                                 </button>
                                                 <button
-                                                    @click="doVote(player.id)"
-                                                    :disabled="!canVote"
+                                                    @click="doMatchVote(player.id)"
+                                                    :disabled="!matchCanVote"
                                                 class="w-10 h-10 flex items-center justify-center transition-all border-2 border-black rounded-none active:scale-90 relative"
                                                 :class="
-                                                    !canVote
+                                                    !matchCanVote
                                                         ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_rgba(0,0,0,0.1)]'
-                                                        : getPlayerVotes(player.id) > 0
+                                                        : getMatchPlayerVotes(player.id) > 0
                                                           ? 'bg-green-500 border-black text-white hover:bg-green-600 shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                                           : 'bg-white border-black text-secondary hover:bg-primary hover:text-white shadow-[2px_2px_0px_rgba(0,0,0,1)]'
                                                 "
                                                 :title="
-                                                    !canVote
-                                                        ? 'Hai esaurito i voti'
-                                                        : 'Vota MVP'
+                                                    !matchCanVote
+                                                        ? 'Hai esaurito i voti per questa partita'
+                                                        : 'Vota MVP Partita'
                                                 "
                                             >
-                                                <div v-if="getPlayerVotes(player.id) > 0" class="absolute -top-2 -right-2 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-black border border-black z-10">{{ getPlayerVotes(player.id) }}</div>
+                                                <div v-if="getMatchPlayerVotes(player.id) > 0" class="absolute -top-2 -right-2 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-black border border-black z-10">{{ getMatchPlayerVotes(player.id) }}</div>
                                                 <Icon
                                                     :name="
-                                                        getPlayerVotes(player.id) > 0
+                                                        getMatchPlayerVotes(player.id) > 0
                                                             ? 'mdi:thumb-up'
                                                             : 'mdi:thumb-up-outline'
                                                     "
@@ -878,6 +946,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useVotes } from "~/composables/useVotes";
+import { useMatchVotes } from "~/composables/useMatchVotes";
 
 const translateStage = (stage: string) => {
     if (!stage) return "";
@@ -905,8 +974,19 @@ const now = ref(Date.now());
 let timerInterval: any = null;
 
 const liveMatch = computed(() =>
-    matches.value.find((m) => m.status === "in_progress"),
+    matches.value.find((m) => m.status === "in_progress" || m.status === "paused"),
 );
+
+const liveMatchId = computed(() => liveMatch.value?.id || null);
+const { 
+    loadVotes: loadMatchVotes, 
+    canVote: matchCanVote, 
+    remainingVotes: matchRemainingVotes, 
+    recordVote: recordMatchVote, 
+    removeVote: removeMatchVote, 
+    getPlayerVotes: getMatchPlayerVotes,
+    showFirstMatchVotePopup
+} = useMatchVotes(liveMatchId);
 
 const upcomingMatches = computed(() =>
     matches.value
@@ -993,7 +1073,7 @@ const rankedLivePlayers = computed(() =>
         .flatMap((teamRoster) => teamRoster.players)
         .sort(
             (a, b) =>
-                (b.mvp_votes || 0) - (a.mvp_votes || 0) ||
+                (b.match_mvp_votes || 0) - (a.match_mvp_votes || 0) ||
                 a.name.localeCompare(b.name),
         ),
 );
@@ -1070,8 +1150,9 @@ const loadData = async () => {
     if (mData) matches.value = mData;
     if (pData) players.value = pData;
 
-    await loadGroupsAndStandings();
     loadVotes();
+    loadMatchVotes(); 
+    await loadGroupsAndStandings();
 
     realtimeChannel = subscribeToAllMatches((payload) => {
         const changedMatch = payload.new || payload.old;
@@ -1150,6 +1231,31 @@ const undoVote = async (playerId: string) => {
             player.mvp_votes = Math.max(0, (player.mvp_votes || 0) - 1);
         }
         await supabase.rpc("decrement_player_votes", { player_uuid: playerId });
+    }
+};
+
+const doMatchVote = async (playerId: string) => {
+    if (!matchCanVote.value) return;
+
+    if (recordMatchVote(playerId)) {
+        const player = players.value.find((p) => p.id === playerId);
+        if (player) {
+            player.mvp_votes = (player.mvp_votes || 0) + 1;
+            player.match_mvp_votes = (player.match_mvp_votes || 0) + 1;
+        }
+
+        await supabase.rpc("increment_match_player_votes", { player_uuid: playerId });
+    }
+};
+
+const undoMatchVote = async (playerId: string) => {
+    if (removeMatchVote(playerId)) {
+        const player = players.value.find((p) => p.id === playerId);
+        if (player) {
+            player.mvp_votes = Math.max(0, (player.mvp_votes || 0) - 1);
+            player.match_mvp_votes = Math.max(0, (player.match_mvp_votes || 0) - 1);
+        }
+        await supabase.rpc("decrement_match_player_votes", { player_uuid: playerId });
     }
 };
 
